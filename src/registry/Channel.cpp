@@ -75,6 +75,20 @@ bool isRevoked(const profiles::Profile &profile, const QList<RevokedProfile> &re
 Result<RootMetadata> updateRootChain(const QString &distributionDir, const RootMetadata &trusted)
 {
     RootMetadata current = trusted;
+    // The distribution's copy of the anchor's own version may be fresher (e.g. a
+    // later expiry); use it when it is signed by the anchor's root keys.
+    const QString samePath = distributionDir + QStringLiteral("/roots/%1.json").arg(current.version);
+    if (QFile::exists(samePath)) {
+        auto bytes = readSigned(samePath, current.rootKeys, current.rootThreshold);
+        if (!bytes.ok())
+            return bytes.error();
+        auto root = parseRoot(bytes.value());
+        if (!root.ok())
+            return root.error();
+        if (root.value().version != current.version)
+            return untrusted(QStringLiteral("root version mismatch"), samePath);
+        current = std::move(root).value();
+    }
     for (;;) {
         const int next = current.version + 1;
         const QString path = distributionDir + QStringLiteral("/roots/%1.json").arg(next);

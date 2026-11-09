@@ -76,6 +76,10 @@ saveforge_add_test(tst_registry_channel
     SOURCES unit/tst_registry_channel.cpp
     LIBS saveforge::registry)
 
+saveforge_add_test(tst_registry_cache
+    SOURCES unit/tst_registry_cache.cpp
+    LIBS saveforge::registry)
+
 saveforge_add_test(tst_ui_smoke
     SOURCES ui/tst_ui_smoke.cpp
     LIBS saveforge_uiplugin Qt6::Gui Qt6::Quick Qt6::QuickControls2)
