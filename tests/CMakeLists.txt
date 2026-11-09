@@ -15,6 +15,10 @@ saveforge_add_test(tst_core_result
     SOURCES unit/tst_core_result.cpp
     LIBS saveforge::core)
 
+saveforge_add_test(tst_platform
+    SOURCES unit/tst_platform.cpp
+    LIBS saveforge::platform)
+
 saveforge_add_test(tst_ui_smoke
     SOURCES ui/tst_ui_smoke.cpp
     LIBS saveforge_uiplugin Qt6::Gui Qt6::Quick Qt6::QuickControls2)
