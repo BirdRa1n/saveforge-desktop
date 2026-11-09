@@ -80,6 +80,10 @@ saveforge_add_test(tst_registry_cache
     SOURCES unit/tst_registry_cache.cpp
     LIBS saveforge::registry)
 
+saveforge_add_test(tst_registry_updater
+    SOURCES unit/tst_registry_updater.cpp support/StaticHttpServer.h
+    LIBS saveforge::registry Qt6::Network)
+
 saveforge_add_test(tst_profile_catalog
     SOURCES unit/tst_profile_catalog.cpp
     LIBS saveforge::registry)
