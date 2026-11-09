@@ -58,7 +58,7 @@ src/
   vault/       Vault local: blobs, snapshots, verificação e coleta de lixo.
   detection/   Detectores de launchers, associação de instalações a perfis, varredura save-first.
   registry/    Registry: verificação (Ed25519, cadeia de root, rollback), download dos mirrors, cache e catálogo.
-  services/    Casos de uso que combinam os módulos: biblioteca, backup e restauração.
+  services/    Casos de uso que combinam os módulos: biblioteca, perfis locais, backup e restauração.
   backend/     Módulo QML SaveForge.Backend: AppController (singleton), modelos e configurações.
   app/         Executável GUI + módulo QML SaveForge.Ui
     qml/theme/       Tokens visuais (Theme) e ícones (Icons) — singletons

@@ -6,7 +6,8 @@ Aplicativo desktop open source para encontrar, fazer backup e restaurar saves de
 > - perfis de jogos vindos do Registry assinado (22 mil jogos via Ludusavi): baixados dos mirrors, embutidos no build ou importados de uma pasta, sempre verificados e guardados em cache para uso offline;
 > - detecção de jogos (Steam, Epic, GOG e Heroic, com prefixos Wine/Proton, além da busca por saves de jogos não instalados);
 > - backup no vault local (deduplicação, compressão, verificação de integridade);
-> - restauração segura (plano prévio, ponto de desfazer, troca atômica, política de cloud do launcher).
+> - restauração segura (plano prévio, ponto de desfazer, troca atômica, política de cloud do launcher);
+> - jogos adicionados à mão e perfis locais, que têm prioridade sobre o Registry.
 >
 > Ainda faltam as chaves de produção do Registry, o registro do Windows, os backups automáticos e a exportação `.gamesave`.
 
@@ -26,7 +27,7 @@ src/
   vault/     vault local: blobs por conteúdo (SHA-256 + zstd), snapshots, verificação e coleta de lixo
   detection/ detecção de jogos instalados (Steam, Epic, GOG, Heroic) e associação a perfis
   registry/  Registry: verificação Ed25519, download dos mirrors, cache local dos canais e catálogo de perfis
-  services/  casos de uso: biblioteca, backup e restauração (checagem de jogo aberto, plano, desfazer)
+  services/  casos de uso: biblioteca, perfis locais e jogos manuais, backup e restauração (checagem de jogo aberto, plano, desfazer)
   backend/   módulo QML SaveForge.Backend: controlador, modelos de lista e configurações do app
   app/       executável GUI + módulo QML SaveForge.Ui (tema, componentes, páginas; só apresentação)
   cli/       saveforge-cli (sem GUI)
@@ -87,6 +88,8 @@ Para capturar a interface com dados reais (biblioteca escaneada, página de um j
 
 | Comando | O que faz |
 |---|---|
+| `profiles add --name <nome> --folder <pasta>` | Adiciona à mão um jogo que o Registry não conhece, a partir das pastas de saves. `--folder` pode se repetir. |
+| `profiles list` / `profiles import <arquivo.json>` / `profiles remove <id>` | Lista, importa ou remove perfis locais. Os backups de um jogo removido continuam no vault. |
 | `registry update [--mirror <url>]` | Baixa os canais dos mirrors (os do build ou os de `--mirror`), verifica e guarda no cache. Não baixa de novo o que já está em cache. |
 | `registry import <pasta>` | Verifica uma distribuição do Registry (assinaturas, rollback, hashes) e a guarda no cache local. |
 | `registry status` | Mostra os canais em cache, o total de perfis e as atribuições de licença. |
@@ -109,7 +112,9 @@ Em `backup` e `restore`, `--profile <arquivo.json>` substitui `--game` para usar
 
 Em builds de desenvolvimento, que confiam nas chaves de teste, o mirror padrão é a distribuição de teste que o `saveforge-registry` publica em `https://birdra1n.github.io/saveforge-registry/v1/`. Builds com outro trust anchor começam sem mirror e devem definir o próprio. A distribuição embutida fica vazia por padrão. Para testar com uma distribuição local, rode `saveforge-cli registry update --mirror <pasta-ou-url>`. Também é possível definir `mirrors=<url>` no grupo `[registry]` do `settings.ini`.
 
-Os dados do app (cache do Registry) ficam em `%LOCALAPPDATA%/SaveForge` no Windows, `~/.local/share/SaveForge` no Linux e `~/Library/Application Support/SaveForge` no macOS. A variável `SAVEFORGE_DATA_DIR` permite trocar esse local.
+**Jogos adicionados à mão.** Viram perfis locais (`profile.v1`, com origem `local`), guardados em `<dados do app>/profiles/<id>.json`, e passam pela mesma validação dos perfis do Registry. Perfis descrevem locais por placeholders, nunca por caminhos absolutos. Por isso, as pastas de saves precisam ficar dentro das pastas do usuário (pasta pessoal, Documentos, AppData e equivalentes no Linux e no macOS). Pastas dentro da instalação do jogo ainda não são aceitas.
+
+Os dados do app (cache do Registry, perfis locais e configurações) ficam em `%LOCALAPPDATA%/SaveForge` no Windows, `~/.local/share/SaveForge` no Linux e `~/Library/Application Support/SaveForge` no macOS. A variável `SAVEFORGE_DATA_DIR` permite trocar esse local.
 
 Na restauração:
 - sempre é criado antes um snapshot `pre-restore`, que permite desfazer a operação;
