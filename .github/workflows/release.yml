@@ -1,0 +1,161 @@
+name: Release
+
+# Builds the packages of cmake/SaveForgePackaging.cmake on the three OSes.
+#   - Manual run (workflow_dispatch): packages are kept as workflow artifacts.
+#   - Tag "v<X.Y.Z>[-suffix]" (e.g. v0.1.0-alpha.1): also publishes a GitHub
+#     pre-release with the packages and their SHA-256 files.
+# Every package embeds the registry distribution built from saveforge-registry,
+# so the app has profiles on first run without a download.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  registry:
+    name: Registry distribution
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: BirdRa1n/saveforge-registry
+          submodules: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run fetch-upstream
+      # Test keys, matching the trust anchor of these builds (see README).
+      - run: npm run build -- --keys test
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: registry-dist
+          path: dist/v1/
+
+  package:
+    name: ${{ matrix.name }}
+    needs: registry
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            qt-arch: win64_msvc2022_64
+            # See ci.yml: aqtinstall cannot read the Windows layout of Qt 6.11+ yet.
+            qt-version: "6.10.*"
+          - name: Linux
+            os: ubuntu-24.04
+            qt-arch: linux_gcc_64
+            qt-version: "6.12.*"
+          - name: macOS
+            os: macos-latest
+            qt-arch: clang_64
+            qt-version: "6.12.*"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Package version
+        id: version
+        shell: bash
+        run: |
+          project=$(sed -nE 's/^ +VERSION ([0-9]+\.[0-9]+\.[0-9]+)$/\1/p' CMakeLists.txt | head -1)
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="${GITHUB_REF_NAME#v}"
+            # The tag must name the version in CMakeLists.txt.
+            if [[ "$version" != "$project" && "$version" != "$project"-* ]]; then
+              echo "::error::tag $GITHUB_REF_NAME does not match project version $project"
+              exit 1
+            fi
+          else
+            version="$project-dev.$GITHUB_RUN_NUMBER"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: registry-dist
+          path: registry-dist
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ matrix.qt-version }}
+          arch: ${{ matrix.qt-arch }}
+          cache: true
+
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
+
+      - name: MSVC environment
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: System dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libxkbcommon-dev
+
+      - name: Configure
+        shell: bash
+        run: >
+          cmake --preset release
+          -DSAVEFORGE_BUILD_TESTS=OFF
+          -DSAVEFORGE_PACKAGE_VERSION=${{ steps.version.outputs.version }}
+          -DSAVEFORGE_REGISTRY_BUNDLED_DIR="$GITHUB_WORKSPACE/registry-dist"
+
+      - name: Build
+        run: cmake --build --preset release
+
+      - name: Package
+        working-directory: out/build/release
+        run: cpack
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.name }}
+          path: |
+            out/build/release/SaveForge-*.zip
+            out/build/release/SaveForge-*.zip.sha256
+            out/build/release/SaveForge-*.tar.gz
+            out/build/release/SaveForge-*.tar.gz.sha256
+            out/build/release/SaveForge-*.dmg
+            out/build/release/SaveForge-*.dmg.sha256
+          if-no-files-found: error
+
+  publish:
+    name: GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: package-*
+          path: packages
+          merge-multiple: true
+
+      - name: Create the pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "$GITHUB_REF_NAME" packages/*
+          --prerelease
+          --title "SaveForge ${GITHUB_REF_NAME#v}"
+          --notes-file docs/release-notes.md
+          --generate-notes
