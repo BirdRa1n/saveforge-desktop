@@ -2,6 +2,7 @@
 
 #include "saveforge/registry/RegistryCache.h"
 #include "saveforge/registry/RegistryUpdater.h"
+#include "saveforge/services/LocalProfiles.h"
 
 #include <QHash>
 #include <QSet>
@@ -10,9 +11,17 @@
 
 namespace saveforge::services {
 
-CatalogLoad loadCatalogFromCache(const QString &registryCacheDir, const QString &appVersion)
+CatalogLoad loadCatalogFromCache(const QString &registryCacheDir, const QString &appVersion,
+                                 const QString &localProfilesDir)
 {
     CatalogLoad result;
+    // Local profiles do not depend on the registry and work even without a trust anchor.
+    if (!localProfilesDir.isEmpty()) {
+        LocalProfileStore::Load local = LocalProfileStore(localProfilesDir).load();
+        for (const QString &warning : std::as_const(local.warnings))
+            result.warnings.append(QStringLiteral("local profile skipped: ") + warning);
+        result.catalog.addChannel(QStringLiteral("local"), local.profiles);
+    }
     const auto anchor = registry::builtinTrustAnchor();
     if (!anchor.ok()) {
         result.warnings.append(QStringLiteral("registry disabled: ") + anchor.error().toString());

@@ -27,8 +27,11 @@ struct CatalogLoad {
 // Loads every cached channel (re-verified) into one catalog. Channels the
 // cache does not have yet are first seeded from the distribution bundled with
 // the build, if any, so profiles work on first run without a download.
+// Profiles in `localProfilesDir` (see LocalProfileStore) form the "local"
+// channel, which takes precedence over the registry.
 // Problems become warnings: an empty catalog is not an error.
-[[nodiscard]] CatalogLoad loadCatalogFromCache(const QString &registryCacheDir, const QString &appVersion);
+[[nodiscard]] CatalogLoad loadCatalogFromCache(const QString &registryCacheDir, const QString &appVersion,
+                                               const QString &localProfilesDir = {});
 
 // One game shown in the library.
 struct LibraryGame {
