@@ -8,6 +8,7 @@
 #include <QFileInfo>
 #include <QLockFile>
 #include <QLoggingCategory>
+#include <QSet>
 #include <QTimeZone>
 
 #include <algorithm>
@@ -257,6 +258,112 @@ Result<Snapshot> Vault::snapshot(const QString &gameId, const QUuid &snapshotId)
         return Error{ErrorCode::Corrupted, QStringLiteral("snapshot file is damaged: ") + parsed.error().message,
                      file.fileName()};
     return parsed;
+}
+
+Vault::Scan Vault::scanAllSnapshots() const
+{
+    Scan scan;
+    const QDir root(m_dir + QStringLiteral("/snapshots"));
+    for (const QString &gameDir : root.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
+        for (const QFileInfo &info : QDir(root.filePath(gameDir)).entryInfoList({QStringLiteral("*.json")}, QDir::Files)) {
+            QFile file(info.absoluteFilePath());
+            auto parsed = file.open(QIODevice::ReadOnly) ? parseSnapshot(file.readAll())
+                                                         : Result<Snapshot>(Error{ErrorCode::Io, file.errorString(), {}});
+            if (!parsed.ok() || gameDirectoryName(parsed.value().gameId) != gameDir) {
+                scan.damagedFiles.append(info.absoluteFilePath());
+                continue;
+            }
+            scan.snapshots.append(std::move(parsed).value());
+        }
+    }
+    return scan;
+}
+
+Result<VerifyReport> Vault::verify(const std::function<bool(qsizetype, qsizetype)> &progress) const
+{
+    VerifyReport report;
+    const Scan scan = scanAllSnapshots();
+    report.damagedSnapshotFiles = scan.damagedFiles;
+
+    QHash<QString, QList<SnapshotRef>> referencedBy;
+    for (const Snapshot &s : scan.snapshots) {
+        for (const SnapshotFile &file : s.files) {
+            QList<SnapshotRef> &refs = referencedBy[file.sha256];
+            const SnapshotRef ref{s.gameId, s.snapshotId};
+            if (!refs.contains(ref))
+                refs.append(ref);
+        }
+    }
+
+    const QStringList blobs = m_blobs.list();
+    for (qsizetype i = 0; i < blobs.size(); ++i) {
+        const auto result = m_blobs.verify(blobs.at(i));
+        ++report.blobsChecked;
+        if (!result.ok() && result.error().code == ErrorCode::Corrupted)
+            report.corruptedBlobs.append(blobs.at(i));
+        else if (!result.ok() && result.error().code != ErrorCode::NotFound)
+            return result.error();
+        if (progress && !progress(i + 1, blobs.size()))
+            return Error{ErrorCode::Cancelled, QStringLiteral("verification cancelled"), {}};
+    }
+
+    const QSet<QString> present(blobs.cbegin(), blobs.cend());
+    for (auto it = referencedBy.cbegin(); it != referencedBy.cend(); ++it) {
+        if (!present.contains(it.key()))
+            report.missingBlobs.append(it.key());
+    }
+    report.missingBlobs.sort();
+
+    for (const QString &hash : report.corruptedBlobs + report.missingBlobs) {
+        for (const SnapshotRef &ref : referencedBy.value(hash)) {
+            if (!report.affectedSnapshots.contains(ref))
+                report.affectedSnapshots.append(ref);
+        }
+    }
+    if (!report.healthy())
+        qCWarning(lcVault) << "vault verification found problems:" << report.corruptedBlobs.size() << "corrupted,"
+                           << report.missingBlobs.size() << "missing," << report.damagedSnapshotFiles.size()
+                           << "damaged snapshot files";
+    return report;
+}
+
+Result<GarbageReport> Vault::collectGarbage(const QDateTime &now, std::chrono::seconds minimumAge)
+{
+    WriterLock lock(m_dir);
+    if (auto acquired = lock.acquire(); !acquired.ok())
+        return acquired.error();
+
+    const Scan scan = scanAllSnapshots();
+    if (!scan.damagedFiles.isEmpty())
+        return Error{ErrorCode::Corrupted,
+                     QStringLiteral("refusing to collect garbage while snapshot files are unreadable"),
+                     scan.damagedFiles.join(QLatin1String(", "))};
+
+    QSet<QString> referenced;
+    for (const Snapshot &s : scan.snapshots) {
+        for (const SnapshotFile &file : s.files)
+            referenced.insert(file.sha256);
+    }
+
+    const QDateTime cutoff = now.addSecs(-minimumAge.count());
+    GarbageReport report;
+    for (const QString &hash : m_blobs.list()) {
+        if (referenced.contains(hash) || m_blobs.lastModified(hash) > cutoff)
+            continue;
+        const qint64 size = QFileInfo(m_blobs.blobPath(hash)).size();
+        if (auto removed = m_blobs.remove(hash); !removed.ok())
+            return removed.error();
+        report.removedBlobs.append(hash);
+        report.freedBytes += size;
+    }
+
+    for (const QFileInfo &info : QDir(m_blobs.tmpDir()).entryInfoList(QDir::Files | QDir::Hidden)) {
+        if (info.lastModified(QTimeZone::UTC) <= cutoff && QFile::remove(info.absoluteFilePath()))
+            ++report.removedTempFiles;
+    }
+    qCInfo(lcVault) << "garbage collection removed" << report.removedBlobs.size() << "blobs," << report.freedBytes
+                    << "bytes," << report.removedTempFiles << "temporary files";
+    return report;
 }
 
 Result<void> Vault::removeSnapshot(const QString &gameId, const QUuid &snapshotId)

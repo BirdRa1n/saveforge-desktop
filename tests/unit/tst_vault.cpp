@@ -219,6 +219,82 @@ private slots:
         QCOMPARE(refused.error().code, ErrorCode::PermissionDenied);
     }
 
+    void verifiesHealthyVault()
+    {
+        Fixture f;
+        auto vault = Vault::open(f.vaultDir());
+        QVERIFY(vault.value().createSnapshot(requestFor(f.savesDir())).ok());
+        const auto report = vault.value().verify();
+        QVERIFY(report.ok());
+        QVERIFY(report.value().healthy());
+        QCOMPARE(report.value().blobsChecked, 2);
+    }
+
+    void verifyReportsCorruptedAndMissingBlobs()
+    {
+        Fixture f;
+        auto vault = Vault::open(f.vaultDir());
+        const auto s = vault.value().createSnapshot(requestFor(f.savesDir()));
+        QVERIFY(s.ok());
+        const QString corrupted = s.value().files.at(0).sha256;
+        const QString missing = s.value().files.at(1).sha256;
+        writeFile(vault.value().blobs().blobPath(corrupted), "not zstd");
+        QVERIFY(QFile::remove(vault.value().blobs().blobPath(missing)));
+        writeFile(vault.value().snapshotPath(QStringLiteral("hollow-knight"), createUuidV7()), "{ damaged");
+
+        const auto report = vault.value().verify();
+        QVERIFY(report.ok());
+        QVERIFY(!report.value().healthy());
+        QCOMPARE(report.value().corruptedBlobs, QStringList{corrupted});
+        QCOMPARE(report.value().missingBlobs, QStringList{missing});
+        QCOMPARE(report.value().damagedSnapshotFiles.size(), 1);
+        QCOMPARE(report.value().affectedSnapshots, (QList<SnapshotRef>{{s.value().gameId, s.value().snapshotId}}));
+        // Corrupted blobs are reported, never deleted.
+        QVERIFY(QFile::exists(vault.value().blobs().blobPath(corrupted)));
+    }
+
+    void garbageCollectionRemovesOnlyOldUnreferencedData()
+    {
+        Fixture f;
+        auto vault = Vault::open(f.vaultDir());
+        const auto a = vault.value().createSnapshot(requestFor(f.savesDir()));
+        writeFile(f.savesDir() + QStringLiteral("/user2.dat"), "slot 2 changed");
+        const auto b = vault.value().createSnapshot(requestFor(f.savesDir()));
+        QVERIFY(a.ok() && b.ok());
+        writeFile(f.vaultDir() + QStringLiteral("/tmp/crashed-write.part"), "leftover");
+
+        // Removing the first snapshot orphans the old user2.dat blob.
+        QVERIFY(vault.value().removeSnapshot(a.value().gameId, a.value().snapshotId).ok());
+        const QString orphan = a.value().files.at(1).sha256;
+
+        // Too recent: protected as a possible write in flight.
+        auto report = vault.value().collectGarbage();
+        QVERIFY(report.ok());
+        QVERIFY(report.value().removedBlobs.isEmpty());
+        QCOMPARE(report.value().removedTempFiles, 0);
+
+        // Two hours later the orphan and the leftover temp file go away.
+        report = vault.value().collectGarbage(QDateTime::currentDateTimeUtc().addSecs(2 * 3600));
+        QVERIFY(report.ok());
+        QCOMPARE(report.value().removedBlobs, QStringList{orphan});
+        QVERIFY(report.value().freedBytes > 0);
+        QCOMPARE(report.value().removedTempFiles, 1);
+        QVERIFY(vault.value().verify().value().healthy());
+        QCOMPARE(vault.value().blobs().list().size(), 2);
+    }
+
+    void garbageCollectionRefusesWhenSnapshotsAreUnreadable()
+    {
+        Fixture f;
+        auto vault = Vault::open(f.vaultDir());
+        QVERIFY(vault.value().createSnapshot(requestFor(f.savesDir())).ok());
+        writeFile(vault.value().snapshotPath(QStringLiteral("hollow-knight"), createUuidV7()), "{ damaged");
+        const auto report = vault.value().collectGarbage(QDateTime::currentDateTimeUtc().addDays(1));
+        QVERIFY(!report.ok());
+        QCOMPARE(report.error().code, ErrorCode::Corrupted);
+        QCOMPARE(vault.value().blobs().list().size(), 2);
+    }
+
     void skipsDamagedSnapshotFiles()
     {
         Fixture f;

@@ -9,6 +9,7 @@
 #include <QString>
 #include <QUuid>
 
+#include <chrono>
 #include <functional>
 
 namespace saveforge::vault {
@@ -31,6 +32,34 @@ struct SnapshotRequest {
     ProfileRef profile;
     QList<SnapshotSource> files;
     QList<RegistryKey> registry;
+};
+
+struct SnapshotRef {
+    QString gameId;
+    QUuid snapshotId;
+
+    bool operator==(const SnapshotRef &) const = default;
+};
+
+// Outcome of Vault::verify(). Corrupted blobs are reported, never deleted.
+struct VerifyReport {
+    qsizetype blobsChecked = 0;
+    QStringList corruptedBlobs;           // content does not match its name, or cannot be decoded
+    QStringList missingBlobs;             // referenced by a snapshot but absent
+    QStringList damagedSnapshotFiles;     // snapshot documents that cannot be read
+    QList<SnapshotRef> affectedSnapshots; // snapshots that reference corrupted or missing blobs
+
+    [[nodiscard]] bool healthy() const
+    {
+        return corruptedBlobs.isEmpty() && missingBlobs.isEmpty() && damagedSnapshotFiles.isEmpty();
+    }
+};
+
+// Outcome of Vault::collectGarbage().
+struct GarbageReport {
+    QStringList removedBlobs;
+    qint64 freedBytes = 0;                // on-disk (compressed) size of removed blobs
+    qsizetype removedTempFiles = 0;
 };
 
 // Called after each read attempt of a file; return false to cancel.
@@ -73,8 +102,26 @@ public:
 
     [[nodiscard]] QString snapshotPath(const QString &gameId, const QUuid &snapshotId) const;
 
+    // Reads every blob and checks it against its name, and checks that every
+    // blob referenced by a snapshot exists (vault spec section 6).
+    // `progress(done, total)` may return false to cancel.
+    [[nodiscard]] Result<VerifyReport> verify(const std::function<bool(qsizetype, qsizetype)> &progress = {}) const;
+
+    // Mark-and-sweep (vault spec section 5): removes blobs no snapshot references
+    // and temporary files, both only when older than `minimumAge`, which protects
+    // writes in flight. Refused while any snapshot document is unreadable,
+    // because its references would be unknown.
+    [[nodiscard]] Result<GarbageReport> collectGarbage(const QDateTime &now = QDateTime::currentDateTimeUtc(),
+                                                       std::chrono::seconds minimumAge = std::chrono::hours(1));
+
 private:
+    struct Scan {
+        QList<Snapshot> snapshots;
+        QStringList damagedFiles;
+    };
+
     Vault(QString directory, VaultDescriptor descriptor);
+    [[nodiscard]] Scan scanAllSnapshots() const;
 
     QString m_dir;
     VaultDescriptor m_descriptor;
