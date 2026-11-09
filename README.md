@@ -2,7 +2,7 @@
 
 Aplicativo desktop open source para encontrar, fazer backup e restaurar saves de jogos de PC. Funciona com Steam, Epic, GOG e instalações manuais, **totalmente offline**.
 
-> **Estado:** em desenvolvimento inicial (0.1.0). Já estão prontos a estrutura do projeto, a interface base, a resolução de pastas do sistema (incluindo prefixos Wine/Proton), a leitura, validação e resolução de perfis de jogos e o vault local (snapshots, deduplicação, verificação de integridade e coleta de lixo). Detecção de jogos, restauração e a interface conectada continuam na Fase 1 do [roadmap](../saveforge-docs/planejamento/PLANEJAMENTO-TECNICO.md#18-roadmap-com-dependências).
+> **Estado:** em desenvolvimento inicial (0.1.0). Já estão prontos a estrutura do projeto, a interface base, a resolução de pastas do sistema (incluindo prefixos Wine/Proton), a leitura, validação e resolução de perfis de jogos o vault local (snapshots, deduplicação, verificação de integridade e coleta de lixo) e a detecção de jogos (Steam, Epic, GOG e Heroic, com prefixos Wine/Proton, mais a varredura de saves de jogos não instalados). Restauração e a interface conectada continuam na Fase 1 do [roadmap](../saveforge-docs/planejamento/PLANEJAMENTO-TECNICO.md#18-roadmap-com-dependências).
 
 ## Stack
 
@@ -18,6 +18,7 @@ src/
   platform/  pastas do usuário por SO e dentro de prefixos Wine/Proton
   profiles/  perfis de jogos: parser v1, regras de segurança de caminhos, resolução de arquivos
   vault/     vault local: blobs por conteúdo (SHA-256 + zstd), snapshots, verificação e coleta de lixo
+  detection/ detecção de jogos instalados (Steam, Epic, GOG, Heroic) e associação a perfis
   app/       executável GUI + módulo QML SaveForge.Ui (tema, componentes, páginas)
   cli/       saveforge-cli (sem GUI)
 tests/
@@ -27,7 +28,7 @@ external/
   specs/     submódulo saveforge-specs (schemas, catálogos e vetores de teste)
 ```
 
-Novos módulos (`db`, `detection`, `archive`, `registry`, `services`) entram conforme o roadmap.
+Novos módulos (`db`, `archive`, `registry`, `services`) entram conforme o roadmap.
 
 Decisões locais deste repositório ficam em [`docs/adr/`](docs/adr/README.md).
 
@@ -66,6 +67,20 @@ Para salvar capturas de cada página da interface, defina uma pasta e rode o tes
 ```bash
 SAVEFORGE_SCREENSHOT_DIR=/caminho/para/pasta ./out/build/debug/tst_ui_smoke
 ```
+
+## Linha de comando
+
+`saveforge-cli` expõe as funções do app sem interface gráfica. Por enquanto, só há comandos de leitura:
+
+```bash
+saveforge-cli detect
+```
+
+```bash
+saveforge-cli detect --profiles <pasta-com-perfis-json>
+```
+
+O primeiro lista os jogos instalados pelos launchers suportados. O segundo também os associa aos perfis da pasta e procura saves de jogos não instalados.
 
 ## Licença
 

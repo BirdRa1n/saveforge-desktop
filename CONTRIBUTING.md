@@ -56,6 +56,7 @@ src/
   platform/    Pastas do usuário por SO e dentro de prefixos Wine/Proton.
   profiles/    Perfis de jogos: parser, regras de segurança de caminhos, resolução de arquivos.
   vault/       Vault local: blobs, snapshots, verificação e coleta de lixo.
+  detection/   Detectores de launchers, associação de instalações a perfis, varredura save-first.
   app/         Executável GUI + módulo QML SaveForge.Ui
     qml/theme/       Tokens visuais (Theme) e ícones (Icons) — singletons
     qml/components/  Componentes reutilizáveis, sem lógica de negócio
@@ -96,6 +97,8 @@ app, cli → services → detection, vault, archive, registry, db → profiles �
 - Use `[[nodiscard]]` em funções cujo retorno não pode ser ignorado.
 - Use `QStringLiteral` para literais `QString`.
 - Os cabeçalhos usam `#pragma once`.
+- Código que lê o sistema (pastas, registro do Windows, SO) recebe essas informações por parâmetro, como no `DetectionEnvironment`. Assim os testes podem simular qualquer SO com diretórios temporários.
+- Em arquivos processados pelo moc (classes com `Q_OBJECT`, incluindo testes), evite raw string literals que contenham aspas e `//`: o moc deixa de reconhecer a classe e o link falha com `undefined reference to vtable`.
 - Para validar documentos definidos pelas specs, use `saveforge::JsonReader` (`core`). Ele rejeita propriedades desconhecidas e informa o JSON pointer do erro.
 - Escritas que precisam sobreviver a quedas seguem o padrão do vault: grave em `tmp/`, faça `fsync` e renomeie.
 - Dependências de terceiros entram em `cmake/SaveForgeDependencies.cmake`: primeiro `find_package`, com fallback para download fixado e verificado por SHA-256. Cada dependência nova precisa de justificativa (ADR ou descrição no PR).
