@@ -14,6 +14,7 @@ enum class ErrorCode {
     Unsupported,
     PermissionDenied,
     Cancelled,
+    Untrusted,      // signature, trust chain or anti-rollback check failed
 };
 
 // Erro de domínio: código estável + mensagem legível + contexto opcional

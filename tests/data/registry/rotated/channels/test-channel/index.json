@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "type": "index",
+  "channel": "test-channel",
+  "sequence": 42,
+  "publishedAt": "2026-11-09T00:00:00Z",
+  "expires": "2027-11-09T00:00:00Z",
+  "minAppVersion": "0.1.0",
+  "bundle": {
+    "path": "bundles/test-channel-000042.json.zst",
+    "sha256": "9a8a810c73ed5ab9b158ef0ff1a60abead3e12759f69388bce3b1ba084358c90",
+    "size": 695,
+    "uncompressedSize": 2905,
+    "profileCount": 3
+  },
+  "revoked": [
+    {
+      "id": "revoked-game",
+      "revision": 2,
+      "reason": "test fixture"
+    }
+  ]
+}

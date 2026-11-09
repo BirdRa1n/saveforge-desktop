@@ -7,7 +7,9 @@ function(saveforge_add_test name)
     target_link_libraries(${name} PRIVATE Qt6::Test ${ARG_LIBS})
     target_include_directories(${name} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/support")
     # Conformance tests read vectors and examples straight from the specs submodule.
-    target_compile_definitions(${name} PRIVATE SAVEFORGE_SPECS_DIR="${SAVEFORGE_SPECS_DIR}")
+    target_compile_definitions(${name} PRIVATE
+        SAVEFORGE_SPECS_DIR="${SAVEFORGE_SPECS_DIR}"
+        SAVEFORGE_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
     saveforge_set_warnings(${name})
     add_test(NAME ${name} COMMAND ${name})
     # Testes de UI rodam sem display.
@@ -68,6 +70,10 @@ saveforge_add_test(tst_restore_service
 
 saveforge_add_test(tst_ed25519
     SOURCES unit/tst_ed25519.cpp
+    LIBS saveforge::registry)
+
+saveforge_add_test(tst_registry_channel
+    SOURCES unit/tst_registry_channel.cpp
     LIBS saveforge::registry)
 
 saveforge_add_test(tst_ui_smoke

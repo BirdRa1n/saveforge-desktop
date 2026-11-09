@@ -13,6 +13,7 @@ QString errorCodeName(ErrorCode code)
     case ErrorCode::Unsupported: return QStringLiteral("unsupported");
     case ErrorCode::PermissionDenied: return QStringLiteral("permission_denied");
     case ErrorCode::Cancelled: return QStringLiteral("cancelled");
+    case ErrorCode::Untrusted: return QStringLiteral("untrusted");
     }
     return QStringLiteral("unknown");
 }

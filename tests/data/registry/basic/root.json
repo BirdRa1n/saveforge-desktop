@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "type": "root",
+  "version": 1,
+  "expires": "2030-01-01T00:00:00Z",
+  "rootThreshold": 1,
+  "rootKeys": [
+    {
+      "keyId": "9d61e6dda9427181",
+      "algorithm": "ed25519",
+      "publicKey": "nnJKuLiZR2eWZl02+1lU17oQEf+mc8eXMK9DQKlUn+E="
+    }
+  ],
+  "onlineKeys": [
+    {
+      "keyId": "aadf952169f076b6",
+      "algorithm": "ed25519",
+      "publicKey": "J1Qx7rN7SBKnqSdWcRwwDC6BkZkLT97ny1PfsNcMvRs=",
+      "channels": [
+        "*"
+      ]
+    }
+  ]
+}

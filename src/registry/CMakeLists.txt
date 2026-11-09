@@ -1,6 +1,10 @@
 qt_add_library(saveforge_registry STATIC
+    include/saveforge/registry/Channel.h
     include/saveforge/registry/Ed25519.h
+    include/saveforge/registry/Metadata.h
+    Channel.cpp
     Ed25519.cpp
+    Metadata.cpp
 )
 add_library(saveforge::registry ALIAS saveforge_registry)
 
