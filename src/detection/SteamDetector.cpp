@@ -87,9 +87,10 @@ QStringList steamRoots(const DetectionEnvironment &env)
     QStringList candidates;
     switch (env.hostOs) {
     case platform::Os::Windows:
-        candidates << env.registry->value(QStringLiteral("HKEY_CURRENT_USER\\Software\\Valve\\Steam"), QStringLiteral("SteamPath"))
-                   << env.registry->value(QStringLiteral("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Valve\\Steam"),
-                                          QStringLiteral("InstallPath"));
+        // InstallPath keeps the real spelling; SteamPath is often lower-cased.
+        candidates << env.registry->value(QStringLiteral("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Valve\\Steam"),
+                                          QStringLiteral("InstallPath"))
+                   << env.registry->value(QStringLiteral("HKEY_CURRENT_USER\\Software\\Valve\\Steam"), QStringLiteral("SteamPath"));
         break;
     case platform::Os::Linux:
         candidates << env.home + QStringLiteral("/.steam/steam") << env.home + QStringLiteral("/.local/share/Steam")
@@ -106,11 +107,14 @@ QStringList steamRoots(const DetectionEnvironment &env)
     for (const QString &candidate : std::as_const(candidates)) {
         if (candidate.isEmpty() || !QFileInfo(candidate + QStringLiteral("/steamapps")).isDir())
             continue;
-        // ~/.steam/steam is usually a symlink to ~/.local/share/Steam.
-        const QString canonical = QFileInfo(candidate).canonicalFilePath();
-        if (seen.contains(canonical))
+        // ~/.steam/steam is usually a symlink to ~/.local/share/Steam, and on
+        // Windows/macOS the same folder may be spelled with different case.
+        QString key = QFileInfo(candidate).canonicalFilePath();
+        if (env.hostOs != platform::Os::Linux)
+            key = key.toLower();
+        if (seen.contains(key))
             continue;
-        seen.insert(canonical);
+        seen.insert(key);
         roots.append(clean(candidate));
     }
     return roots;

@@ -105,6 +105,24 @@ private slots:
         QCOMPARE(find(games, QStringLiteral("504230"))->installDir, library2 + QStringLiteral("/steamapps/common/Celeste"));
     }
 
+    void steamRootsAreDeduplicatedIgnoringCaseOnWindows()
+    {
+        QTemporaryDir tmp;
+        const QString steam = tmp.path() + QStringLiteral("/Program Files (x86)/Steam");
+        mkdir(steam + QStringLiteral("/steamapps"));
+        DetectionEnvironment env = environment(tmp.path(), Os::Windows);
+        auto registry = std::make_shared<MapRegistryReader>();
+        // Real-world case: HKCU stores a lower-cased copy of the path.
+        registry->set(QStringLiteral("HKEY_CURRENT_USER\\Software\\Valve\\Steam"), QStringLiteral("SteamPath"), steam.toLower());
+        registry->set(QStringLiteral("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Valve\\Steam"), QStringLiteral("InstallPath"),
+                      QDir::toNativeSeparators(steam));
+        env.registry = registry;
+
+        if (!QFileInfo::exists(steam.toLower()))
+            QSKIP("file system is case-sensitive");
+        QCOMPARE(steamRoots(env), QStringList{steam}); // one root, with the real spelling
+    }
+
     void steamOnLinuxDetectsProtonPrefixes()
     {
         QTemporaryDir tmp;
