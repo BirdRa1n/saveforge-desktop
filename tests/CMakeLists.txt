@@ -53,6 +53,10 @@ saveforge_add_test(tst_launchers
     SOURCES unit/tst_launchers.cpp
     LIBS saveforge::detection)
 
+saveforge_add_test(tst_game_matcher
+    SOURCES unit/tst_game_matcher.cpp
+    LIBS saveforge::detection)
+
 saveforge_add_test(tst_ui_smoke
     SOURCES ui/tst_ui_smoke.cpp
     LIBS saveforge_uiplugin Qt6::Gui Qt6::Quick Qt6::QuickControls2)

@@ -1,10 +1,12 @@
 qt_add_library(saveforge_detection STATIC
     include/saveforge/detection/DetectionEnvironment.h
+    include/saveforge/detection/GameMatcher.h
     include/saveforge/detection/InstallCandidate.h
     include/saveforge/detection/Launchers.h
     include/saveforge/detection/Vdf.h
     DetectionEnvironment.cpp
     EpicGogDetector.cpp
+    GameMatcher.cpp
     HeroicDetector.cpp
     InstallCandidate.cpp
     SteamDetector.cpp
