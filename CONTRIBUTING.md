@@ -70,7 +70,7 @@ tests/
   support/     Fixtures compartilhados (headers incluídos pelos testes)
   data/        Dados de teste versionados; registry/generate.mjs regenera as distribuições assinadas
   ui/          Testes da interface QML
-cmake/         Módulos CMake auxiliares (avisos, dependências de terceiros)
+cmake/         Módulos CMake auxiliares (avisos, dependências de terceiros, empacotamento)
 docs/adr/      Decisões arquiteturais locais deste repositório
 external/specs Submódulo saveforge-specs (não edite aqui; mude no repositório de specs)
 .github/       Workflows de CI
@@ -109,6 +109,7 @@ Na prática, o `registry` verifica e entrega perfis, e quem escolhe qual perfil 
 - Para validar documentos definidos pelas specs, use `saveforge::JsonReader` (`core`). Ele rejeita propriedades desconhecidas e informa o JSON pointer do erro.
 - Escritas que precisam sobreviver a quedas seguem o padrão do vault: grave num arquivo temporário, faça `fsync` (`platform::syncFile`) e renomeie.
 - Operações que alteram saves do usuário seguem o padrão da restauração: primeiro um plano sem efeitos colaterais, depois a execução com ponto de desfazer e rollback em caso de falha.
+- Tudo o que vai para os pacotes é instalado no componente `SaveForge` (`install(... COMPONENT SaveForge)`). Regras sem componente não entram nos pacotes.
 - Dependências de terceiros entram em `cmake/SaveForgeDependencies.cmake`: primeiro `find_package`, com fallback para download fixado e verificado por SHA-256. Cada dependência nova precisa de justificativa (ADR ou descrição no PR).
 - Comentários explicam **por quê**, não o quê.
 

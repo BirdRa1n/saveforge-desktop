@@ -82,6 +82,24 @@ SAVEFORGE_SCREENSHOT_DIR=/caminho/para/pasta ./out/build/debug/tst_ui_smoke
 
 Para capturar a interface com dados reais (biblioteca escaneada, página de um jogo e diálogo de restauração), aponte também `SAVEFORGE_DATA_DIR` para uma pasta de dados preparada, por exemplo com um Registry importado, e escolha um jogo com `SAVEFORGE_SCREENSHOT_GAME=<id>`. O teste fará um backup desse jogo no vault dessa pasta antes de capturar.
 
+## Pacotes
+
+Os pacotes são gerados com o CPack a partir de um build de release: um `.zip` portátil no Windows, um `.tar.gz` no Linux e um `.dmg` no macOS. A etapa de instalação copia para junto do app as bibliotecas, os plugins e os módulos QML do Qt, e por isso o pacote roda sem o Qt instalado.
+
+```bash
+cmake --preset release -DCMAKE_PREFIX_PATH=<caminho-do-qt> -DSAVEFORGE_BUILD_TESTS=OFF -DSAVEFORGE_REGISTRY_BUNDLED_DIR=<saveforge-registry>/dist/v1
+```
+
+```bash
+cmake --build --preset release
+```
+
+```bash
+cd out/build/release && cpack
+```
+
+`SAVEFORGE_PACKAGE_VERSION` muda a versão no nome do arquivo, por exemplo para `0.1.0-alpha.1`. O workflow `Release` gera os três pacotes, já com o Registry embutido. Ele roda manualmente, guardando os pacotes como artefatos, ou com uma tag `v<versão>`, que publica um pre-release no GitHub com as notas de [`docs/release-notes.md`](docs/release-notes.md). Os pacotes ainda não são assinados (tarefa D2.7 do roadmap).
+
 ## Linha de comando
 
 `saveforge-cli` expõe as funções do app sem interface gráfica. Use `saveforge-cli <comando> --help` para ver todas as opções.
