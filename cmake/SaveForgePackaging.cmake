@@ -56,6 +56,14 @@ endif()
 set(CPACK_DMG_VOLUME_NAME "SaveForge ${SAVEFORGE_PACKAGE_VERSION}")
 set(CPACK_PACKAGE_CHECKSUM SHA256)
 
+# MSVC builds need the Visual C++ runtime DLLs next to the executables:
+# Qt's deploy step does not copy them, and many machines lack them.
+if(MSVC)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION "${CMAKE_INSTALL_BINDIR}")
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_COMPONENT SaveForge)
+    include(InstallRequiredSystemLibraries)
+endif()
+
 # Next to SaveForge.app in the disk image; under share/doc elsewhere.
 if(APPLE)
     set(_docdir .)

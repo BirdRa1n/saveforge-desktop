@@ -122,6 +122,29 @@ jobs:
         working-directory: out/build/release
         run: cpack
 
+      # Runs the installed tree (the packages' content) outside the build
+      # directory: a missing Qt library, plugin or QML module fails here.
+      - name: Check the packaged app
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          SAVEFORGE_DATA_DIR: ${{ runner.temp }}/saveforge-data
+        run: |
+          cmake --install out/build/release --prefix "$RUNNER_TEMP/staged" --component SaveForge
+          cd "$RUNNER_TEMP/staged"
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            app=SaveForge.app/Contents/MacOS/SaveForge
+          else
+            app=bin/SaveForge
+            bin/saveforge-cli --version
+            bin/saveforge-cli registry status
+          fi
+          # The GUI must still be running after 15 s (no missing-module exit).
+          "$app" & pid=$!
+          sleep 15
+          kill -0 "$pid"
+          kill "$pid"
+
       - uses: actions/upload-artifact@v4
         with:
           name: package-${{ matrix.name }}
