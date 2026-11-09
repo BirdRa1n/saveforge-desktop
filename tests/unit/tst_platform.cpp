@@ -1,3 +1,4 @@
+#include "saveforge/platform/AppPaths.h"
 #include "saveforge/platform/Os.h"
 #include "saveforge/platform/Processes.h"
 #include "saveforge/platform/UserFolders.h"
@@ -77,6 +78,19 @@ private slots:
         QVERIFY(it != processes.end());
         QVERIFY2(it->name.startsWith(QLatin1String("tst_platform")), qPrintable(it->name));
         QVERIFY(it->executablePath.endsWith(it->name, Qt::CaseInsensitive));
+    }
+
+    void appDataDirectoryIsSharedAndOverridable()
+    {
+        qunsetenv("SAVEFORGE_DATA_DIR");
+        const QString dir = appDataDirectory();
+        QVERIFY(QDir::isAbsolutePath(dir));
+        QVERIFY(dir.endsWith(QLatin1String("/SaveForge")));
+        QCoreApplication::setApplicationName(QStringLiteral("something-else"));
+        QCOMPARE(appDataDirectory(), dir);
+        qputenv("SAVEFORGE_DATA_DIR", "C:\\sandbox\\data\\");
+        QCOMPARE(appDataDirectory(), QStringLiteral("C:/sandbox/data"));
+        qunsetenv("SAVEFORGE_DATA_DIR");
     }
 
     void winePrefixMapsInsideDriveC()
