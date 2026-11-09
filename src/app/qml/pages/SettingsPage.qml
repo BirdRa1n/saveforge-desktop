@@ -15,6 +15,13 @@ Item {
         onAccepted: vaultError.text = AppController.setVaultFolder(selectedFolder)
     }
 
+    FileDialog {
+        id: profileDialog
+        title: qsTr("Escolha um arquivo de perfil")
+        nameFilters: [qsTr("Perfis de jogo (*.json)")]
+        onAccepted: profileError.text = AppController.importProfile(selectedFile)
+    }
+
     FolderDialog {
         id: registryDialog
         title: qsTr("Escolha a pasta da distribuição de perfis")
@@ -162,6 +169,23 @@ Item {
                         enabled: !AppController.busy
                         onClicked: registryDialog.open()
                     }
+                }
+                Paragraph {
+                    text: qsTr("Perfis locais têm prioridade sobre os do Registry. Use-os para jogos que você adicionou à mão ou para testar um perfil antes de contribuir com ele.")
+                    color: Theme.textSubtle
+                }
+                SecondaryButton {
+                    text: qsTr("Importar perfil local…")
+                    enabled: !AppController.busy
+                    onClicked: {
+                        profileError.text = ""
+                        profileDialog.open()
+                    }
+                }
+                Paragraph {
+                    id: profileError
+                    visible: text.length > 0
+                    color: Theme.warningFg
                 }
             }
 

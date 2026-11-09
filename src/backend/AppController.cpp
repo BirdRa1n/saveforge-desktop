@@ -8,6 +8,7 @@
 #include "saveforge/registry/RegistryCache.h"
 #include "saveforge/registry/RegistryUpdater.h"
 #include "saveforge/services/BackupService.h"
+#include "saveforge/services/LocalProfiles.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -137,13 +138,14 @@ void AppController::run(const QString &busyText, std::function<T()> work, std::f
 void AppController::refresh()
 {
     const QString cacheDir = m_settings.registryCacheDirectory();
+    const QString localDir = m_settings.localProfilesDirectory();
     const QString version = appVersion();
     const vault::Vault *vaultPtr = m_vault ? &*m_vault : nullptr;
     run<RefreshResult>(
         tr("Procurando jogos…"),
-        [cacheDir, version, vaultPtr] {
+        [cacheDir, localDir, version, vaultPtr] {
             RefreshResult result;
-            result.catalog = services::loadCatalogFromCache(cacheDir, version);
+            result.catalog = services::loadCatalogFromCache(cacheDir, version, localDir);
             const detection::DetectionEnvironment env = detection::DetectionEnvironment::host();
             result.scan = services::scanLibrary(result.catalog.catalog, detection::detectInstalledGames(env), env, vaultPtr);
             return result;
@@ -351,7 +353,8 @@ QVariantMap AppController::gameInfo(const QString &gameId) const
             {QStringLiteral("launcherCloud"), game->launcherCloud},
             {QStringLiteral("snapshotCount"), static_cast<int>(game->snapshotCount)},
             {QStringLiteral("coverColor"), coverColor(gameId)},
-            {QStringLiteral("profileSource"), game->target.channel}};
+            {QStringLiteral("profileSource"), game->target.channel},
+            {QStringLiteral("local"), game->target.channel == u"local"}};
 }
 
 QVariantList AppController::snapshots(const QString &gameId) const
@@ -441,6 +444,62 @@ void AppController::restore(const QString &gameId, const QString &snapshotId, co
                     .arg(copy.target.profile.name, countText(report.value().written, tr("arquivo"), tr("arquivos"))),
                 QStringLiteral("success"));
         });
+}
+
+QString AppController::addManualGame(const QString &name, const QVariantList &folders)
+{
+    if (name.simplified().isEmpty())
+        return tr("Digite o nome do jogo.");
+    QStringList paths;
+    for (const QVariant &folder : folders) {
+        const QUrl url = folder.toUrl();
+        paths.append(url.isLocalFile() ? url.toLocalFile() : folder.toString());
+    }
+    paths.removeAll(QString());
+    if (paths.isEmpty())
+        return tr("Escolha pelo menos uma pasta de saves.");
+
+    services::LocalProfileStore store(m_settings.localProfilesDirectory());
+    const auto added = store.addManualGame(name, paths, detection::DetectionEnvironment::host().userFolders);
+    if (!added.ok()) {
+        const Error &error = added.error();
+        if (error.message.startsWith(QLatin1String("the folder is outside")))
+            return tr("A pasta %1 fica fora das suas pastas de usuário (pasta pessoal, Documentos, AppData). "
+                      "Por enquanto, os jogos adicionados à mão precisam guardar os saves nessas pastas.")
+                .arg(QDir::toNativeSeparators(error.context));
+        if (error.context.startsWith(QLatin1String("/saves")))
+            return tr("Essa pasta é ampla demais. Escolha a pasta do jogo, e não uma pasta inteira do sistema.");
+        return tr("Não foi possível adicionar o jogo: %1").arg(error.message);
+    }
+    log(tr("%1 adicionado à biblioteca").arg(added.value().name), QStringLiteral("success"));
+    refresh();
+    return {};
+}
+
+QString AppController::importProfile(const QUrl &file)
+{
+    services::LocalProfileStore store(m_settings.localProfilesDirectory());
+    const auto imported = store.importProfile(file.isLocalFile() ? file.toLocalFile() : file.toString());
+    if (!imported.ok())
+        return tr("O arquivo não é um perfil válido: %1").arg(imported.error().message);
+    log(tr("Perfil de %1 importado").arg(imported.value().name), QStringLiteral("success"));
+    refresh();
+    return {};
+}
+
+void AppController::removeLocalGame(const QString &gameId)
+{
+    const services::LibraryGame *game = m_library.game(gameId);
+    if (!game || game->target.channel != u"local")
+        return;
+    const QString name = game->target.profile.name;
+    services::LocalProfileStore store(m_settings.localProfilesDirectory());
+    if (auto removed = store.remove(gameId); !removed.ok()) {
+        log(tr("Não foi possível remover %1: %2").arg(name, removed.error().message), QStringLiteral("error"));
+        return;
+    }
+    log(tr("%1 removido. Os backups continuam no vault.").arg(name), QStringLiteral("info"));
+    refresh();
 }
 
 void AppController::importRegistry(const QUrl &folder)

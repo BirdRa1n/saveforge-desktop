@@ -15,6 +15,8 @@ public:
 
     [[nodiscard]] QString dataDirectory() const { return m_dataDir; }
     [[nodiscard]] QString registryCacheDirectory() const;
+    // Local profiles and games added by hand (services::LocalProfileStore).
+    [[nodiscard]] QString localProfilesDirectory() const;
 
     // Default: <app data>/vault.
     [[nodiscard]] QString vaultPath() const;

@@ -17,6 +17,11 @@ Item {
         search: searchField.text
     }
 
+    AddGameDialog {
+        id: addGameDialog
+        objectName: "addGameDialog"
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: Theme.space8
@@ -42,6 +47,11 @@ Item {
                 id: searchField
                 Layout.preferredWidth: 300
                 placeholderText: qsTr("Buscar jogos")
+            }
+
+            SecondaryButton {
+                text: qsTr("Adicionar jogo")
+                onClicked: addGameDialog.openEmpty()
             }
 
             SecondaryButton {
@@ -148,9 +158,9 @@ Item {
                  : AppController.library.count === 0 ? qsTr("Nenhum jogo encontrado ainda")
                  : qsTr("Nenhum jogo corresponde ao filtro")
             description: AppController.profileCount === 0
-                         ? qsTr("O SaveForge precisa dos perfis de jogos para saber onde ficam os saves. Importe uma distribuição de perfis em Configurações.")
+                         ? qsTr("O SaveForge precisa dos perfis de jogos para saber onde ficam os saves. Procure ou importe perfis em Configurações, ou adicione um jogo à mão.")
                          : AppController.library.count === 0
-                           ? qsTr("Nenhum jogo instalado ou save conhecido foi encontrado nesta máquina. Clique em Escanear depois de instalar ou jogar algo.")
+                           ? qsTr("Nenhum jogo instalado ou save conhecido foi encontrado nesta máquina. Clique em Escanear depois de instalar ou jogar algo, ou adicione um jogo à mão.")
                            : qsTr("Tente outro termo de busca ou outra loja.")
 
             SecondaryButton {

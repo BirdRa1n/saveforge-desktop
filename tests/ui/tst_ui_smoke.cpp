@@ -6,6 +6,7 @@
 #include <QRegularExpression>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QUrl>
 #include <QtQml/QQmlExtensionPlugin>
 
 Q_IMPORT_QML_PLUGIN(SaveForge_UiPlugin)
@@ -103,6 +104,43 @@ private slots:
                 window->setProperty("selectedGameId", QString());
             }
         }
+
+        // The add-game dialog opens without warnings.
+        auto *addDialog = window->findChild<QObject *>(QStringLiteral("addGameDialog"));
+        QVERIFY(addDialog);
+        QMetaObject::invokeMethod(addDialog, "openEmpty");
+        QCoreApplication::processEvents();
+        if (!shotDir.isEmpty())
+            QVERIFY(window->grabWindow().save(shotDir + QStringLiteral("/add-game.png")));
+        QMetaObject::invokeMethod(addDialog, "close");
+
+#if defined(Q_OS_WIN)
+        // Adding a game by hand: the temporary data directory lies in the user's
+        // local AppData, so it can hold the save folder. Removing it again keeps backups.
+        if (!m_preparedData) {
+            const QString saves = m_data.path() + QStringLiteral("/Manual Game/Saves");
+            QVERIFY(QDir().mkpath(saves));
+            QFile save(saves + QStringLiteral("/slot.sav"));
+            QVERIFY(save.open(QIODevice::WriteOnly));
+            save.write("progress");
+            save.close();
+            QString error;
+            QMetaObject::invokeMethod(controller, "addManualGame", Q_RETURN_ARG(QString, error),
+                                      Q_ARG(QString, QStringLiteral("Manual Game")),
+                                      Q_ARG(QVariantList, QVariantList{QUrl::fromLocalFile(saves)}));
+            QVERIFY2(error.isEmpty(), qPrintable(error));
+            QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
+            QVariantMap info;
+            QMetaObject::invokeMethod(controller, "gameInfo", Q_RETURN_ARG(QVariantMap, info),
+                                      Q_ARG(QString, QStringLiteral("local-manual-game")));
+            QCOMPARE(info.value(QStringLiteral("local")).toBool(), true);
+            QMetaObject::invokeMethod(controller, "removeLocalGame", Q_ARG(QString, QStringLiteral("local-manual-game")));
+            QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
+            QMetaObject::invokeMethod(controller, "gameInfo", Q_RETURN_ARG(QVariantMap, info),
+                                      Q_ARG(QString, QStringLiteral("local-manual-game")));
+            QVERIFY(info.isEmpty());
+        }
+#endif
 
         // The game page must render without warnings even for an unknown game.
         sidebar->setProperty("currentIndex", 0);

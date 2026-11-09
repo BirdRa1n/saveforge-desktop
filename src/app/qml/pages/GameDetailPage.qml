@@ -101,6 +101,17 @@ Item {
                 }
             }
 
+            SecondaryButton {
+                visible: root.info.local === true
+                text: qsTr("Remover jogo")
+                Accessible.description: qsTr("Remove o jogo adicionado à mão. Os backups continuam no vault.")
+                enabled: !AppController.busy
+                onClicked: {
+                    AppController.removeLocalGame(root.gameId)
+                    root.back()
+                }
+            }
+
             PrimaryButton {
                 text: qsTr("Fazer backup agora")
                 enabled: !AppController.busy && AppController.vaultReady

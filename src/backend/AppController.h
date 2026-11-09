@@ -91,6 +91,13 @@ public:
     // Downloads newer profiles from the registry mirrors and refreshes the
     // library when something changed.
     Q_INVOKABLE void updateRegistry();
+    // Adds a game the registry does not know, from its save folders (URLs or
+    // paths), then refreshes. Returns an error message for the user, or "".
+    Q_INVOKABLE QString addManualGame(const QString &name, const QVariantList &folders);
+    // Stores a profile.v1 file as a local profile, then refreshes. Returns an error message or "".
+    Q_INVOKABLE QString importProfile(const QUrl &file);
+    // Deletes a local profile (games added by hand or imported). Backups stay in the vault.
+    Q_INVOKABLE void removeLocalGame(const QString &gameId);
     // Verifies and caches a registry distribution chosen by the user, then refreshes.
     Q_INVOKABLE void importRegistry(const QUrl &folder);
     // Switches to another vault directory; returns an error message or "".

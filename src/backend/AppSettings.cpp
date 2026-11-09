@@ -29,6 +29,11 @@ QString AppSettings::registryCacheDirectory() const
     return m_dataDir + QStringLiteral("/registry");
 }
 
+QString AppSettings::localProfilesDirectory() const
+{
+    return m_dataDir + QStringLiteral("/profiles");
+}
+
 QString AppSettings::vaultPath() const
 {
     const QSettings settings(file(), QSettings::IniFormat);
