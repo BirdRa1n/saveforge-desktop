@@ -57,7 +57,7 @@ src/
   profiles/    Perfis de jogos: parser, regras de segurança de caminhos, resolução de arquivos.
   vault/       Vault local: blobs, snapshots, verificação e coleta de lixo.
   detection/   Detectores de launchers, associação de instalações a perfis, varredura save-first.
-  registry/    Verificação do Registry (Ed25519, cadeia de root, rollback), cache e catálogo.
+  registry/    Registry: verificação (Ed25519, cadeia de root, rollback), download dos mirrors, cache e catálogo.
   services/    Casos de uso que combinam os módulos: biblioteca, backup e restauração.
   backend/     Módulo QML SaveForge.Backend: AppController (singleton), modelos e configurações.
   app/         Executável GUI + módulo QML SaveForge.Ui

@@ -3,12 +3,12 @@
 Aplicativo desktop open source para encontrar, fazer backup e restaurar saves de jogos de PC. Funciona com Steam, Epic, GOG e instalações manuais, **totalmente offline**.
 
 > **Estado:** em desenvolvimento inicial (0.1.0). O núcleo da Fase 1 do [roadmap](../saveforge-docs/planejamento/PLANEJAMENTO-TECNICO.md#18-roadmap-com-dependências) já funciona, pela interface e pela linha de comando:
-> - perfis de jogos vindos do Registry assinado (22 mil jogos via Ludusavi), verificados e guardados em cache para uso offline;
+> - perfis de jogos vindos do Registry assinado (22 mil jogos via Ludusavi): baixados dos mirrors, embutidos no build ou importados de uma pasta, sempre verificados e guardados em cache para uso offline;
 > - detecção de jogos (Steam, Epic, GOG e Heroic, com prefixos Wine/Proton, além da busca por saves de jogos não instalados);
 > - backup no vault local (deduplicação, compressão, verificação de integridade);
 > - restauração segura (plano prévio, ponto de desfazer, troca atômica, política de cloud do launcher).
 >
-> Ainda faltam o download automático do Registry com chaves de produção, o registro do Windows, os backups automáticos e a exportação `.gamesave`.
+> Ainda faltam as chaves de produção e um endereço oficial do Registry, o registro do Windows, os backups automáticos e a exportação `.gamesave`.
 
 ## Stack
 
@@ -25,7 +25,7 @@ src/
   profiles/  perfis de jogos: parser v1, regras de segurança de caminhos, resolução de arquivos
   vault/     vault local: blobs por conteúdo (SHA-256 + zstd), snapshots, verificação e coleta de lixo
   detection/ detecção de jogos instalados (Steam, Epic, GOG, Heroic) e associação a perfis
-  registry/  verificação Ed25519 do Registry, cache local dos canais e catálogo de perfis
+  registry/  Registry: verificação Ed25519, download dos mirrors, cache local dos canais e catálogo de perfis
   services/  casos de uso: biblioteca, backup e restauração (checagem de jogo aberto, plano, desfazer)
   backend/   módulo QML SaveForge.Backend: controlador, modelos de lista e configurações do app
   app/       executável GUI + módulo QML SaveForge.Ui (tema, componentes, páginas; só apresentação)
@@ -87,6 +87,7 @@ Para capturar a interface com dados reais (biblioteca escaneada, página de um j
 
 | Comando | O que faz |
 |---|---|
+| `registry update [--mirror <url>]` | Baixa os canais dos mirrors (os do build ou os de `--mirror`), verifica e guarda no cache. Não baixa de novo o que já está em cache. |
 | `registry import <pasta>` | Verifica uma distribuição do Registry (assinaturas, rollback, hashes) e a guarda no cache local. |
 | `registry status` | Mostra os canais em cache, o total de perfis e as atribuições de licença. |
 | `detect [--profiles <pasta>]` | Lista os jogos instalados, associa-os aos perfis (do cache ou da pasta) e procura saves de jogos não instalados. Só leitura. |
@@ -97,6 +98,16 @@ Para capturar a interface com dados reais (biblioteca escaneada, página de um j
 Em `backup` e `restore`, `--profile <arquivo.json>` substitui `--game` para usar um perfil fora do Registry.
 
 **Registry em desenvolvimento.** Enquanto não existem chaves de produção, o app confia nas chaves de teste **públicas** do `saveforge-specs`. O configure do CMake e a CLI avisam sobre isso. Para gerar uma distribuição local, veja o README do `saveforge-registry`. Builds de release devem definir `SAVEFORGE_REGISTRY_TRUST_ANCHOR`.
+
+**De onde vêm os perfis.** Veja a [ADR 0003](docs/adr/0003-registry-download.md). Três opções do CMake controlam isso:
+
+| Opção | Efeito |
+|---|---|
+| `SAVEFORGE_REGISTRY_TRUST_ANCHOR` | Root do Registry em que o build confia. |
+| `SAVEFORGE_REGISTRY_MIRRORS` | Mirrors padrão, separados por `;`: URLs HTTPS ou pastas locais. Com mirrors, o app procura novos perfis uma vez por dia, e isso pode ser desligado em Configurações. A requisição leva só a versão do app. |
+| `SAVEFORGE_REGISTRY_BUNDLED_DIR` | Pasta de uma distribuição (o `dist/v1` do `saveforge-registry`) embutida no app. Ela alimenta o cache na primeira execução, para que os perfis funcionem sem internet. |
+
+Por padrão as opções de mirrors e de distribuição embutida ficam vazias. Para testar o download localmente, gere uma distribuição no `saveforge-registry` e rode `saveforge-cli registry update --mirror <pasta-ou-url>`. Também é possível definir `mirrors=<url>` no grupo `[registry]` do `settings.ini`.
 
 Os dados do app (cache do Registry) ficam em `%LOCALAPPDATA%/SaveForge` no Windows, `~/.local/share/SaveForge` no Linux e `~/Library/Application Support/SaveForge` no macOS. A variável `SAVEFORGE_DATA_DIR` permite trocar esse local.
 
