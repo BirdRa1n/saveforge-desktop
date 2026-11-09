@@ -54,6 +54,16 @@ target_link_libraries(saveforge_app PRIVATE
 saveforge_set_warnings(saveforge_app)
 
 install(TARGETS saveforge_app
-    BUNDLE DESTINATION .
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    BUNDLE DESTINATION . COMPONENT SaveForge
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT SaveForge
 )
+
+# Copies the Qt libraries, plugins and QML modules the app uses next to it
+# (windeployqt/macdeployqt under the hood), so `cmake --install` and the
+# packages in cmake/SaveForgePackaging.cmake run without a Qt installation.
+qt_generate_deploy_qml_app_script(
+    TARGET saveforge_app
+    OUTPUT_SCRIPT saveforge_deploy_script
+    NO_UNSUPPORTED_PLATFORM_ERROR
+)
+install(SCRIPT ${saveforge_deploy_script} COMPONENT SaveForge)

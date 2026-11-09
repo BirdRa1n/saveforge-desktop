@@ -33,6 +33,7 @@ if(NOT EXISTS "${SAVEFORGE_SPECS_DIR}/profile/placeholders.json")
 endif()
 
 add_subdirectory(src)
+include(SaveForgePackaging)
 
 if(SAVEFORGE_BUILD_TESTS)
     enable_testing()
