@@ -41,3 +41,26 @@ elseif(TARGET libzstd_static)
 else()
     message(FATAL_ERROR "zstd was neither found nor built")
 endif()
+
+# --- Monocypher: Ed25519 verification of registry signatures ---------------
+# Release: https://github.com/LoupVaillant/Monocypher/releases/tag/4.0.3
+# SHA-512 matches https://monocypher.org/download/monocypher-4.0.3.tar.gz.sha512.
+# Monocypher ships no CMake package, so it is always built from the pinned
+# source: two C files (core + the optional SHA-512 based Ed25519).
+FetchContent_Declare(monocypher
+    URL https://github.com/LoupVaillant/Monocypher/releases/download/4.0.3/monocypher-4.0.3.tar.gz
+    URL_HASH SHA512=40904ada5c7ee4f7741733e38b69a30a4b0561cbffba5ffe7c2dce16136d540251ec0d9056ff606510d3b5b708fb8a40db7e0870d4a0b2dc17ba2bfb880f8965
+)
+FetchContent_MakeAvailable(monocypher)
+
+enable_language(C)
+add_library(saveforge_monocypher STATIC
+    "${monocypher_SOURCE_DIR}/src/monocypher.c"
+    "${monocypher_SOURCE_DIR}/src/optional/monocypher-ed25519.c"
+)
+add_library(saveforge::monocypher ALIAS saveforge_monocypher)
+target_include_directories(saveforge_monocypher SYSTEM PUBLIC
+    "${monocypher_SOURCE_DIR}/src"
+    "${monocypher_SOURCE_DIR}/src/optional"
+)
+set_target_properties(saveforge_monocypher PROPERTIES C_STANDARD 99 POSITION_INDEPENDENT_CODE ON)

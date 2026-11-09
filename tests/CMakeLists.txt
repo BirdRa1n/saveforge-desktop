@@ -66,6 +66,10 @@ saveforge_add_test(tst_restore_service
     SOURCES unit/tst_restore_service.cpp
     LIBS saveforge::services)
 
+saveforge_add_test(tst_ed25519
+    SOURCES unit/tst_ed25519.cpp
+    LIBS saveforge::registry)
+
 saveforge_add_test(tst_ui_smoke
     SOURCES ui/tst_ui_smoke.cpp
     LIBS saveforge_uiplugin Qt6::Gui Qt6::Quick Qt6::QuickControls2)
