@@ -41,6 +41,10 @@ saveforge_add_test(tst_blob_store
     SOURCES unit/tst_blob_store.cpp
     LIBS saveforge::vault)
 
+saveforge_add_test(tst_vault
+    SOURCES unit/tst_vault.cpp
+    LIBS saveforge::vault)
+
 saveforge_add_test(tst_ui_smoke
     SOURCES ui/tst_ui_smoke.cpp
     LIBS saveforge_uiplugin Qt6::Gui Qt6::Quick Qt6::QuickControls2)
