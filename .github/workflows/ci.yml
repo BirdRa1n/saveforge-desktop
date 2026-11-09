@@ -29,11 +29,11 @@ jobs:
           - name: Linux (GCC)
             os: ubuntu-24.04
             qt-arch: linux_gcc_64
-            qt-version: ${{ matrix.qt-version }}
+            qt-version: "6.12.*"
           - name: macOS (Clang)
             os: macos-latest
             qt-arch: clang_64
-            qt-version: ${{ matrix.qt-version }}
+            qt-version: "6.12.*"
 
     steps:
       - uses: actions/checkout@v4
