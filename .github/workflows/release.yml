@@ -131,10 +131,13 @@ jobs:
         working-directory: out/build/release
         run: cpack
 
-      - name: Show the installer script
-        if: runner.os == 'Windows'
+      - name: Show the installer script and compiler log
+        if: always() && runner.os == 'Windows'
         shell: bash
-        run: cat out/build/release/_CPack_Packages/*/INNOSETUP/ISScript.iss
+        run: |
+          cd out/build/release/_CPack_Packages/*/INNOSETUP
+          cat ISScript.iss
+          cat ISCCOutput.log || true
 
       # Runs the installed tree (the packages' content) outside the build
       # directory: a missing Qt library, plugin or QML module fails here.
