@@ -1,0 +1,3 @@
+[submodule "external/specs"]
+	path = external/specs
+	url = ../saveforge-specs

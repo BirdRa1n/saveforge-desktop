@@ -23,6 +23,14 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(SaveForgeWarnings)
 include(GNUInstallDirs)
 
+# Shared specifications (schemas, placeholder catalog, path rules, test vectors).
+set(SAVEFORGE_SPECS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/specs" CACHE PATH "Path to saveforge-specs")
+if(NOT EXISTS "${SAVEFORGE_SPECS_DIR}/profile/placeholders.json")
+    message(FATAL_ERROR
+        "saveforge-specs not found at ${SAVEFORGE_SPECS_DIR}.\n"
+        "Run: git submodule update --init")
+endif()
+
 add_subdirectory(src)
 
 if(SAVEFORGE_BUILD_TESTS)
