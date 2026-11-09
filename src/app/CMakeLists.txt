@@ -1,15 +1,17 @@
 # --- Módulo QML da interface (biblioteca estática, reutilizada pelos testes) ---
 qt_add_library(saveforge_ui STATIC)
 
-set_source_files_properties(qml/theme/Theme.qml qml/theme/Icons.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/theme/Theme.qml qml/theme/Icons.qml qml/theme/Format.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 qt_add_qml_module(saveforge_ui
     URI SaveForge.Ui
     VERSION 1.0
+    DEPENDENCIES SaveForge.Backend
     QML_FILES
         qml/Main.qml
         qml/theme/Theme.qml
         qml/theme/Icons.qml
+        qml/theme/Format.qml
         qml/components/Icon.qml
         qml/components/Logo.qml
         qml/components/NavButton.qml
@@ -21,10 +23,16 @@ qt_add_qml_module(saveforge_ui
         qml/components/GameCard.qml
         qml/components/EmptyState.qml
         qml/components/Sidebar.qml
+        qml/components/Spinner.qml
+        qml/components/Toast.qml
+        qml/pages/ActivityPage.qml
+        qml/pages/GameDetailPage.qml
         qml/pages/LibraryPage.qml
         qml/pages/PlaceholderPage.qml
+        qml/pages/RestoreDialog.qml
+        qml/pages/SettingsPage.qml
 )
-target_link_libraries(saveforge_ui PRIVATE Qt6::Quick Qt6::QuickControls2)
+target_link_libraries(saveforge_ui PRIVATE Qt6::Quick Qt6::QuickControls2 Qt6::QuickDialogs2 saveforge_backend)
 
 # --- Executável GUI ---
 qt_add_executable(saveforge_app WIN32 MACOSX_BUNDLE main.cpp)
@@ -37,6 +45,7 @@ set_target_properties(saveforge_app PROPERTIES
 target_link_libraries(saveforge_app PRIVATE
     saveforge::core
     saveforge_uiplugin
+    saveforge_backendplugin
     Qt6::Gui Qt6::Quick Qt6::QuickControls2
 )
 saveforge_set_warnings(saveforge_app)

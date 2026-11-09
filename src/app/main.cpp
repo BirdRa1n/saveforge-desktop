@@ -6,6 +6,7 @@
 #include <QtQml/QQmlExtensionPlugin>
 
 Q_IMPORT_QML_PLUGIN(SaveForge_UiPlugin)
+Q_IMPORT_QML_PLUGIN(SaveForge_BackendPlugin)
 
 int main(int argc, char *argv[])
 {

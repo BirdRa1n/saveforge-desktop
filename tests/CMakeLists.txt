@@ -90,4 +90,4 @@ saveforge_add_test(tst_library
 
 saveforge_add_test(tst_ui_smoke
     SOURCES ui/tst_ui_smoke.cpp
-    LIBS saveforge_uiplugin Qt6::Gui Qt6::Quick Qt6::QuickControls2)
+    LIBS saveforge_uiplugin saveforge_backendplugin Qt6::Gui Qt6::Quick Qt6::QuickControls2)

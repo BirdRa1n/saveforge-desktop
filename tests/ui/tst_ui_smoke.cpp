@@ -1,20 +1,32 @@
+#include <QDir>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QQuickWindow>
 #include <QRegularExpression>
+#include <QTemporaryDir>
 #include <QTest>
 #include <QtQml/QQmlExtensionPlugin>
 
 Q_IMPORT_QML_PLUGIN(SaveForge_UiPlugin)
+Q_IMPORT_QML_PLUGIN(SaveForge_BackendPlugin)
 
 // Garante que a janela principal carrega sem nenhum aviso de QML
 // (tipos ausentes, bindings quebrados, propriedades inexistentes).
 class TestUiSmoke : public QObject {
     Q_OBJECT
 
+    QTemporaryDir m_data;
+    bool m_preparedData = false;
+
 private slots:
     void initTestCase()
     {
+        // Settings, vault and registry cache go to a throwaway directory, unless a
+        // screenshot run points SAVEFORGE_DATA_DIR at prepared data on purpose.
+        QVERIFY(m_data.isValid());
+        m_preparedData = !qEnvironmentVariableIsEmpty("SAVEFORGE_SCREENSHOT_DIR") && !qEnvironmentVariableIsEmpty("SAVEFORGE_DATA_DIR");
+        if (!m_preparedData)
+            qputenv("SAVEFORGE_DATA_DIR", m_data.path().toUtf8());
         QQuickStyle::setStyle(QStringLiteral("Basic"));
         // Qualquer aviso vindo de um arquivo QML (tipos ausentes, bindings quebrados) falha o teste.
         QTest::failOnWarning(QRegularExpression(QStringLiteral("\\.qml|QQmlApplicationEngine")));
@@ -42,32 +54,58 @@ private slots:
         QVERIFY(QTest::qWaitForWindowExposed(window));
 
         // Navegar por todas as páginas não deve gerar avisos.
-        for (int page = 0; page < 4; ++page) {
+        for (int page = 0; page < 4; ++page) { // biblioteca, atividade, importar/exportar, configurações
             sidebar->setProperty("currentIndex", page);
             QCoreApplication::processEvents();
             if (!shotDir.isEmpty())
                 QVERIFY(window->grabWindow().save(shotDir + QStringLiteral("/page-%1.png").arg(page)));
         }
 
-        // A grade de jogos (GameCard + StatusBadge) também deve renderizar sem avisos.
+        // The first scan runs in the background; wait for it to finish.
+        auto *controller = engine.singletonInstance<QObject *>("SaveForge.Backend", "AppController");
+        QVERIFY(controller);
+        QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
+        QVERIFY(controller->property("vaultReady").toBool());
+        if (!m_preparedData) {
+            // The data directory is empty: no profiles, and a fresh vault was created there.
+            QCOMPARE(controller->property("profileCount").toInt(), 0);
+            QVERIFY(controller->property("vaultPath").toString().startsWith(QDir::fromNativeSeparators(m_data.path())));
+        }
+        if (!shotDir.isEmpty()) {
+            // Screenshot runs: the library after the scan, and one game page
+            // (SAVEFORGE_SCREENSHOT_GAME, backed up first so it has history).
+            sidebar->setProperty("currentIndex", 0);
+            QTest::qWait(200);
+            QVERIFY(window->grabWindow().save(shotDir + QStringLiteral("/library-scanned.png")));
+            const QString game = qEnvironmentVariable("SAVEFORGE_SCREENSHOT_GAME");
+            if (!game.isEmpty()) {
+                QMetaObject::invokeMethod(controller, "backupGame", Q_ARG(QString, game));
+                QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
+                window->setProperty("selectedGameId", game);
+                QTest::qWait(200);
+                QVERIFY(window->grabWindow().save(shotDir + QStringLiteral("/game-%1.png").arg(game)));
+                // The restore dialog for the newest snapshot (plan only; nothing is restored).
+                QVariantList history;
+                QMetaObject::invokeMethod(controller, "snapshots", Q_RETURN_ARG(QVariantList, history), Q_ARG(QString, game));
+                auto *dialog = window->findChild<QObject *>(QStringLiteral("restoreDialog"));
+                if (dialog && !history.isEmpty()) {
+                    QMetaObject::invokeMethod(dialog, "openFor", Q_ARG(QVariant, history.first()));
+                    QTest::qWait(300);
+                    QVERIFY(window->grabWindow().save(shotDir + QStringLiteral("/restore-%1.png").arg(game)));
+                    QMetaObject::invokeMethod(dialog, "close");
+                }
+                window->setProperty("selectedGameId", QString());
+            }
+        }
+
+        // The game page must render without warnings even for an unknown game.
         sidebar->setProperty("currentIndex", 0);
-        QVariantList games;
-        const auto addGame = [&games](const QString &name, const QString &store, const QString &status,
-                                      int kind, const QString &color) {
-            games.append(QVariantMap{{QStringLiteral("name"), name},
-                                     {QStringLiteral("store"), store},
-                                     {QStringLiteral("statusText"), status},
-                                     {QStringLiteral("statusKind"), kind},
-                                     {QStringLiteral("color"), color}});
-        };
-        // statusKind: 0 = Success, 1 = Warning, 2 = Neutral (enum StatusBadge.Kind)
-        addGame(QStringLiteral("Hollow Knight"), QStringLiteral("Steam"), QStringLiteral("Backup há 2 h"), 0, QStringLiteral("#3B4A6B"));
-        addGame(QStringLiteral("Stardew Valley"), QStringLiteral("GOG"), QStringLiteral("Conflito: Steam Cloud"), 1, QStringLiteral("#4F6B3B"));
-        addGame(QStringLiteral("Hades"), QStringLiteral("Epic"), QStringLiteral("Sem backup"), 2, QStringLiteral("#7A2E22"));
-        library->setProperty("games", games);
+        window->setProperty("selectedGameId", QStringLiteral("unknown-game"));
         QCoreApplication::processEvents();
+        QVERIFY(window->findChild<QObject *>(QStringLiteral("gameDetailPage")));
         if (!shotDir.isEmpty())
-            QVERIFY(window->grabWindow().save(shotDir + QStringLiteral("/library-with-games.png")));
+            QVERIFY(window->grabWindow().save(shotDir + QStringLiteral("/game-detail.png")));
+        window->setProperty("selectedGameId", QString());
     }
 };
 

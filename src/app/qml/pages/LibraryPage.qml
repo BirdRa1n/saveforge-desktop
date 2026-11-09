@@ -2,17 +2,20 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
+import SaveForge.Backend
 
-// Biblioteca de jogos. O modelo de jogos virá da camada services (tarefa D1.9);
-// enquanto estiver vazio, a página mostra o estado vazio.
+// Library of detected games (AppController.library), with store filter and search.
 Item {
     id: root
 
-    property var games: []
-    property bool scanAvailable: false
+    signal gameSelected(string gameId)
+    signal openSettings()
 
-    signal scanRequested()
-    signal backupAllRequested()
+    LibraryFilterModel {
+        id: filtered
+        sourceModel: AppController.library
+        search: searchField.text
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -36,38 +39,67 @@ Item {
             }
 
             SearchInput {
-                id: search
+                id: searchField
                 Layout.preferredWidth: 300
                 placeholderText: qsTr("Buscar jogos")
             }
 
             SecondaryButton {
                 text: qsTr("Escanear")
-                enabled: root.scanAvailable
-                onClicked: root.scanRequested()
+                enabled: !AppController.busy
+                onClicked: AppController.refresh()
             }
 
             PrimaryButton {
                 text: qsTr("Fazer backup de tudo")
-                enabled: root.games.length > 0
-                onClicked: root.backupAllRequested()
+                enabled: !AppController.busy && AppController.vaultReady && AppController.library.count > 0
+                onClicked: AppController.backupAll()
             }
         }
 
         RowLayout {
+            Layout.fillWidth: true
             spacing: Theme.space2
 
             ButtonGroup { id: filterGroup }
 
             Repeater {
-                model: [qsTr("Todos"), "Steam", "Epic", "GOG", qsTr("Manuais")]
+                model: [
+                    { label: qsTr("Todos"), key: "" },
+                    { label: "Steam", key: "steam" },
+                    { label: "Epic", key: "epic" },
+                    { label: "GOG", key: "gog" },
+                    { label: qsTr("Outros"), key: "other" }
+                ]
                 delegate: FilterChip {
-                    required property string modelData
-                    required property int index
-                    text: modelData
-                    checked: index === 0
+                    required property var modelData
+                    text: modelData.label
+                    checked: filtered.store === modelData.key
                     ButtonGroup.group: filterGroup
+                    onClicked: filtered.store = modelData.key
                 }
+            }
+
+            Item { Layout.fillWidth: true }
+
+            Spinner {
+                Layout.preferredWidth: 18
+                Layout.preferredHeight: 18
+                running: AppController.busy
+            }
+            Text {
+                visible: AppController.busy
+                text: AppController.busyText
+                color: Theme.textMuted
+                font.family: Theme.fontBody
+                font.pixelSize: Theme.textBody
+            }
+            Text {
+                visible: !AppController.busy
+                text: Format.count(filtered.count, qsTr("jogo"), qsTr("jogos"))
+                color: Theme.textSubtle
+                font.family: Theme.fontBody
+                font.pixelSize: Theme.textBody
             }
         }
 
@@ -75,26 +107,35 @@ Item {
             id: grid
             Layout.fillWidth: true
             Layout.fillHeight: true
-            visible: root.games.length > 0
+            visible: filtered.count > 0
             clip: true
             cellWidth: Math.max(198, width / Math.max(1, Math.floor(width / 198)))
             cellHeight: 254
-            model: root.games
+            model: filtered
+            boundsBehavior: Flickable.StopAtBounds
+            ScrollBar.vertical: ScrollBar {}
+
             delegate: Item {
-                required property var modelData
+                id: cell
+                required property string gameId
+                required property string name
+                required property string store
+                required property string statusText
+                required property int statusKind
+                required property color coverColor
                 width: grid.cellWidth
                 height: grid.cellHeight
 
-                id: cell
                 GameCard {
                     anchors.fill: parent
                     anchors.rightMargin: 18
                     anchors.bottomMargin: 18
-                    name: cell.modelData.name
-                    store: cell.modelData.store
-                    statusText: cell.modelData.statusText
-                    statusKind: cell.modelData.statusKind
-                    placeholderColor: cell.modelData.color
+                    name: cell.name
+                    store: cell.store
+                    statusText: cell.statusText
+                    statusKind: cell.statusKind
+                    placeholderColor: cell.coverColor
+                    onClicked: root.gameSelected(cell.gameId)
                 }
             }
         }
@@ -102,10 +143,21 @@ Item {
         EmptyState {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.alignment: Qt.AlignCenter
-            visible: root.games.length === 0
-            title: qsTr("Nenhum jogo encontrado ainda")
-            description: qsTr("O SaveForge vai procurar jogos da Steam, Epic e GOG, além dos locais de save conhecidos. Você também poderá adicionar jogos manualmente.")
+            visible: filtered.count === 0 && !(AppController.busy && AppController.profileCount === 0)
+            title: AppController.profileCount === 0 ? qsTr("Nenhum perfil de jogo instalado")
+                 : AppController.library.count === 0 ? qsTr("Nenhum jogo encontrado ainda")
+                 : qsTr("Nenhum jogo corresponde ao filtro")
+            description: AppController.profileCount === 0
+                         ? qsTr("O SaveForge precisa dos perfis de jogos para saber onde ficam os saves. Importe uma distribuição de perfis em Configurações.")
+                         : AppController.library.count === 0
+                           ? qsTr("Nenhum jogo instalado ou save conhecido foi encontrado nesta máquina. Clique em Escanear depois de instalar ou jogar algo.")
+                           : qsTr("Tente outro termo de busca ou outra loja.")
+
+            SecondaryButton {
+                visible: AppController.profileCount === 0
+                text: qsTr("Abrir Configurações")
+                onClicked: root.openSettings()
+            }
         }
     }
 }

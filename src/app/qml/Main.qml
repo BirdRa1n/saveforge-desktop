@@ -1,9 +1,13 @@
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
+import SaveForge.Backend
 
 ApplicationWindow {
     id: window
+
+    // Game shown in the detail page; empty shows the selected sidebar page.
+    property string selectedGameId
 
     width: 1280
     height: 800
@@ -16,6 +20,11 @@ ApplicationWindow {
     font.family: Theme.fontBody
     font.pixelSize: Theme.textBody
 
+    Connections {
+        target: AppController
+        function onNotify(text, kind) { toast.show(text, kind) }
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 0
@@ -25,33 +34,45 @@ ApplicationWindow {
             objectName: "sidebar"
             Layout.fillHeight: true
             Layout.preferredWidth: 240
-            vaultPath: qsTr("Não configurado")
-            statusText: qsTr("Funciona offline")
+            vaultPath: AppController.vaultReady ? AppController.vaultPath : qsTr("Indisponível")
+            statusText: AppController.busy ? AppController.busyText
+                                           : Format.count(AppController.library.count, qsTr("jogo"), qsTr("jogos")) + qsTr(" · funciona offline")
+            onCurrentIndexChanged: window.selectedGameId = ""
         }
 
         StackLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            currentIndex: sidebar.currentIndex
+            currentIndex: window.selectedGameId.length > 0 ? 4 : sidebar.currentIndex
 
             LibraryPage {
                 objectName: "libraryPage"
+                onGameSelected: gameId => window.selectedGameId = gameId
+                onOpenSettings: sidebar.currentIndex = 3
             }
-            PlaceholderPage {
-                title: qsTr("Atividade")
-                iconPath: Icons.activity
-                description: qsTr("Aqui aparecerá o histórico de backups, restaurações e verificações.")
+            ActivityPage {
+                objectName: "activityPage"
             }
             PlaceholderPage {
                 title: qsTr("Importar / Exportar")
                 iconPath: Icons.transfer
                 description: qsTr("Aqui você poderá exportar seus saves em um arquivo .gamesave e importá-los em outro computador.")
             }
-            PlaceholderPage {
-                title: qsTr("Configurações")
-                iconPath: Icons.settings
-                description: qsTr("Aqui ficarão o diretório do vault, a retenção de backups e a política de cloud dos launchers.")
+            SettingsPage {
+                objectName: "settingsPage"
+            }
+            GameDetailPage {
+                objectName: "gameDetailPage"
+                gameId: window.selectedGameId
+                onBack: window.selectedGameId = ""
             }
         }
+    }
+
+    Toast {
+        id: toast
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: Theme.space6
     }
 }
