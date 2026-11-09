@@ -27,8 +27,9 @@ private slots:
     void folderMapNormalizesSeparators()
     {
         FolderMap map;
-        map.set(QStringLiteral("home"), QStringLiteral("C:\\Users\\player\\"));
-        QCOMPARE(map.value(QStringLiteral("home")), QStringLiteral("C:/Users/player"));
+        // Native separators are converted; backslashes only count as separators on Windows.
+        map.set(QStringLiteral("home"), QDir::toNativeSeparators(QStringLiteral("/home/player/")));
+        QCOMPARE(map.value(QStringLiteral("home")), QStringLiteral("/home/player"));
         map.set(QStringLiteral("home"), QString());
         QVERIFY(!map.contains(QStringLiteral("home")));
     }
@@ -88,8 +89,8 @@ private slots:
         QVERIFY(dir.endsWith(QLatin1String("/SaveForge")));
         QCoreApplication::setApplicationName(QStringLiteral("something-else"));
         QCOMPARE(appDataDirectory(), dir);
-        qputenv("SAVEFORGE_DATA_DIR", "C:\\sandbox\\data\\");
-        QCOMPARE(appDataDirectory(), QStringLiteral("C:/sandbox/data"));
+        qputenv("SAVEFORGE_DATA_DIR", QDir::toNativeSeparators(QStringLiteral("/sandbox/data/")).toUtf8());
+        QCOMPARE(appDataDirectory(), QStringLiteral("/sandbox/data"));
         qunsetenv("SAVEFORGE_DATA_DIR");
     }
 

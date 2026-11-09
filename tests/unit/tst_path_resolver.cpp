@@ -20,6 +20,8 @@ void touch(const QString &root, const QString &relativePath, const QDateTime &mt
     QFile file(path);
     QVERIFY(file.open(QIODevice::WriteOnly));
     file.write(relativePath.toUtf8());
+    // Flush first: buffered data written on close would bump the time again.
+    file.flush();
     if (mtime.isValid())
         QVERIFY(file.setFileTime(mtime, QFileDevice::FileModificationTime));
 }
