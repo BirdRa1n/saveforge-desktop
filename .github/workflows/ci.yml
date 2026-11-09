@@ -23,12 +23,17 @@ jobs:
           - name: Windows (MSVC)
             os: windows-latest
             qt-arch: win64_msvc2022_64
+            # Qt 6.11+ splits the Windows online repository per toolchain, a
+            # layout aqtinstall 3.3 cannot read yet. Use the newest release it can.
+            qt-version: "6.10.*"
           - name: Linux (GCC)
             os: ubuntu-24.04
             qt-arch: linux_gcc_64
+            qt-version: ${{ matrix.qt-version }}
           - name: macOS (Clang)
             os: macos-latest
             qt-arch: clang_64
+            qt-version: ${{ matrix.qt-version }}
 
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +43,7 @@ jobs:
       - name: Instalar Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: "6.12.*"
+          version: ${{ matrix.qt-version }}
           arch: ${{ matrix.qt-arch }}
           cache: true
 
