@@ -4,7 +4,8 @@
 
 | Sistema | Arquivo | Como usar |
 |---|---|---|
-| Windows 10/11 (x64) | `SaveForge-…-windows-x64.zip` | Extraia e abra `bin/SaveForge.exe`. A linha de comando fica em `bin/saveforge-cli.exe`. |
+| Windows 10/11 (x64) | `SaveForge-…-windows-x64-setup.exe` | **Recomendado.** Abra e siga o assistente. Não pede administrador, cria os atalhos no menu Iniciar e, se você quiser, na área de trabalho. Para remover, use "Adicionar ou remover programas". |
+| Windows 10/11 (x64), portátil | `SaveForge-…-windows-x64.zip` | Extraia e abra `bin/SaveForge.exe`. A linha de comando fica em `bin/saveforge-cli.exe`. |
 | Linux (x64) | `SaveForge-…-linux-x64.tar.gz` | Extraia e rode `bin/SaveForge`. Requer as bibliotecas gráficas do sistema (OpenGL, `libxkbcommon`, `libxcb-cursor0`). |
 | macOS (Apple Silicon) | `SaveForge-…-macos-arm64.dmg` | Abra o disco e arraste o SaveForge para Aplicativos. |
 

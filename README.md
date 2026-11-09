@@ -84,7 +84,7 @@ Para capturar a interface com dados reais (biblioteca escaneada, página de um j
 
 ## Pacotes
 
-Os pacotes são gerados com o CPack a partir de um build de release: um `.zip` portátil no Windows, um `.tar.gz` no Linux e um `.dmg` no macOS. A etapa de instalação copia para junto do app as bibliotecas, os plugins e os módulos QML do Qt, e por isso o pacote roda sem o Qt instalado.
+Os pacotes são gerados com o CPack a partir de um build de release. No Windows saem um instalador (`-setup.exe`, feito com o Inno Setup 6 quando ele está instalado) e um `.zip` portátil; no Linux, um `.tar.gz` com a entrada `.desktop` e o ícone; no macOS, um `.dmg`. O instalador não pede administrador, porque instala só para o usuário atual, mas oferece instalar para todos. Ele também cria os atalhos e o desinstalador. A etapa de instalação copia para junto do app as bibliotecas, os plugins e os módulos QML do Qt, e por isso o pacote roda sem o Qt instalado.
 
 ```bash
 cmake --preset release -DCMAKE_PREFIX_PATH=<caminho-do-qt> -DSAVEFORGE_BUILD_TESTS=OFF -DSAVEFORGE_REGISTRY_BUNDLED_DIR=<saveforge-registry>/dist/v1

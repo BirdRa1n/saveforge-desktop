@@ -1,6 +1,7 @@
 name: Release
 
-# Builds the packages of cmake/SaveForgePackaging.cmake on the three OSes.
+# Builds the packages of cmake/SaveForgePackaging.cmake on the three OSes
+# (on Windows, an installer and a portable zip).
 #   - Manual run (workflow_dispatch): packages are kept as workflow artifacts.
 #   - Tag "v<X.Y.Z>[-suffix]" (e.g. v0.1.0-alpha.1): also publishes a GitHub
 #     pre-release with the packages and their SHA-256 files.
@@ -103,6 +104,14 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
+      - name: Inno Setup (Windows installer)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup -y --no-progress
+          }
+
       - name: System dependencies (Linux)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libxkbcommon-dev
@@ -121,6 +130,11 @@ jobs:
       - name: Package
         working-directory: out/build/release
         run: cpack
+
+      - name: Show the installer script
+        if: runner.os == 'Windows'
+        shell: bash
+        run: cat out/build/release/_CPack_Packages/*/INNOSETUP/ISScript.iss
 
       # Runs the installed tree (the packages' content) outside the build
       # directory: a missing Qt library, plugin or QML module fails here.
@@ -145,10 +159,34 @@ jobs:
           kill -0 "$pid"
           kill "$pid"
 
+      # Installs like a user would (silently, for the current user), runs the
+      # installed app, then uninstalls and checks the app is gone.
+      - name: Check the Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+          SAVEFORGE_DATA_DIR: ${{ runner.temp }}\saveforge-installed-data
+        run: |
+          $setup = Get-ChildItem out/build/release/SaveForge-*-setup.exe | Select-Object -First 1
+          $dir = Join-Path $env:RUNNER_TEMP "SaveForge-installed"
+          Start-Process $setup.FullName -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/CURRENTUSER", "/NORESTART", "/DIR=$dir" -Wait
+          & "$dir\bin\saveforge-cli.exe" registry status
+          if ($LASTEXITCODE -ne 0) { throw "the installed CLI failed" }
+          $app = Start-Process "$dir\bin\SaveForge.exe" -PassThru
+          Start-Sleep -Seconds 15
+          if ($app.HasExited) { throw "the installed app exited with code $($app.ExitCode)" }
+          Stop-Process -Id $app.Id
+          Start-Process "$dir\unins000.exe" -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
+          Start-Sleep -Seconds 5
+          if (Test-Path "$dir\bin\SaveForge.exe") { throw "the uninstaller left the app behind" }
+
       - uses: actions/upload-artifact@v4
         with:
           name: package-${{ matrix.name }}
           path: |
+            out/build/release/SaveForge-*-setup.exe
+            out/build/release/SaveForge-*-setup.exe.sha256
             out/build/release/SaveForge-*.zip
             out/build/release/SaveForge-*.zip.sha256
             out/build/release/SaveForge-*.tar.gz

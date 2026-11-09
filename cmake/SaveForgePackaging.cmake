@@ -2,7 +2,8 @@
 # Qt deploy step of src/app). Unsigned for now (roadmap D1.11); code signing
 # comes with D2.7.
 #
-#   Windows  SaveForge-<version>-windows-x64.zip   portable: unzip and run bin/SaveForge.exe
+#   Windows  SaveForge-<version>-windows-x64-setup.exe  installer (Inno Setup)
+#            SaveForge-<version>-windows-x64.zip   portable: unzip and run bin/SaveForge.exe
 #   Linux    SaveForge-<version>-linux-x64.tar.gz  run bin/SaveForge
 #   macOS    SaveForge-<version>-macos-<arch>.dmg  drag SaveForge.app to Applications
 #
@@ -19,6 +20,16 @@ set(SAVEFORGE_PACKAGE_VERSION "${PROJECT_VERSION}" CACHE STRING "Version shown i
 if(WIN32)
     set(_os windows)
     set(CPACK_GENERATOR ZIP)
+    # The installer needs Inno Setup 6 (ISCC). Without it, only the zip is built.
+    set(_pf86 "ProgramFiles(x86)")
+    find_program(SAVEFORGE_ISCC ISCC
+        HINTS "$ENV{${_pf86}}/Inno Setup 6" "$ENV{ProgramFiles}/Inno Setup 6" "$ENV{LOCALAPPDATA}/Programs/Inno Setup 6")
+    if(SAVEFORGE_ISCC)
+        list(PREPEND CPACK_GENERATOR INNOSETUP)
+        set(CPACK_INNOSETUP_EXECUTABLE "${SAVEFORGE_ISCC}")
+    else()
+        message(STATUS "Inno Setup not found: cpack builds the portable zip only")
+    endif()
 elseif(APPLE)
     set(_os macos)
     set(CPACK_GENERATOR DragNDrop)
@@ -79,5 +90,33 @@ set(CPACK_COMPONENTS_ALL SaveForge)
 set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 set(CPACK_DMG_COMPONENT_INSTALL ON)
+
+# --- Windows installer (Inno Setup) ------------------------------------------
+# Installs for the current user without administrator rights by default (the
+# wizard offers "all users" too), adds Start menu and optional desktop
+# shortcuts, an uninstaller, and runs the app at the end. AppId identifies the
+# app across versions, so a new installer upgrades the old one: never change it.
+set(CPACK_PACKAGE_EXECUTABLES SaveForge SaveForge)
+set(CPACK_CREATE_DESKTOP_LINKS SaveForge)
+set(CPACK_INNOSETUP_RUN_EXECUTABLES SaveForge)
+set(CPACK_INNOSETUP_PROGRAM_MENU_FOLDER .)
+set(CPACK_INNOSETUP_LANGUAGES brazilianPortuguese english)
+set(CPACK_INNOSETUP_USE_MODERN_WIZARD ON)
+set(CPACK_INNOSETUP_ICON_FILE "${PROJECT_SOURCE_DIR}/src/app/icons/saveforge.ico")
+set(CPACK_INNOSETUP_SETUP_AppId "{{D02782E0-D807-4590-BD2E-2DFA33ED8B6B}")
+set(CPACK_INNOSETUP_SETUP_PrivilegesRequired lowest)
+set(CPACK_INNOSETUP_SETUP_PrivilegesRequiredOverridesAllowed dialog)
+set(CPACK_INNOSETUP_SETUP_UninstallDisplayIcon "{app}\\bin\\SaveForge.exe")
+set(CPACK_INNOSETUP_SETUP_UninstallDisplayName "SaveForge")
+set(CPACK_INNOSETUP_SETUP_CloseApplications yes)
+set(CPACK_INNOSETUP_SETUP_DisableProgramGroupPage yes)
+# The only component is required and hidden: no component page in the wizard.
+set(CPACK_COMPONENT_SAVEFORGE_DISPLAY_NAME "SaveForge")
+set(CPACK_COMPONENT_SAVEFORGE_REQUIRED ON)
+set(CPACK_COMPONENT_SAVEFORGE_HIDDEN ON)
+set(CPACK_INNOSETUP_COMPONENT_INSTALL ON)
+
+# Per-generator settings (the installer's file name) live in this file.
+set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_CURRENT_LIST_DIR}/SaveForgeCPackOptions.cmake")
 
 include(CPack)
