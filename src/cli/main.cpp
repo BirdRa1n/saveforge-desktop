@@ -1,10 +1,29 @@
+#include "Commands.h"
 #include "saveforge/core/Version.h"
 
-#include <QCommandLineParser>
 #include <QCoreApplication>
+#include <QTextStream>
 
-// saveforge-cli: interface sem GUI para scripts e testes ponta a ponta.
-// Os comandos (scan, backup, restore, export, import) chegam com a Fase 1.
+#include <cstdio>
+
+// saveforge-cli: command-line interface for scripts and end-to-end tests.
+//
+//   saveforge-cli --version
+//   saveforge-cli detect [--profiles <dir>] [--no-save-scan]
+namespace {
+
+void printUsage(QTextStream &out)
+{
+    out << "Usage: saveforge-cli <command> [options]\n\n"
+           "Commands:\n"
+           "  detect    List installed games and match them to profiles (read-only)\n\n"
+           "Options:\n"
+           "  -h, --help     Show this help (use '<command> --help' for command options)\n"
+           "  -v, --version  Show the version\n";
+}
+
+} // namespace
+
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
@@ -13,11 +32,26 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationVersion(QString::fromUtf8(saveforge::kVersion.data(),
                                                               static_cast<qsizetype>(saveforge::kVersion.size())));
 
-    QCommandLineParser parser;
-    parser.setApplicationDescription(QStringLiteral("SaveForge — backup de saves de jogos de PC"));
-    parser.addHelpOption();
-    parser.addVersionOption();
-    parser.process(app);
+    QTextStream out(stdout);
+    QTextStream err(stderr);
+    const QStringList args = QCoreApplication::arguments();
 
-    parser.showHelp(0);
+    if (args.size() < 2 || args.at(1) == u"-h" || args.at(1) == u"--help") {
+        printUsage(out);
+        return args.size() < 2 ? 2 : 0;
+    }
+    if (args.at(1) == u"-v" || args.at(1) == u"--version") {
+        out << QCoreApplication::applicationName() << ' ' << QCoreApplication::applicationVersion() << Qt::endl;
+        return 0;
+    }
+
+    // Each command parses its own options; argv[0] is kept for help output.
+    const QString command = args.at(1);
+    const QStringList commandArgs = QStringList{args.at(0)} + args.mid(2);
+    if (command == u"detect")
+        return saveforge::cli::runDetect(commandArgs, out, err);
+
+    err << "unknown command: " << command << "\n\n";
+    printUsage(err);
+    return 2;
 }
