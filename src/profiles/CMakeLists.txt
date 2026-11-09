@@ -3,9 +3,11 @@ qt_add_library(saveforge_profiles STATIC
     include/saveforge/profiles/PathRules.h
     include/saveforge/profiles/Profile.h
     include/saveforge/profiles/ProfileParser.h
+    include/saveforge/profiles/PathResolver.h
     PlaceholderCatalog.cpp
     PathRules.cpp
     ProfileParser.cpp
+    PathResolver.cpp
 )
 add_library(saveforge::profiles ALIAS saveforge_profiles)
 
