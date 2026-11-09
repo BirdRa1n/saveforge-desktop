@@ -53,31 +53,59 @@ QRegularExpression segmentGlobToRegex(QStringView glob)
     return QRegularExpression(pattern, QRegularExpression::CaseInsensitiveOption);
 }
 
-bool segmentCanMatch(const QString &segment, const QString &target)
+// A path segment prepared once for sensitivity checks: classifying it and
+// compiling its glob is far more expensive than comparing it.
+struct PreparedSegment {
+    enum class Kind { DoubleStar, Placeholder, Glob, Literal } kind = Kind::Literal;
+    QString text;
+    QRegularExpression glob;
+};
+
+QList<PreparedSegment> prepare(const QStringList &segments)
 {
-    if (segment == u"**")
-        return true;
-    if (hasPlaceholder(segment))
-        return false;
-    if (isGlob(segment))
-        return segmentGlobToRegex(segment).match(target).hasMatch();
-    return segment.compare(target, Qt::CaseInsensitive) == 0;
+    QList<PreparedSegment> prepared;
+    prepared.reserve(segments.size());
+    for (const QString &segment : segments) {
+        PreparedSegment p;
+        p.text = segment;
+        if (segment == u"**")
+            p.kind = PreparedSegment::Kind::DoubleStar;
+        else if (hasPlaceholder(segment))
+            p.kind = PreparedSegment::Kind::Placeholder;
+        else if (isGlob(segment)) {
+            p.kind = PreparedSegment::Kind::Glob;
+            p.glob = segmentGlobToRegex(segment);
+        }
+        prepared.append(std::move(p));
+    }
+    return prepared;
+}
+
+bool segmentCanMatch(const PreparedSegment &segment, const QString &target)
+{
+    switch (segment.kind) {
+    case PreparedSegment::Kind::DoubleStar: return true;
+    case PreparedSegment::Kind::Placeholder: return false;
+    case PreparedSegment::Kind::Glob: return segment.glob.match(target).hasMatch();
+    case PreparedSegment::Kind::Literal: return segment.text.compare(target, Qt::CaseInsensitive) == 0;
+    }
+    return false;
 }
 
 // True when a contiguous window of `segments` can match `sequence` and at least
 // one element of the window matches literally.
-bool matchesSequence(const QStringList &segments, const QStringList &sequence)
+bool matchesSequence(const QList<PreparedSegment> &segments, const QStringList &sequence)
 {
     for (qsizetype start = 0; start + sequence.size() <= segments.size(); ++start) {
         bool ok = true;
         bool literalHit = false;
         for (qsizetype i = 0; i < sequence.size(); ++i) {
-            const QString &segment = segments.at(start + i);
+            const PreparedSegment &segment = segments.at(start + i);
             if (!segmentCanMatch(segment, sequence.at(i))) {
                 ok = false;
                 break;
             }
-            if (!isGlob(segment) && !hasPlaceholder(segment))
+            if (segment.kind == PreparedSegment::Kind::Literal)
                 literalHit = true;
         }
         if (ok && literalHit)
@@ -223,8 +251,9 @@ std::optional<platform::Os> PathRules::impliedOs(QStringView path) const
 
 bool PathRules::isSensitive(const QStringList &segments) const
 {
+    const QList<PreparedSegment> prepared = prepare(segments);
     return std::any_of(m_denylist.begin(), m_denylist.end(),
-                       [&](const QStringList &sequence) { return matchesSequence(segments, sequence); });
+                       [&](const QStringList &sequence) { return matchesSequence(prepared, sequence); });
 }
 
 } // namespace saveforge::profiles
