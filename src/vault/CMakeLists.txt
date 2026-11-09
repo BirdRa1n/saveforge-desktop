@@ -1,5 +1,9 @@
 qt_add_library(saveforge_vault STATIC
+    include/saveforge/vault/BlobStore.h
     include/saveforge/vault/Snapshot.h
+    BlobStore.cpp
+    FileSync.h
+    FileSync.cpp
     Snapshot.cpp
 )
 add_library(saveforge::vault ALIAS saveforge_vault)
