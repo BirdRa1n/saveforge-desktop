@@ -32,6 +32,8 @@ qrc_*.cpp
 Thumbs.db
 *.res
 *.rc
+# Hand-written Windows resources (the app icon), unlike the generated ones above.
+!src/app/saveforge.rc
 /.qmake.cache
 /.qmake.stash
 **/.qmlls.ini

@@ -1,6 +1,7 @@
 #include "saveforge/core/Version.h"
 
 #include <QGuiApplication>
+#include <QIcon>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QtQml/QQmlExtensionPlugin>
@@ -16,6 +17,9 @@ int main(int argc, char *argv[])
     QGuiApplication::setApplicationName(QStringLiteral("SaveForge"));
     QGuiApplication::setApplicationVersion(QString::fromUtf8(saveforge::kVersion.data(),
                                                              static_cast<qsizetype>(saveforge::kVersion.size())));
+    QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/saveforge/icons/saveforge.png")));
+    // Lets Linux desktops match the window to saveforge.desktop.
+    QGuiApplication::setDesktopFileName(QStringLiteral("saveforge"));
 
     // "Basic" é o estilo totalmente customizável e idêntico nos três SOs;
     // o visual Forja é aplicado pelos componentes do módulo SaveForge.Ui.

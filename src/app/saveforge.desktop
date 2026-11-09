@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=SaveForge
+GenericName=Backup de saves de jogos
+Comment=Encontre, faça backup e restaure saves de jogos de PC
+Exec=SaveForge
+Icon=saveforge
+Terminal=false
+Categories=Game;Utility;Archiving;
