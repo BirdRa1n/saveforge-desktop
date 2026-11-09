@@ -14,7 +14,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(SAVEFORGE_BUILD_TESTS "Compilar os testes" ON)
 option(SAVEFORGE_WARNINGS_AS_ERRORS "Tratar avisos como erros" OFF)
 
-find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
+find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 QuickDialogs2 Concurrent)
 qt_standard_project_setup(REQUIRES 6.8)
 # Módulos QML vão para <build>/qml/<URI>, como o qmllint e o qmlls esperam.
 set(QT_QML_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/qml")
