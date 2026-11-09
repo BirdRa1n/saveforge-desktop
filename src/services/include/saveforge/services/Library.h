@@ -24,8 +24,10 @@ struct CatalogLoad {
     bool usingTestKeys = false;
 };
 
-// Loads every cached channel (re-verified) into one catalog. Problems become
-// warnings: an empty catalog is not an error.
+// Loads every cached channel (re-verified) into one catalog. Channels the
+// cache does not have yet are first seeded from the distribution bundled with
+// the build, if any, so profiles work on first run without a download.
+// Problems become warnings: an empty catalog is not an error.
 [[nodiscard]] CatalogLoad loadCatalogFromCache(const QString &registryCacheDir, const QString &appVersion);
 
 // One game shown in the library.

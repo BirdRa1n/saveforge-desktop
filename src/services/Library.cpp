@@ -1,6 +1,7 @@
 #include "saveforge/services/Library.h"
 
 #include "saveforge/registry/RegistryCache.h"
+#include "saveforge/registry/RegistryUpdater.h"
 
 #include <QHash>
 #include <QSet>
@@ -21,7 +22,14 @@ CatalogLoad loadCatalogFromCache(const QString &registryCacheDir, const QString 
     if (result.usingTestKeys)
         result.warnings.append(QStringLiteral("this build trusts the PUBLIC registry test keys (development only)"));
 
-    const registry::RegistryCache cache(registryCacheDir);
+    registry::RegistryCache cache(registryCacheDir);
+    if (const QString bundled = registry::bundledDistribution(); !bundled.isEmpty()) {
+        for (const registry::ChannelUpdate &seeded :
+             registry::importDistribution(bundled, cache, anchor.value(), appVersion, {}, true)) {
+            if (seeded.error)
+                result.warnings.append(QStringLiteral("bundled channel %1 unusable: %2").arg(seeded.channel, seeded.error->toString()));
+        }
+    }
     for (const QString &channel : cache.channels()) {
         auto loaded = cache.loadChannel(channel, anchor.value(), appVersion);
         if (!loaded.ok()) {
