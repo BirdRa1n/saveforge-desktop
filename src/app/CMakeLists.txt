@@ -34,6 +34,14 @@ qt_add_qml_module(saveforge_ui
         qml/pages/PlaceholderPage.qml
         qml/pages/RestoreDialog.qml
         qml/pages/SettingsPage.qml
+    RESOURCES
+        fonts/inter/Inter-Regular.ttf
+        fonts/inter/Inter-Medium.ttf
+        fonts/inter/Inter-SemiBold.ttf
+        fonts/inter/Inter-Bold.ttf
+        fonts/space-grotesk/SpaceGrotesk-Regular.ttf
+        fonts/space-grotesk/SpaceGrotesk-Medium.ttf
+        fonts/space-grotesk/SpaceGrotesk-Bold.ttf
 )
 target_link_libraries(saveforge_ui PRIVATE Qt6::Quick Qt6::QuickControls2 Qt6::QuickDialogs2 saveforge_backend)
 

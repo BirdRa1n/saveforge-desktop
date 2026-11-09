@@ -2,3 +2,7 @@
 * text=auto
 # Registry fixtures are signed byte-for-byte: keep LF and binary bundles intact.
 tests/data/** -text
+*.ttf binary
+*.ico binary
+*.icns binary
+*.png binary

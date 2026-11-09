@@ -33,7 +33,18 @@ QtObject {
     readonly property color neutralBg: "#2E2820"
     readonly property color neutralFg: "#D6CBBD"
 
-    // Tipografia (fontes OFL a serem empacotadas; até lá, cai na fonte do sistema)
+    // Tipografia: Inter e Space Grotesk (SIL OFL 1.1) vêm embutidas no app,
+    // em src/app/fonts. Cada FontLoader registra um peso da família no banco
+    // de fontes do Qt, e os componentes usam o nome da família.
+    readonly property list<FontLoader> fonts: [
+        FontLoader { source: "../../fonts/inter/Inter-Regular.ttf" },
+        FontLoader { source: "../../fonts/inter/Inter-Medium.ttf" },
+        FontLoader { source: "../../fonts/inter/Inter-SemiBold.ttf" },
+        FontLoader { source: "../../fonts/inter/Inter-Bold.ttf" },
+        FontLoader { source: "../../fonts/space-grotesk/SpaceGrotesk-Regular.ttf" },
+        FontLoader { source: "../../fonts/space-grotesk/SpaceGrotesk-Medium.ttf" },
+        FontLoader { source: "../../fonts/space-grotesk/SpaceGrotesk-Bold.ttf" }
+    ]
     readonly property string fontDisplay: "Space Grotesk"
     readonly property string fontBody: "Inter"
     readonly property int textPageTitle: 30

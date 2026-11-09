@@ -1,5 +1,6 @@
 #include <QDir>
 #include <QFile>
+#include <QFontDatabase>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QQuickWindow>
@@ -52,6 +53,12 @@ private slots:
         QObject *sidebar = window->findChild<QObject *>(QStringLiteral("sidebar"));
         QVERIFY(sidebar);
         QCOMPARE(sidebar->property("currentIndex").toInt(), 0);
+
+        // The bundled fonts are registered (Theme's FontLoaders), with every weight.
+        const QStringList families = QFontDatabase::families();
+        QVERIFY(families.contains(QStringLiteral("Inter")));
+        QVERIFY(families.contains(QStringLiteral("Space Grotesk")));
+        QVERIFY(QFontDatabase::isSmoothlyScalable(QStringLiteral("Inter"), QStringLiteral("SemiBold")));
 
         QObject *library = window->findChild<QObject *>(QStringLiteral("libraryPage"));
         QVERIFY(library);
