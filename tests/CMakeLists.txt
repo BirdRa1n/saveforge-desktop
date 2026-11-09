@@ -25,6 +25,10 @@ saveforge_add_test(tst_path_rules
     SOURCES unit/tst_path_rules.cpp
     LIBS saveforge::profiles)
 
+saveforge_add_test(tst_profile_parser
+    SOURCES unit/tst_profile_parser.cpp
+    LIBS saveforge::profiles)
+
 saveforge_add_test(tst_ui_smoke
     SOURCES ui/tst_ui_smoke.cpp
     LIBS saveforge_uiplugin Qt6::Gui Qt6::Quick Qt6::QuickControls2)
