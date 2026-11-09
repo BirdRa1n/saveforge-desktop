@@ -27,6 +27,10 @@ Requisitos:
 - Um compilador com suporte a C++20: MSVC 2022, GCC ≥ 12, Clang/AppleClang ≥ 15 ou MinGW 13.
 
 ```bash
+git submodule update --init
+```
+
+```bash
 cmake --preset debug -DCMAKE_PREFIX_PATH=<caminho-do-qt>
 ```
 
@@ -49,6 +53,8 @@ O preset `ci` trata avisos como erros. Rode-o antes de abrir um PR.
 ```
 src/
   core/        Tipos de domínio, Result/Error, versão. Depende apenas de QtCore.
+  platform/    Pastas do usuário por SO e dentro de prefixos Wine/Proton.
+  profiles/    Perfis de jogos: parser, regras de segurança de caminhos, resolução de arquivos.
   app/         Executável GUI + módulo QML SaveForge.Ui
     qml/theme/       Tokens visuais (Theme) e ícones (Icons) — singletons
     qml/components/  Componentes reutilizáveis, sem lógica de negócio
@@ -58,8 +64,11 @@ tests/
   unit/        Testes de unidade (Qt Test), um arquivo por módulo/assunto
   ui/          Testes da interface QML
 cmake/         Módulos CMake auxiliares
+external/specs Submódulo saveforge-specs (não edite aqui; mude no repositório de specs)
 .github/       Workflows de CI
 ```
+
+**Specs como fonte única.** Dados definidos pelas specs (catálogo de placeholders, lista de locais sensíveis) são embutidos a partir de `external/specs` como recursos Qt, e os testes de conformidade leem os exemplos e vetores de lá. Uma mudança de comportamento definida pela spec começa no `saveforge-specs`. Depois, atualize o submódulo aqui (`git -C external/specs pull`) em um commit próprio.
 
 **Regra de dependência entre módulos.** As setas indicam "depende de" e só existem nessa direção:
 
