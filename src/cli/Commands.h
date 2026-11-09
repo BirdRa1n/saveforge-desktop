@@ -11,4 +11,14 @@ namespace saveforge::cli {
 // Read-only. Returns the process exit code.
 int runDetect(const QStringList &arguments, QTextStream &out, QTextStream &err);
 
+// `saveforge-cli backup --vault <dir> --profile <file> [--label <text>] [--map <placeholder>=<dir>]...`
+int runBackup(const QStringList &arguments, QTextStream &out, QTextStream &err);
+
+// `saveforge-cli snapshots --vault <dir> [--game <id>]`
+int runSnapshots(const QStringList &arguments, QTextStream &out, QTextStream &err);
+
+// `saveforge-cli restore --vault <dir> --profile <file> --snapshot <id> [--cloud <policy>] [--yes]`
+// Prints the plan; writes files only with --yes.
+int runRestore(const QStringList &arguments, QTextStream &out, QTextStream &err);
+
 } // namespace saveforge::cli
