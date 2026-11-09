@@ -2,13 +2,13 @@
 
 Aplicativo desktop open source para encontrar, fazer backup e restaurar saves de jogos de PC. Funciona com Steam, Epic, GOG e instalações manuais, **totalmente offline**.
 
-> **Estado:** em desenvolvimento inicial (0.1.0). O núcleo da Fase 1 do [roadmap](../saveforge-docs/planejamento/PLANEJAMENTO-TECNICO.md#18-roadmap-com-dependências) já funciona pela linha de comando:
+> **Estado:** em desenvolvimento inicial (0.1.0). O núcleo da Fase 1 do [roadmap](../saveforge-docs/planejamento/PLANEJAMENTO-TECNICO.md#18-roadmap-com-dependências) já funciona, pela interface e pela linha de comando:
 > - perfis de jogos vindos do Registry assinado (22 mil jogos via Ludusavi), verificados e guardados em cache para uso offline;
 > - detecção de jogos (Steam, Epic, GOG e Heroic, com prefixos Wine/Proton, além da busca por saves de jogos não instalados);
 > - backup no vault local (deduplicação, compressão, verificação de integridade);
 > - restauração segura (plano prévio, ponto de desfazer, troca atômica, política de cloud do launcher).
 >
-> Ainda faltam a interface conectada a essas funções, as chaves de produção do Registry e o registro do Windows.
+> Ainda faltam o download automático do Registry com chaves de produção, o registro do Windows, os backups automáticos e a exportação `.gamesave`.
 
 ## Stack
 
@@ -26,8 +26,9 @@ src/
   vault/     vault local: blobs por conteúdo (SHA-256 + zstd), snapshots, verificação e coleta de lixo
   detection/ detecção de jogos instalados (Steam, Epic, GOG, Heroic) e associação a perfis
   registry/  verificação Ed25519 do Registry, cache local dos canais e catálogo de perfis
-  services/  casos de uso: backup e restauração (checagem de jogo aberto, plano, desfazer)
-  app/       executável GUI + módulo QML SaveForge.Ui (tema, componentes, páginas)
+  services/  casos de uso: biblioteca, backup e restauração (checagem de jogo aberto, plano, desfazer)
+  backend/   módulo QML SaveForge.Backend: controlador, modelos de lista e configurações do app
+  app/       executável GUI + módulo QML SaveForge.Ui (tema, componentes, páginas; só apresentação)
   cli/       saveforge-cli (sem GUI)
 tests/
   unit/      testes de unidade e de conformidade com as specs (Qt Test)
@@ -77,6 +78,8 @@ Para salvar capturas de cada página da interface, defina uma pasta e rode o tes
 ```bash
 SAVEFORGE_SCREENSHOT_DIR=/caminho/para/pasta ./out/build/debug/tst_ui_smoke
 ```
+
+Para capturar a interface com dados reais (biblioteca escaneada, página de um jogo e diálogo de restauração), aponte também `SAVEFORGE_DATA_DIR` para uma pasta de dados preparada, por exemplo com um Registry importado, e escolha um jogo com `SAVEFORGE_SCREENSHOT_GAME=<id>`. O teste fará um backup desse jogo no vault dessa pasta antes de capturar.
 
 ## Linha de comando
 

@@ -58,7 +58,8 @@ src/
   vault/       Vault local: blobs, snapshots, verificação e coleta de lixo.
   detection/   Detectores de launchers, associação de instalações a perfis, varredura save-first.
   registry/    Verificação do Registry (Ed25519, cadeia de root, rollback), cache e catálogo.
-  services/    Casos de uso que combinam os módulos: backup e restauração.
+  services/    Casos de uso que combinam os módulos: biblioteca, backup e restauração.
+  backend/     Módulo QML SaveForge.Backend: AppController (singleton), modelos e configurações.
   app/         Executável GUI + módulo QML SaveForge.Ui
     qml/theme/       Tokens visuais (Theme) e ícones (Icons) — singletons
     qml/components/  Componentes reutilizáveis, sem lógica de negócio
@@ -122,6 +123,9 @@ Na prática, o `registry` verifica e entrega perfis, e quem escolhe qual perfil 
   - foco visível;
   - `Accessible.name` em controles sem texto.
 - Textos visíveis passam por `qsTr()`. A interface é escrita em pt-BR.
+- **SaveForge.Ui é só apresentação.** Páginas leem e chamam o `AppController` (módulo SaveForge.Backend); componentes em `qml/components/` não conhecem o backend.
+- Quantidades usam `Format.count(n, "jogo", "jogos")` no QML e `countText()` no C++ (número em pt-BR e plural correto). Não use textos como "jogo(s)".
+- Operações demoradas nunca rodam na thread da interface: use o padrão `run()` do `AppController` (worker + resultado na thread da UI).
 
 ### Idiomas
 - Código, identificadores, mensagens de commit e mensagens de log ficam em **inglês**.
