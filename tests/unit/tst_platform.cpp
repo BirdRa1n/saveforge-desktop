@@ -1,9 +1,13 @@
 #include "saveforge/platform/Os.h"
+#include "saveforge/platform/Processes.h"
 #include "saveforge/platform/UserFolders.h"
 
+#include <QCoreApplication>
 #include <QDir>
 #include <QTemporaryDir>
 #include <QTest>
+
+#include <algorithm>
 
 using namespace saveforge::platform;
 
@@ -62,6 +66,17 @@ private slots:
         qputenv("XDG_CONFIG_HOME", "/tmp/xdg-config");
         QCOMPARE(hostUserFolders().value(QStringLiteral("xdgConfig")), QStringLiteral("/tmp/xdg-config"));
         qunsetenv("XDG_CONFIG_HOME");
+    }
+
+    void listsTheCurrentProcess()
+    {
+        const qint64 self = QCoreApplication::applicationPid();
+        const QList<ProcessInfo> processes = runningProcesses();
+        QVERIFY(processes.size() > 1);
+        const auto it = std::find_if(processes.begin(), processes.end(), [self](const ProcessInfo &p) { return p.pid == self; });
+        QVERIFY(it != processes.end());
+        QVERIFY2(it->name.startsWith(QLatin1String("tst_platform")), qPrintable(it->name));
+        QVERIFY(it->executablePath.endsWith(it->name, Qt::CaseInsensitive));
     }
 
     void winePrefixMapsInsideDriveC()
