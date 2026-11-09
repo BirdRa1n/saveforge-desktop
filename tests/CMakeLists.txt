@@ -5,6 +5,8 @@ function(saveforge_add_test name)
     cmake_parse_arguments(ARG "" "" "SOURCES;LIBS" ${ARGN})
     qt_add_executable(${name} ${ARG_SOURCES})
     target_link_libraries(${name} PRIVATE Qt6::Test ${ARG_LIBS})
+    # Conformance tests read vectors and examples straight from the specs submodule.
+    target_compile_definitions(${name} PRIVATE SAVEFORGE_SPECS_DIR="${SAVEFORGE_SPECS_DIR}")
     saveforge_set_warnings(${name})
     add_test(NAME ${name} COMMAND ${name})
     # Testes de UI rodam sem display.
@@ -18,6 +20,10 @@ saveforge_add_test(tst_core_result
 saveforge_add_test(tst_platform
     SOURCES unit/tst_platform.cpp
     LIBS saveforge::platform)
+
+saveforge_add_test(tst_path_rules
+    SOURCES unit/tst_path_rules.cpp
+    LIBS saveforge::profiles)
 
 saveforge_add_test(tst_ui_smoke
     SOURCES ui/tst_ui_smoke.cpp
