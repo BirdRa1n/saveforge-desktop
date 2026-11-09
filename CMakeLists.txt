@@ -22,6 +22,7 @@ set(QT_QML_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/qml")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(SaveForgeWarnings)
 include(GNUInstallDirs)
+include(SaveForgeDependencies)
 
 # Shared specifications (schemas, placeholder catalog, path rules, test vectors).
 set(SAVEFORGE_SPECS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/specs" CACHE PATH "Path to saveforge-specs")
