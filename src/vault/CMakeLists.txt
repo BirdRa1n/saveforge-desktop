@@ -3,8 +3,6 @@ qt_add_library(saveforge_vault STATIC
     include/saveforge/vault/Snapshot.h
     include/saveforge/vault/Vault.h
     BlobStore.cpp
-    FileSync.h
-    FileSync.cpp
     Snapshot.cpp
     Vault.cpp
 )

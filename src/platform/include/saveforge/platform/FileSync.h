@@ -3,7 +3,10 @@
 #include <QFile>
 #include <QString>
 
-namespace saveforge::vault::detail {
+// Durability helpers for crash-safe writes (write to a temporary file, sync,
+// then rename into place).
+
+namespace saveforge::platform {
 
 // Flushes Qt's buffer and asks the OS to persist the file to disk
 // (FlushFileBuffers on Windows, fsync elsewhere).
@@ -13,4 +16,4 @@ namespace saveforge::vault::detail {
 // No-op on Windows, where NTFS journals metadata changes.
 void syncDirectory(const QString &directory);
 
-} // namespace saveforge::vault::detail
+} // namespace saveforge::platform

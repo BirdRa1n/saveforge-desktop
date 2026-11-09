@@ -1,7 +1,7 @@
 #include "saveforge/vault/BlobStore.h"
 
-#include "FileSync.h"
 #include "saveforge/core/Uuid.h"
+#include "saveforge/platform/FileSync.h"
 
 #include <QCryptographicHash>
 #include <QDir>
@@ -116,7 +116,7 @@ Result<StoredBlob> BlobStore::store(QIODevice &source)
     }
     if (!compress(ZSTD_inBuffer{nullptr, 0, 0}, ZSTD_e_end))
         return discard(ioError(QStringLiteral("cannot compress blob"), tmp.fileName()));
-    if (!detail::syncFile(tmp))
+    if (!platform::syncFile(tmp))
         return discard(ioError(QStringLiteral("cannot persist blob"), tmp.fileName()));
     tmp.close();
 
@@ -139,7 +139,7 @@ Result<StoredBlob> BlobStore::store(QIODevice &source)
         }
         return discard(ioError(QStringLiteral("cannot move blob into place"), target));
     }
-    detail::syncDirectory(targetDir);
+    platform::syncDirectory(targetDir);
     return blob;
 }
 

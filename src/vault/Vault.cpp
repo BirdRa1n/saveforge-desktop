@@ -1,7 +1,7 @@
 #include "saveforge/vault/Vault.h"
 
-#include "FileSync.h"
 #include "saveforge/core/Uuid.h"
+#include "saveforge/platform/FileSync.h"
 
 #include <QDir>
 #include <QFile>
@@ -37,7 +37,7 @@ Result<void> writeDurably(const QString &tmpDir, const QString &target, const QB
     QFile tmp(tmpDir + u'/' + uuidToString(createUuidV7()) + QStringLiteral(".json.part"));
     if (!tmp.open(QIODevice::WriteOnly | QIODevice::NewOnly))
         return ioError(QStringLiteral("cannot create temporary file"), tmp.fileName());
-    if (tmp.write(data) != data.size() || !detail::syncFile(tmp)) {
+    if (tmp.write(data) != data.size() || !platform::syncFile(tmp)) {
         tmp.close();
         tmp.remove();
         return ioError(QStringLiteral("cannot write file"), target);
@@ -48,7 +48,7 @@ Result<void> writeDurably(const QString &tmpDir, const QString &target, const QB
         tmp.remove();
         return ioError(QStringLiteral("cannot move file into place"), target);
     }
-    detail::syncDirectory(QFileInfo(target).absolutePath());
+    platform::syncDirectory(QFileInfo(target).absolutePath());
     return {};
 }
 
