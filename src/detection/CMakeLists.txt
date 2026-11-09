@@ -1,0 +1,9 @@
+qt_add_library(saveforge_detection STATIC
+    include/saveforge/detection/Vdf.h
+    Vdf.cpp
+)
+add_library(saveforge::detection ALIAS saveforge_detection)
+
+target_include_directories(saveforge_detection PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(saveforge_detection PUBLIC saveforge::core saveforge::platform saveforge::profiles Qt6::Core)
+saveforge_set_warnings(saveforge_detection)
