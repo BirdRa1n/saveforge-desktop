@@ -5,6 +5,7 @@ function(saveforge_add_test name)
     cmake_parse_arguments(ARG "" "" "SOURCES;LIBS" ${ARGN})
     qt_add_executable(${name} ${ARG_SOURCES})
     target_link_libraries(${name} PRIVATE Qt6::Test ${ARG_LIBS})
+    target_include_directories(${name} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/support")
     # Conformance tests read vectors and examples straight from the specs submodule.
     target_compile_definitions(${name} PRIVATE SAVEFORGE_SPECS_DIR="${SAVEFORGE_SPECS_DIR}")
     saveforge_set_warnings(${name})
@@ -56,6 +57,10 @@ saveforge_add_test(tst_launchers
 saveforge_add_test(tst_game_matcher
     SOURCES unit/tst_game_matcher.cpp
     LIBS saveforge::detection)
+
+saveforge_add_test(tst_backup_service
+    SOURCES unit/tst_backup_service.cpp
+    LIBS saveforge::services)
 
 saveforge_add_test(tst_ui_smoke
     SOURCES ui/tst_ui_smoke.cpp
