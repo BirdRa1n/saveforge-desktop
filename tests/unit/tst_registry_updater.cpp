@@ -219,10 +219,12 @@ private slots:
         QCOMPARE(importDistribution(kBasic, cache, anchor(), QStringLiteral("0.1.0")).size(), 1);
     }
 
-    void hasNoBundledDistributionOrMirrorsByDefault()
+    void developmentBuildsUseThePublishedTestMirror()
     {
         QVERIFY(bundledDistribution().isEmpty());
-        QVERIFY(builtinMirrors().isEmpty());
+        // Development builds trust the test keys and follow the matching published distribution.
+        QCOMPARE(builtinMirrors(), QStringList{QStringLiteral("https://birdra1n.github.io/saveforge-registry/v1/")});
+        QVERIFY(makeFetcher(builtinMirrors().first(), {}).ok());
         QCOMPARE(defaultChannels(), (QStringList{QStringLiteral("official"), QStringLiteral("upstream-ludusavi")}));
     }
 };

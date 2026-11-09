@@ -1,4 +1,5 @@
 #include <QDir>
+#include <QFile>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QQuickWindow>
@@ -25,8 +26,13 @@ private slots:
         // screenshot run points SAVEFORGE_DATA_DIR at prepared data on purpose.
         QVERIFY(m_data.isValid());
         m_preparedData = !qEnvironmentVariableIsEmpty("SAVEFORGE_SCREENSHOT_DIR") && !qEnvironmentVariableIsEmpty("SAVEFORGE_DATA_DIR");
-        if (!m_preparedData)
+        if (!m_preparedData) {
             qputenv("SAVEFORGE_DATA_DIR", m_data.path().toUtf8());
+            // The test must not download profiles from the network.
+            QFile settings(m_data.path() + QStringLiteral("/settings.ini"));
+            QVERIFY(settings.open(QIODevice::WriteOnly));
+            settings.write("[registry]\nautoUpdate=false\n");
+        }
         QQuickStyle::setStyle(QStringLiteral("Basic"));
         // Qualquer aviso vindo de um arquivo QML (tipos ausentes, bindings quebrados) falha o teste.
         QTest::failOnWarning(QRegularExpression(QStringLiteral("\\.qml|QQmlApplicationEngine")));

@@ -8,7 +8,7 @@ Aplicativo desktop open source para encontrar, fazer backup e restaurar saves de
 > - backup no vault local (deduplicação, compressão, verificação de integridade);
 > - restauração segura (plano prévio, ponto de desfazer, troca atômica, política de cloud do launcher).
 >
-> Ainda faltam as chaves de produção e um endereço oficial do Registry, o registro do Windows, os backups automáticos e a exportação `.gamesave`.
+> Ainda faltam as chaves de produção do Registry, o registro do Windows, os backups automáticos e a exportação `.gamesave`.
 
 ## Stack
 
@@ -107,7 +107,7 @@ Em `backup` e `restore`, `--profile <arquivo.json>` substitui `--game` para usar
 | `SAVEFORGE_REGISTRY_MIRRORS` | Mirrors padrão, separados por `;`: URLs HTTPS ou pastas locais. Com mirrors, o app procura novos perfis uma vez por dia, e isso pode ser desligado em Configurações. A requisição leva só a versão do app. |
 | `SAVEFORGE_REGISTRY_BUNDLED_DIR` | Pasta de uma distribuição (o `dist/v1` do `saveforge-registry`) embutida no app. Ela alimenta o cache na primeira execução, para que os perfis funcionem sem internet. |
 
-Por padrão as opções de mirrors e de distribuição embutida ficam vazias. Para testar o download localmente, gere uma distribuição no `saveforge-registry` e rode `saveforge-cli registry update --mirror <pasta-ou-url>`. Também é possível definir `mirrors=<url>` no grupo `[registry]` do `settings.ini`.
+Em builds de desenvolvimento, que confiam nas chaves de teste, o mirror padrão é a distribuição de teste que o `saveforge-registry` publica em `https://birdra1n.github.io/saveforge-registry/v1/`. Builds com outro trust anchor começam sem mirror e devem definir o próprio. A distribuição embutida fica vazia por padrão. Para testar com uma distribuição local, rode `saveforge-cli registry update --mirror <pasta-ou-url>`. Também é possível definir `mirrors=<url>` no grupo `[registry]` do `settings.ini`.
 
 Os dados do app (cache do Registry) ficam em `%LOCALAPPDATA%/SaveForge` no Windows, `~/.local/share/SaveForge` no Linux e `~/Library/Application Support/SaveForge` no macOS. A variável `SAVEFORGE_DATA_DIR` permite trocar esse local.
 

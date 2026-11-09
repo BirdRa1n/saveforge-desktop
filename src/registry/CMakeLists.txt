@@ -43,7 +43,14 @@ qt_add_resources(saveforge_registry saveforge_registry_anchor
 
 # Mirrors tried in order when the app updates its profiles, separated by ";".
 # Empty means the app only uses the bundled distribution and manual imports.
-set(SAVEFORGE_REGISTRY_MIRRORS "" CACHE STRING "Registry mirror base URLs, separated by semicolons")
+# Development builds default to the test-key distribution that
+# saveforge-registry publishes on GitHub Pages; release builds name their own.
+if(SAVEFORGE_REGISTRY_TRUST_ANCHOR STREQUAL "${SAVEFORGE_SPECS_DIR}/registry/examples/root.v1/valid/root.json")
+    set(_default_mirrors "https://birdra1n.github.io/saveforge-registry/v1/")
+else()
+    set(_default_mirrors "")
+endif()
+set(SAVEFORGE_REGISTRY_MIRRORS "${_default_mirrors}" CACHE STRING "Registry mirror base URLs, separated by semicolons")
 if(SAVEFORGE_REGISTRY_MIRRORS)
     target_compile_definitions(saveforge_registry PRIVATE "SAVEFORGE_REGISTRY_MIRRORS=\"${SAVEFORGE_REGISTRY_MIRRORS}\"")
 endif()
