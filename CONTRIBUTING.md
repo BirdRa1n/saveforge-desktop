@@ -57,6 +57,7 @@ src/
   profiles/    Perfis de jogos: parser, regras de segurança de caminhos, resolução de arquivos.
   vault/       Vault local: blobs, snapshots, verificação e coleta de lixo.
   detection/   Detectores de launchers, associação de instalações a perfis, varredura save-first.
+  registry/    Verificação do Registry (Ed25519, cadeia de root, rollback), cache e catálogo.
   services/    Casos de uso que combinam os módulos: backup e restauração.
   app/         Executável GUI + módulo QML SaveForge.Ui
     qml/theme/       Tokens visuais (Theme) e ícones (Icons) — singletons
@@ -66,6 +67,7 @@ src/
 tests/
   unit/        Testes de unidade (Qt Test), um arquivo por módulo/assunto
   support/     Fixtures compartilhados (headers incluídos pelos testes)
+  data/        Dados de teste versionados; registry/generate.mjs regenera as distribuições assinadas
   ui/          Testes da interface QML
 cmake/         Módulos CMake auxiliares (avisos, dependências de terceiros)
 docs/adr/      Decisões arquiteturais locais deste repositório
@@ -80,6 +82,8 @@ external/specs Submódulo saveforge-specs (não edite aqui; mude no repositório
 ```
 app, cli → services → detection, vault, archive, registry, db → profiles → platform → core
 ```
+
+Na prática, o `registry` verifica e entrega perfis, e quem escolhe qual perfil usar para cada jogo é o catálogo (`ProfileCatalog`).
 
 - Cada módulo é uma biblioteca estática (`saveforge::<módulo>`), com cabeçalhos públicos em `src/<módulo>/include/saveforge/<módulo>/`.
 - Nada abaixo de `app` pode depender de QtGui ou QtQuick.
