@@ -48,6 +48,9 @@ else()
     string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" _arch)
 endif()
 
+# Values are written to CPackConfig.cmake escaped, so backslashes (Inno Setup
+# paths) and quotes survive.
+set(CPACK_VERBATIM_VARIABLES ON)
 set(CPACK_PACKAGE_NAME "SaveForge")
 set(CPACK_PACKAGE_VENDOR "SaveForge")
 set(CPACK_PACKAGE_VERSION "${SAVEFORGE_PACKAGE_VERSION}")
