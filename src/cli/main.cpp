@@ -10,9 +10,10 @@
 //
 //   saveforge-cli --version
 //   saveforge-cli detect [--profiles <dir>] [--no-save-scan]
-//   saveforge-cli backup --vault <dir> --profile <file> [--label <text>]
+//   saveforge-cli registry import <dir> | registry status
+//   saveforge-cli backup --vault <dir> (--game <id> | --profile <file>) [--label <text>]
 //   saveforge-cli snapshots --vault <dir> [--game <id>]
-//   saveforge-cli restore --vault <dir> --profile <file> --snapshot <id> [--cloud <policy>] [--yes]
+//   saveforge-cli restore --vault <dir> (--game <id> | --profile <file>) --snapshot <id> [--cloud <policy>] [--yes]
 namespace {
 
 void printUsage(QTextStream &out)
@@ -20,6 +21,7 @@ void printUsage(QTextStream &out)
     out << "Usage: saveforge-cli <command> [options]\n\n"
            "Commands:\n"
            "  detect     List installed games and match them to profiles (read-only)\n"
+           "  registry   Import a signed profile distribution, or show the cache status\n"
            "  backup     Back up a game into a vault\n"
            "  snapshots  List the snapshots in a vault\n"
            "  restore    Plan a restore, and perform it with --yes\n\n"
@@ -62,6 +64,8 @@ int main(int argc, char *argv[])
         return saveforge::cli::runSnapshots(commandArgs, out, err);
     if (command == u"restore")
         return saveforge::cli::runRestore(commandArgs, out, err);
+    if (command == u"registry")
+        return saveforge::cli::runRegistry(commandArgs, out, err);
 
     err << "unknown command: " << command << "\n\n";
     printUsage(err);

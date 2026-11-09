@@ -1,9 +1,9 @@
 // `backup`, `snapshots` and `restore` commands.
 
+#include "CliSupport.h"
 #include "Commands.h"
 
 #include "saveforge/core/Uuid.h"
-#include "saveforge/core/Version.h"
 #include "saveforge/detection/GameMatcher.h"
 #include "saveforge/detection/Launchers.h"
 #include "saveforge/profiles/ProfileParser.h"
@@ -20,6 +20,7 @@ namespace {
 
 const QCommandLineOption kVault(QStringLiteral("vault"), QStringLiteral("Vault directory."), QStringLiteral("dir"));
 const QCommandLineOption kProfile(QStringLiteral("profile"), QStringLiteral("Profile JSON file."), QStringLiteral("file"));
+const QCommandLineOption kGame(QStringLiteral("game"), QStringLiteral("Profile id from the registry cache."), QStringLiteral("id"));
 const QCommandLineOption kMap(QStringLiteral("map"),
                               QStringLiteral("Override a root folder, e.g. winAppData=D:/sandbox (repeatable)."),
                               QStringLiteral("placeholder=dir"));
@@ -36,7 +37,7 @@ services::ServiceEnvironment serviceEnvironment()
 {
     services::ServiceEnvironment env;
     env.machineId = machineId();
-    env.appVersion = QString::fromUtf8(kVersion.data(), static_cast<qsizetype>(kVersion.size()));
+    env.appVersion = appVersion();
     return env;
 }
 
@@ -72,24 +73,35 @@ std::optional<vault::Vault> openVault(const QCommandLineParser &parser, QTextStr
 // otherwise the host user's folders; --map overrides individual roots.
 std::optional<services::GameTarget> loadTarget(const QCommandLineParser &parser, QTextStream &out, QTextStream &err)
 {
-    if (!parser.isSet(kProfile)) {
-        err << "--profile is required" << Qt::endl;
-        return std::nullopt;
-    }
-    QFile file(parser.value(kProfile));
-    if (!file.open(QIODevice::ReadOnly)) {
-        err << "cannot read profile: " << file.errorString() << Qt::endl;
-        return std::nullopt;
-    }
-    auto profile = profiles::parseProfile(file.readAll());
-    if (!profile.ok()) {
-        err << "invalid profile: " << profile.error().toString() << Qt::endl;
-        return std::nullopt;
-    }
-
     services::GameTarget target;
-    target.profile = std::move(profile).value();
-    target.channel = target.profile.provenance.source == u"local" ? QStringLiteral("local") : QStringLiteral("official");
+    if (parser.isSet(kGame)) {
+        // A profile from the local registry cache.
+        const CatalogLoad load = loadCatalog();
+        printWarnings(load.warnings, err);
+        const auto entry = load.catalog.find(parser.value(kGame));
+        if (!entry) {
+            err << "no profile with id '" << parser.value(kGame) << "' in the registry cache" << Qt::endl;
+            return std::nullopt;
+        }
+        target.profile = entry->profile;
+        target.channel = entry->channel;
+    } else if (parser.isSet(kProfile)) {
+        QFile file(parser.value(kProfile));
+        if (!file.open(QIODevice::ReadOnly)) {
+            err << "cannot read profile: " << file.errorString() << Qt::endl;
+            return std::nullopt;
+        }
+        auto profile = profiles::parseProfile(file.readAll());
+        if (!profile.ok()) {
+            err << "invalid profile: " << profile.error().toString() << Qt::endl;
+            return std::nullopt;
+        }
+        target.profile = std::move(profile).value();
+        target.channel = target.profile.provenance.source == u"local" ? QStringLiteral("local") : QStringLiteral("official");
+    } else {
+        err << "--game <id> or --profile <file> is required" << Qt::endl;
+        return std::nullopt;
+    }
 
     const detection::DetectionEnvironment env = detection::DetectionEnvironment::host();
     const QList<detection::InstallCandidate> installs = detection::detectInstalledGames(env);
@@ -150,7 +162,7 @@ int runBackup(const QStringList &arguments, QTextStream &out, QTextStream &err)
     QCommandLineParser parser;
     parser.setApplicationDescription(QStringLiteral("Back up a game's saves into a vault."));
     const QCommandLineOption label(QStringLiteral("label"), QStringLiteral("Name for the snapshot."), QStringLiteral("text"));
-    parser.addOptions({kVault, kProfile, kMap, label});
+    parser.addOptions({kVault, kGame, kProfile, kMap, label});
     if (!parse(parser, arguments, out, err))
         return parser.isSet(QStringLiteral("help")) ? 0 : 2;
 
@@ -211,7 +223,7 @@ int runRestore(const QStringList &arguments, QTextStream &out, QTextStream &err)
                                    QStringLiteral("Launcher-cloud conflicts: prefer-saveforge or prefer-launcher."),
                                    QStringLiteral("policy"));
     const QCommandLineOption yes(QStringLiteral("yes"), QStringLiteral("Write the files (otherwise only plan)."));
-    parser.addOptions({kVault, kProfile, kMap, snapshot, cloud, yes});
+    parser.addOptions({kVault, kGame, kProfile, kMap, snapshot, cloud, yes});
     if (!parse(parser, arguments, out, err))
         return parser.isSet(QStringLiteral("help")) ? 0 : 2;
 

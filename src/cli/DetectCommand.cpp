@@ -1,3 +1,4 @@
+#include "CliSupport.h"
 #include "Commands.h"
 
 #include "saveforge/detection/GameMatcher.h"
@@ -6,6 +7,7 @@
 
 #include <QCommandLineParser>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QFile>
 
 namespace saveforge::cli {
@@ -52,7 +54,7 @@ int runDetect(const QStringList &arguments, QTextStream &out, QTextStream &err)
     parser.setApplicationDescription(QStringLiteral("List installed games and, optionally, match them to profiles."));
     parser.addHelpOption();
     const QCommandLineOption profilesOption(QStringLiteral("profiles"),
-                                            QStringLiteral("Directory with profile JSON files to match against."),
+                                            QStringLiteral("Directory with profile JSON files (default: the local registry cache)."),
                                             QStringLiteral("dir"));
     const QCommandLineOption noScanOption(QStringLiteral("no-save-scan"),
                                           QStringLiteral("Do not scan for saves of games that are not installed."));
@@ -84,14 +86,26 @@ int runDetect(const QStringList &arguments, QTextStream &out, QTextStream &err)
             out << "      prefix: " << game.winePrefix << " (user " << game.wineUser << ")" << Qt::endl;
     }
 
-    if (!parser.isSet(profilesOption))
+    // Profiles: an explicit folder, otherwise the local registry cache.
+    QElapsedTimer timer;
+    timer.start();
+    QList<profiles::Profile> profiles;
+    if (parser.isSet(profilesOption)) {
+        profiles = loadProfiles(parser.value(profilesOption), err);
+    } else {
+        const CatalogLoad load = loadCatalog();
+        printWarnings(load.warnings, err);
+        profiles = load.catalog.profiles();
+    }
+    out << Qt::endl << profiles.size() << " profile(s) loaded in " << timer.restart() << " ms." << Qt::endl;
+    if (profiles.isEmpty()) {
+        out << "No profiles: import a registry distribution with 'saveforge-cli registry import <dir>'." << Qt::endl;
         return 0;
+    }
 
-    const QList<profiles::Profile> profiles = loadProfiles(parser.value(profilesOption), err);
-    out << Qt::endl << profiles.size() << " profile(s) loaded." << Qt::endl;
     const detection::DetectionReport report =
         detection::detectGames(profiles, installs, env, !parser.isSet(noScanOption));
-    out << report.games.size() << " game(s) detected:" << Qt::endl;
+    out << report.games.size() << " game(s) detected in " << timer.elapsed() << " ms:" << Qt::endl;
     for (const detection::DetectedGame &game : report.games) {
         out << "  " << game.profileId << "  <- " << reasonLabel(game.reason);
         if (game.reason == detection::MatchReason::SavesFound)
