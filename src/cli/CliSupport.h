@@ -1,7 +1,6 @@
 #pragma once
 
-#include "saveforge/registry/Channel.h"
-#include "saveforge/registry/ProfileCatalog.h"
+#include "saveforge/services/Library.h"
 
 #include <QString>
 #include <QStringList>
@@ -15,15 +14,9 @@ namespace saveforge::cli {
 // <app data>/registry
 [[nodiscard]] QString registryCacheDirectory();
 
-struct CatalogLoad {
-    registry::ProfileCatalog catalog;
-    QList<registry::Notice> notices;
-    QStringList warnings;
-};
+using CatalogLoad = services::CatalogLoad;
 
-// Builds the profile catalog from every channel in the local registry cache.
-// Problems (untrusted or damaged cache, expired index, test trust anchor) are
-// returned as warnings; an empty catalog is not an error.
+// The profile catalog from the local registry cache (see services::loadCatalogFromCache).
 [[nodiscard]] CatalogLoad loadCatalog();
 
 // Prints warnings to `err`, one per line.

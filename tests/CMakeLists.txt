@@ -84,6 +84,10 @@ saveforge_add_test(tst_profile_catalog
     SOURCES unit/tst_profile_catalog.cpp
     LIBS saveforge::registry)
 
+saveforge_add_test(tst_library
+    SOURCES unit/tst_library.cpp
+    LIBS saveforge::services)
+
 saveforge_add_test(tst_ui_smoke
     SOURCES ui/tst_ui_smoke.cpp
     LIBS saveforge_uiplugin Qt6::Gui Qt6::Quick Qt6::QuickControls2)
