@@ -73,7 +73,7 @@ external/specs Submódulo saveforge-specs (não edite aqui; mude no repositório
 **Regra de dependência entre módulos.** As setas indicam "depende de" e só existem nessa direção:
 
 ```
-app, cli → services → detection, profiles, vault, archive, registry, db → platform → core
+app, cli → services → detection, vault, archive, registry, db → profiles → platform → core
 ```
 
 - Cada módulo é uma biblioteca estática (`saveforge::<módulo>`), com cabeçalhos públicos em `src/<módulo>/include/saveforge/<módulo>/`.

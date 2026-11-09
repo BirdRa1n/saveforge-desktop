@@ -2,9 +2,11 @@ configure_file(Version.h.in "${CMAKE_CURRENT_BINARY_DIR}/include/saveforge/core/
 
 qt_add_library(saveforge_core STATIC
     include/saveforge/core/Error.h
+    include/saveforge/core/JsonReader.h
     include/saveforge/core/Result.h
     include/saveforge/core/Uuid.h
     Error.cpp
+    JsonReader.cpp
     Uuid.cpp
     "${CMAKE_CURRENT_BINARY_DIR}/include/saveforge/core/Version.h"
 )
