@@ -1,8 +1,10 @@
 qt_add_library(saveforge_services STATIC
     include/saveforge/services/BackupService.h
     include/saveforge/services/GameTarget.h
+    include/saveforge/services/RestoreService.h
     BackupService.cpp
     GameTarget.cpp
+    RestoreService.cpp
 )
 add_library(saveforge::services ALIAS saveforge_services)
 
