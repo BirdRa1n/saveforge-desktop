@@ -136,10 +136,32 @@ Item {
                         font.pixelSize: Theme.textMeta
                     }
                 }
-                SecondaryButton {
-                    text: qsTr("Importar distribuição de perfis…")
-                    enabled: !AppController.busy
-                    onClicked: registryDialog.open()
+                Paragraph {
+                    text: AppController.canUpdateRegistry
+                          ? AppController.registryCheckedText
+                          : qsTr("Esta versão não tem um servidor de perfis configurado. Para adicionar perfis, importe uma distribuição.")
+                    color: Theme.textSubtle
+                }
+                ToggleSetting {
+                    Layout.fillWidth: true
+                    visible: AppController.canUpdateRegistry
+                    text: qsTr("Procurar novos perfis automaticamente, uma vez por dia")
+                    checked: AppController.autoUpdateRegistry
+                    onToggled: AppController.autoUpdateRegistry = checked
+                }
+                RowLayout {
+                    spacing: Theme.space3
+                    SecondaryButton {
+                        visible: AppController.canUpdateRegistry
+                        text: qsTr("Procurar agora")
+                        enabled: !AppController.busy
+                        onClicked: AppController.updateRegistry()
+                    }
+                    SecondaryButton {
+                        text: qsTr("Importar distribuição de perfis…")
+                        enabled: !AppController.busy
+                        onClicked: registryDialog.open()
+                    }
                 }
             }
 

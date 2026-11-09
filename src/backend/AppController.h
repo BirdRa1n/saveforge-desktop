@@ -43,6 +43,9 @@ class AppController : public QObject {
     Q_PROPERTY(QString vaultError READ vaultError NOTIFY vaultChanged)
     Q_PROPERTY(QString cloudPolicy READ cloudPolicy WRITE setCloudPolicy NOTIFY cloudPolicyChanged)
     Q_PROPERTY(QVariantList activity READ activity NOTIFY activityChanged)
+    Q_PROPERTY(bool canUpdateRegistry READ canUpdateRegistry CONSTANT)
+    Q_PROPERTY(bool autoUpdateRegistry READ autoUpdateRegistry WRITE setAutoUpdateRegistry NOTIFY registryChanged)
+    Q_PROPERTY(QString registryCheckedText READ registryCheckedText NOTIFY registryChanged)
 
 public:
     explicit AppController(QObject *parent = nullptr);
@@ -61,6 +64,12 @@ public:
     [[nodiscard]] QString cloudPolicy() const { return m_settings.cloudPolicy(); }
     void setCloudPolicy(const QString &policy);
     [[nodiscard]] QVariantList activity() const { return m_activity; }
+    // True when this build or the settings name at least one registry mirror.
+    [[nodiscard]] bool canUpdateRegistry() const { return !m_settings.registryMirrors().isEmpty(); }
+    [[nodiscard]] bool autoUpdateRegistry() const { return m_settings.autoUpdateRegistry(); }
+    void setAutoUpdateRegistry(bool enabled);
+    // "Verificado há 2 horas", "Ainda não verificado", for the settings page.
+    [[nodiscard]] QString registryCheckedText() const;
 
     // Re-reads the registry cache and scans the machine.
     Q_INVOKABLE void refresh();
@@ -79,6 +88,9 @@ public:
     // Executes the last plan. policy: "prefer-saveforge", "prefer-launcher" or "ask".
     Q_INVOKABLE void restore(const QString &gameId, const QString &snapshotId, const QString &policy);
 
+    // Downloads newer profiles from the registry mirrors and refreshes the
+    // library when something changed.
+    Q_INVOKABLE void updateRegistry();
     // Verifies and caches a registry distribution chosen by the user, then refreshes.
     Q_INVOKABLE void importRegistry(const QUrl &folder);
     // Switches to another vault directory; returns an error message or "".
@@ -90,6 +102,7 @@ signals:
     void vaultChanged();
     void cloudPolicyChanged();
     void activityChanged();
+    void registryChanged();
     // A message the interface may show transiently. kind: "success", "warning", "error", "info".
     void notify(const QString &text, const QString &kind);
 
@@ -98,6 +111,10 @@ private:
     void run(const QString &busyText, std::function<T()> work, std::function<void(T)> done);
     void log(const QString &text, const QString &kind);
     void openVault();
+    // Starts a quiet registry update when automatic updates are on and the
+    // last check is more than a day old.
+    void maybeUpdateRegistry();
+    void runRegistryUpdate(bool quiet);
     [[nodiscard]] services::ServiceEnvironment serviceEnvironment();
     [[nodiscard]] QString appVersion() const;
 
@@ -114,6 +131,7 @@ private:
     std::optional<services::RestorePlan> m_plan;
     QString m_planGameId;
     QFutureWatcherBase *m_running = nullptr;
+    bool m_autoUpdateChecked = false;
 };
 
 } // namespace saveforge::backend

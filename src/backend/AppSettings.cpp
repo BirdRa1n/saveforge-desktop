@@ -2,6 +2,7 @@
 
 #include "saveforge/core/Uuid.h"
 #include "saveforge/platform/AppPaths.h"
+#include "saveforge/registry/RegistryUpdater.h"
 
 #include <QDir>
 #include <QSettings>
@@ -64,6 +65,37 @@ void AppSettings::setCloudPolicy(const QString &policy)
         return;
     QSettings settings(file(), QSettings::IniFormat);
     settings.setValue(QStringLiteral("restore/cloudPolicy"), policy);
+}
+
+QStringList AppSettings::registryMirrors() const
+{
+    const QSettings settings(file(), QSettings::IniFormat);
+    const QStringList mirrors = settings.value(QStringLiteral("registry/mirrors")).toStringList();
+    return mirrors.isEmpty() ? registry::builtinMirrors() : mirrors;
+}
+
+bool AppSettings::autoUpdateRegistry() const
+{
+    const QSettings settings(file(), QSettings::IniFormat);
+    return settings.value(QStringLiteral("registry/autoUpdate"), true).toBool();
+}
+
+void AppSettings::setAutoUpdateRegistry(bool enabled)
+{
+    QSettings settings(file(), QSettings::IniFormat);
+    settings.setValue(QStringLiteral("registry/autoUpdate"), enabled);
+}
+
+QDateTime AppSettings::lastRegistryCheck() const
+{
+    const QSettings settings(file(), QSettings::IniFormat);
+    return QDateTime::fromString(settings.value(QStringLiteral("registry/lastCheck")).toString(), Qt::ISODate);
+}
+
+void AppSettings::setLastRegistryCheck(const QDateTime &when)
+{
+    QSettings settings(file(), QSettings::IniFormat);
+    settings.setValue(QStringLiteral("registry/lastCheck"), when.toUTC().toString(Qt::ISODate));
 }
 
 } // namespace saveforge::backend

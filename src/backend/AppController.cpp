@@ -6,6 +6,7 @@
 #include "saveforge/core/Version.h"
 #include "saveforge/detection/Launchers.h"
 #include "saveforge/registry/RegistryCache.h"
+#include "saveforge/registry/RegistryUpdater.h"
 #include "saveforge/services/BackupService.h"
 
 #include <QCoreApplication>
@@ -24,6 +25,14 @@ struct RefreshResult {
     services::CatalogLoad catalog;
     services::LibraryScan scan;
 };
+
+struct RegistryUpdateResult {
+    QList<registry::ChannelUpdate> channels;
+    QString error; // set when no update could be attempted at all
+};
+
+// Automatic checks run at most this often.
+constexpr qint64 kRegistryCheckIntervalSecs = 24 * 60 * 60;
 
 struct BackupAllResult {
     QList<services::LibraryGame> updated;
@@ -150,6 +159,112 @@ void AppController::refresh()
             emit catalogChanged();
             m_library.setGames(result.scan.games);
             log(countText(result.scan.games.size(), tr("jogo encontrado"), tr("jogos encontrados")), QStringLiteral("info"));
+            maybeUpdateRegistry();
+        });
+}
+
+void AppController::setAutoUpdateRegistry(bool enabled)
+{
+    if (enabled == m_settings.autoUpdateRegistry())
+        return;
+    m_settings.setAutoUpdateRegistry(enabled);
+    emit registryChanged();
+}
+
+QString AppController::registryCheckedText() const
+{
+    const QDateTime last = m_settings.lastRegistryCheck();
+    return last.isValid() ? tr("Última verificação: %1.").arg(relativeTime(last)) : tr("Ainda não verificado.");
+}
+
+void AppController::updateRegistry()
+{
+    runRegistryUpdate(false);
+}
+
+void AppController::maybeUpdateRegistry()
+{
+    // Only the first scan after start-up may trigger an automatic check.
+    if (m_autoUpdateChecked)
+        return;
+    m_autoUpdateChecked = true;
+    if (!m_settings.autoUpdateRegistry() || !canUpdateRegistry())
+        return;
+    const QDateTime last = m_settings.lastRegistryCheck();
+    if (last.isValid() && last.secsTo(QDateTime::currentDateTimeUtc()) < kRegistryCheckIntervalSecs)
+        return;
+    runRegistryUpdate(true);
+}
+
+void AppController::runRegistryUpdate(bool quiet)
+{
+    const QStringList mirrors = m_settings.registryMirrors();
+    if (mirrors.isEmpty()) {
+        log(tr("Esta versão não tem um servidor de perfis configurado. Importe uma distribuição de perfis."),
+            QStringLiteral("warning"));
+        return;
+    }
+    const QString cacheDir = m_settings.registryCacheDirectory();
+    const QString version = appVersion();
+    run<RegistryUpdateResult>(
+        tr("Procurando novos perfis…"),
+        [mirrors, cacheDir, version] {
+            RegistryUpdateResult result;
+            const auto anchor = registry::builtinTrustAnchor();
+            if (!anchor.ok()) {
+                result.error = anchor.error().message;
+                return result;
+            }
+            registry::RegistryCache cache(cacheDir);
+            registry::UpdateOptions options;
+            options.appVersion = version;
+            options.userAgent = QStringLiteral("SaveForge/") + version;
+            result.channels = registry::updateFromMirrors(mirrors, cache, anchor.value(), options);
+            return result;
+        },
+        [this, quiet](RegistryUpdateResult result) {
+            if (!result.error.isEmpty()) {
+                log(tr("Não foi possível atualizar os perfis: %1").arg(result.error), QStringLiteral("error"));
+                return;
+            }
+            bool changed = false;
+            bool answered = false;
+            QStringList failures;
+            bool untrusted = false;
+            for (const registry::ChannelUpdate &channel : std::as_const(result.channels)) {
+                switch (channel.status) {
+                case registry::ChannelUpdate::Status::Updated:
+                    changed = answered = true;
+                    log(tr("Perfis atualizados no canal %1: %2")
+                            .arg(channel.channel,
+                                 countText(channel.profileCount, tr("perfil disponível"), tr("perfis disponíveis"))),
+                        QStringLiteral("success"));
+                    break;
+                case registry::ChannelUpdate::Status::UpToDate:
+                    answered = true;
+                    break;
+                case registry::ChannelUpdate::Status::Failed:
+                    // A channel the mirrors do not publish is not a problem.
+                    if (channel.error->code == ErrorCode::NotFound)
+                        break;
+                    untrusted = untrusted || channel.error->code == ErrorCode::Untrusted;
+                    failures.append(channel.channel + QStringLiteral(": ") + channel.error->message);
+                    break;
+                }
+            }
+            if (answered) {
+                m_settings.setLastRegistryCheck(QDateTime::currentDateTimeUtc());
+                emit registryChanged();
+            }
+            // Automatic checks stay silent when offline; data that fails
+            // verification is always reported.
+            if (!failures.isEmpty() && (!quiet || untrusted))
+                log(tr("Não foi possível atualizar os perfis. Os perfis atuais continuam valendo. (%1)").arg(failures.join(QStringLiteral("; "))),
+                    untrusted ? QStringLiteral("error") : QStringLiteral("warning"));
+            else if (!changed && !quiet && failures.isEmpty())
+                log(tr("Os perfis já estão atualizados."), QStringLiteral("info"));
+            if (changed)
+                refresh();
         });
 }
 

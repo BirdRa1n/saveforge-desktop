@@ -1,6 +1,8 @@
 #pragma once
 
+#include <QDateTime>
 #include <QString>
+#include <QStringList>
 #include <QUuid>
 
 namespace saveforge::backend {
@@ -25,6 +27,15 @@ public:
     // "ask", "prefer-launcher" or "prefer-saveforge".
     [[nodiscard]] QString cloudPolicy() const;
     void setCloudPolicy(const QString &policy);
+
+    // Registry mirrors tried in order. Default: the mirrors of this build.
+    [[nodiscard]] QStringList registryMirrors() const;
+    // Whether the app checks the mirrors for new profiles once a day.
+    [[nodiscard]] bool autoUpdateRegistry() const;
+    void setAutoUpdateRegistry(bool enabled);
+    // When the mirrors last answered a check (invalid if never).
+    [[nodiscard]] QDateTime lastRegistryCheck() const;
+    void setLastRegistryCheck(const QDateTime &when);
 
 private:
     [[nodiscard]] QString file() const;

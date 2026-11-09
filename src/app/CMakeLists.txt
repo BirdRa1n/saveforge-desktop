@@ -25,6 +25,7 @@ qt_add_qml_module(saveforge_ui
         qml/components/Sidebar.qml
         qml/components/Spinner.qml
         qml/components/Toast.qml
+        qml/components/ToggleSetting.qml
         qml/pages/ActivityPage.qml
         qml/pages/GameDetailPage.qml
         qml/pages/LibraryPage.qml
