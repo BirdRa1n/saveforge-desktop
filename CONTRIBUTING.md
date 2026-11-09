@@ -55,6 +55,7 @@ src/
   core/        Tipos de domínio, Result/Error, versão. Depende apenas de QtCore.
   platform/    Pastas do usuário por SO e dentro de prefixos Wine/Proton.
   profiles/    Perfis de jogos: parser, regras de segurança de caminhos, resolução de arquivos.
+  vault/       Vault local: blobs, snapshots, verificação e coleta de lixo.
   app/         Executável GUI + módulo QML SaveForge.Ui
     qml/theme/       Tokens visuais (Theme) e ícones (Icons) — singletons
     qml/components/  Componentes reutilizáveis, sem lógica de negócio
@@ -63,7 +64,8 @@ src/
 tests/
   unit/        Testes de unidade (Qt Test), um arquivo por módulo/assunto
   ui/          Testes da interface QML
-cmake/         Módulos CMake auxiliares
+cmake/         Módulos CMake auxiliares (avisos, dependências de terceiros)
+docs/adr/      Decisões arquiteturais locais deste repositório
 external/specs Submódulo saveforge-specs (não edite aqui; mude no repositório de specs)
 .github/       Workflows de CI
 ```
@@ -94,6 +96,9 @@ app, cli → services → detection, vault, archive, registry, db → profiles �
 - Use `[[nodiscard]]` em funções cujo retorno não pode ser ignorado.
 - Use `QStringLiteral` para literais `QString`.
 - Os cabeçalhos usam `#pragma once`.
+- Para validar documentos definidos pelas specs, use `saveforge::JsonReader` (`core`). Ele rejeita propriedades desconhecidas e informa o JSON pointer do erro.
+- Escritas que precisam sobreviver a quedas seguem o padrão do vault: grave em `tmp/`, faça `fsync` e renomeie.
+- Dependências de terceiros entram em `cmake/SaveForgeDependencies.cmake`: primeiro `find_package`, com fallback para download fixado e verificado por SHA-256. Cada dependência nova precisa de justificativa (ADR ou descrição no PR).
 - Comentários explicam **por quê**, não o quê.
 
 ### QML
