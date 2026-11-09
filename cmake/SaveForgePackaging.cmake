@@ -46,9 +46,13 @@ set(CPACK_PACKAGE_FILE_NAME "SaveForge-${SAVEFORGE_PACKAGE_VERSION}-${_os}-${_ar
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "SaveForge")
 set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 set(CPACK_STRIP_FILES ON)
-# One top-level folder in archives, so unpacking never scatters files.
-set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)
-set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY ON)
+# One top-level folder in archives, so unpacking never scatters files. Disk
+# images need their content at the root (SaveForge.app next to the
+# Applications link), and DragNDrop fails with a top-level folder.
+if(NOT APPLE)
+    set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)
+    set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY ON)
+endif()
 set(CPACK_DMG_VOLUME_NAME "SaveForge ${SAVEFORGE_PACKAGE_VERSION}")
 set(CPACK_PACKAGE_CHECKSUM SHA256)
 
