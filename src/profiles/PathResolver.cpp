@@ -122,6 +122,28 @@ void walk(const QString &dir, const QStringList &pattern, qsizetype index, const
         return;
     }
 
+    // Fast path for literal segments: one stat instead of a directory listing.
+    // Most profile paths point to folders that do not exist on a given machine.
+    // A miss is final unless a case-insensitive match is wanted on a
+    // case-sensitive file system (e.g. a Proton prefix on Linux).
+    if (!isGlob(segment)) {
+        const QFileInfo direct(dir + u'/' + segment);
+        const bool hostIsCaseInsensitive = platform::hostOs() != platform::Os::Linux;
+        if (!direct.exists() && (cs == Qt::CaseSensitive || hostIsCaseInsensitive))
+            return;
+        if (direct.exists() && cs == Qt::CaseSensitive) {
+            if (isLink(direct))
+                return;
+            const QList<Step> next = steps + QList<Step>{{segment, index}};
+            if (last)
+                out.append({direct, next});
+            else if (direct.isDir())
+                walk(direct.absoluteFilePath(), pattern, index + 1, next, cs, out);
+            return;
+        }
+        // Otherwise list the directory to learn the real on-disk spelling.
+    }
+
     for (const QFileInfo &entry : listEntries(dir)) {
         if (!segmentMatches(segment, entry.fileName(), cs))
             continue;
