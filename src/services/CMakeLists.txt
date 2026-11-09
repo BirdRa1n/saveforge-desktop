@@ -1,10 +1,12 @@
 qt_add_library(saveforge_services STATIC
     include/saveforge/services/BackupService.h
+    include/saveforge/services/GameArt.h
     include/saveforge/services/GameTarget.h
     include/saveforge/services/Library.h
     include/saveforge/services/LocalProfiles.h
     include/saveforge/services/RestoreService.h
     BackupService.cpp
+    GameArt.cpp
     GameTarget.cpp
     Library.cpp
     LocalProfiles.cpp

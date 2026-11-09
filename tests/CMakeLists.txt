@@ -68,6 +68,10 @@ saveforge_add_test(tst_restore_service
     SOURCES unit/tst_restore_service.cpp
     LIBS saveforge::services)
 
+saveforge_add_test(tst_game_art
+    SOURCES unit/tst_game_art.cpp
+    LIBS saveforge::services)
+
 saveforge_add_test(tst_local_profiles
     SOURCES unit/tst_local_profiles.cpp
     LIBS saveforge::services)
