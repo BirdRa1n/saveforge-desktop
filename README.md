@@ -2,7 +2,12 @@
 
 Aplicativo desktop open source para encontrar, fazer backup e restaurar saves de jogos de PC. Funciona com Steam, Epic, GOG e instalações manuais, **totalmente offline**.
 
-> **Estado:** em desenvolvimento inicial (0.1.0). Já estão prontos a estrutura do projeto, a interface base, a resolução de pastas do sistema (incluindo prefixos Wine/Proton), a leitura, validação e resolução de perfis de jogos o vault local (snapshots, deduplicação, verificação de integridade e coleta de lixo) e a detecção de jogos (Steam, Epic, GOG e Heroic, com prefixos Wine/Proton, mais a varredura de saves de jogos não instalados). Restauração e a interface conectada continuam na Fase 1 do [roadmap](../saveforge-docs/planejamento/PLANEJAMENTO-TECNICO.md#18-roadmap-com-dependências).
+> **Estado:** em desenvolvimento inicial (0.1.0). O núcleo da Fase 1 do [roadmap](../saveforge-docs/planejamento/PLANEJAMENTO-TECNICO.md#18-roadmap-com-dependências) já funciona pela linha de comando:
+> - detecção de jogos (Steam, Epic, GOG e Heroic, com prefixos Wine/Proton, além da busca por saves de jogos não instalados);
+> - backup no vault local (deduplicação, compressão, verificação de integridade);
+> - restauração segura (plano prévio, ponto de desfazer, troca atômica, política de cloud do launcher).
+>
+> Ainda faltam a interface conectada a essas funções, o Registry de perfis e o registro do Windows.
 
 ## Stack
 
@@ -19,16 +24,18 @@ src/
   profiles/  perfis de jogos: parser v1, regras de segurança de caminhos, resolução de arquivos
   vault/     vault local: blobs por conteúdo (SHA-256 + zstd), snapshots, verificação e coleta de lixo
   detection/ detecção de jogos instalados (Steam, Epic, GOG, Heroic) e associação a perfis
+  services/  casos de uso: backup e restauração (checagem de jogo aberto, plano, desfazer)
   app/       executável GUI + módulo QML SaveForge.Ui (tema, componentes, páginas)
   cli/       saveforge-cli (sem GUI)
 tests/
   unit/      testes de unidade e de conformidade com as specs (Qt Test)
+  support/   fixtures compartilhados entre testes
   ui/        teste de fumaça da interface (falha em qualquer aviso de QML)
 external/
   specs/     submódulo saveforge-specs (schemas, catálogos e vetores de teste)
 ```
 
-Novos módulos (`db`, `archive`, `registry`, `services`) entram conforme o roadmap.
+Novos módulos (`db`, `archive`, `registry`) entram conforme o roadmap.
 
 Decisões locais deste repositório ficam em [`docs/adr/`](docs/adr/README.md).
 
@@ -70,17 +77,22 @@ SAVEFORGE_SCREENSHOT_DIR=/caminho/para/pasta ./out/build/debug/tst_ui_smoke
 
 ## Linha de comando
 
-`saveforge-cli` expõe as funções do app sem interface gráfica. Por enquanto, só há comandos de leitura:
+`saveforge-cli` expõe as funções do app sem interface gráfica. Use `saveforge-cli <comando> --help` para ver todas as opções.
 
-```bash
-saveforge-cli detect
-```
+| Comando | O que faz |
+|---|---|
+| `detect [--profiles <pasta>]` | Lista os jogos instalados. Com perfis, associa-os e procura saves de jogos não instalados. Só leitura. |
+| `backup --vault <pasta> --profile <arquivo.json>` | Cria um snapshot dos saves do jogo. |
+| `snapshots --vault <pasta>` | Lista os snapshots do vault. |
+| `restore --vault <pasta> --profile <arquivo.json> --snapshot <id>` | Mostra o plano de restauração. Só escreve com `--yes`. |
 
-```bash
-saveforge-cli detect --profiles <pasta-com-perfis-json>
-```
+Na restauração:
+- sempre é criado antes um snapshot `pre-restore`, que permite desfazer a operação;
+- arquivos que existem hoje e não estão no snapshot são mantidos;
+- com o jogo aberto, a restauração é recusada;
+- se o launcher também sincroniza os saves pelo próprio cloud, é preciso escolher `--cloud prefer-saveforge` ou `--cloud prefer-launcher`.
 
-O primeiro lista os jogos instalados pelos launchers suportados. O segundo também os associa aos perfis da pasta e procura saves de jogos não instalados.
+Para testar sem tocar nos seus saves reais, use `--map <placeholder>=<pasta>`, que redireciona uma pasta raiz (por exemplo `--map winAppData=D:/sandbox`).
 
 ## Licença
 

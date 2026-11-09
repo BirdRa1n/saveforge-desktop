@@ -57,6 +57,7 @@ src/
   profiles/    Perfis de jogos: parser, regras de segurança de caminhos, resolução de arquivos.
   vault/       Vault local: blobs, snapshots, verificação e coleta de lixo.
   detection/   Detectores de launchers, associação de instalações a perfis, varredura save-first.
+  services/    Casos de uso que combinam os módulos: backup e restauração.
   app/         Executável GUI + módulo QML SaveForge.Ui
     qml/theme/       Tokens visuais (Theme) e ícones (Icons) — singletons
     qml/components/  Componentes reutilizáveis, sem lógica de negócio
@@ -64,6 +65,7 @@ src/
   cli/         saveforge-cli (sem GUI)
 tests/
   unit/        Testes de unidade (Qt Test), um arquivo por módulo/assunto
+  support/     Fixtures compartilhados (headers incluídos pelos testes)
   ui/          Testes da interface QML
 cmake/         Módulos CMake auxiliares (avisos, dependências de terceiros)
 docs/adr/      Decisões arquiteturais locais deste repositório
@@ -100,7 +102,8 @@ app, cli → services → detection, vault, archive, registry, db → profiles �
 - Código que lê o sistema (pastas, registro do Windows, SO) recebe essas informações por parâmetro, como no `DetectionEnvironment`. Assim os testes podem simular qualquer SO com diretórios temporários.
 - Em arquivos processados pelo moc (classes com `Q_OBJECT`, incluindo testes), evite raw string literals que contenham aspas e `//`: o moc deixa de reconhecer a classe e o link falha com `undefined reference to vtable`.
 - Para validar documentos definidos pelas specs, use `saveforge::JsonReader` (`core`). Ele rejeita propriedades desconhecidas e informa o JSON pointer do erro.
-- Escritas que precisam sobreviver a quedas seguem o padrão do vault: grave em `tmp/`, faça `fsync` e renomeie.
+- Escritas que precisam sobreviver a quedas seguem o padrão do vault: grave num arquivo temporário, faça `fsync` (`platform::syncFile`) e renomeie.
+- Operações que alteram saves do usuário seguem o padrão da restauração: primeiro um plano sem efeitos colaterais, depois a execução com ponto de desfazer e rollback em caso de falha.
 - Dependências de terceiros entram em `cmake/SaveForgeDependencies.cmake`: primeiro `find_package`, com fallback para download fixado e verificado por SHA-256. Cada dependência nova precisa de justificativa (ADR ou descrição no PR).
 - Comentários explicam **por quê**, não o quê.
 
