@@ -43,6 +43,12 @@ QFileInfoList listEntries(const QString &dir)
     return entries;
 }
 
+const QRegularExpression &placeholderTokenPattern()
+{
+    static const QRegularExpression re(QStringLiteral("<([^<>]+)>"));
+    return re;
+}
+
 bool isGlob(const QString &segment)
 {
     return segment.contains(u'*') || segment.contains(u'?');
@@ -246,6 +252,63 @@ void keepNewest(QList<Match> &matches, const QJsonObject &params)
 }
 
 } // namespace
+
+Result<QString> resolveRestoreTarget(const QString &templatePath, const QHash<QString, QString> &bindings,
+                                     const ResolveContext &context, const PathRules &rules)
+{
+    QStringList violations = rules.checkSavePath(templatePath).violations;
+    violations.removeIf([](const QString &rule) { return rule == u"P5" || rule == u"P6"; });
+    if (!violations.isEmpty() || isGlob(templatePath))
+        return Error{ErrorCode::InvalidArgument, QStringLiteral("not a concrete, safe path template"), templatePath};
+
+    const QStringList segments = templatePath.split(u'/');
+    const QString rootToken = segments.first();
+    const QString rootDir = context.folders.value(rootToken.mid(1, rootToken.size() - 2));
+    if (rootDir.isEmpty())
+        return Error{ErrorCode::NotFound, QStringLiteral("%1 is not available on this machine").arg(rootToken),
+                     templatePath};
+
+    QStringList concrete;
+    for (const QString &segment : segments.mid(1)) {
+        QString value = segment;
+        auto it = placeholderTokenPattern().globalMatch(segment);
+        while (it.hasNext()) {
+            const auto match = it.next();
+            const QString bound = bindings.value(match.captured(1));
+            if (bound.isEmpty())
+                return Error{ErrorCode::InvalidArgument, QStringLiteral("no value for %1").arg(match.captured(0)),
+                             templatePath};
+            value.replace(match.captured(0), bound);
+        }
+        // Binding values come from backups and must not smuggle in separators or traversal.
+        if (value.isEmpty() || value == u"." || value == u".." || value.contains(u'/') || value.contains(u'\\'))
+            return Error{ErrorCode::InvalidArgument, QStringLiteral("unsafe path segment"), templatePath};
+        concrete.append(value);
+    }
+    if (rules.isSensitive(concrete))
+        return Error{ErrorCode::PermissionDenied, QStringLiteral("refusing to write to a sensitive location"),
+                     templatePath};
+
+    QString current = rootDir;
+    for (const QString &segment : std::as_const(concrete)) {
+        QString name = segment;
+        // Look up the real spelling even when exists() already says yes: on a
+        // case-insensitive file system it would succeed with any spelling.
+        if (context.caseInsensitive && QFileInfo(current).isDir()) {
+            for (const QFileInfo &entry : listEntries(current)) {
+                if (entry.fileName().compare(name, Qt::CaseInsensitive) == 0) {
+                    name = entry.fileName();
+                    break;
+                }
+            }
+        }
+        current += u'/' + name;
+        const QFileInfo info(current);
+        if (isLink(info))
+            return Error{ErrorCode::PermissionDenied, QStringLiteral("refusing to restore through a link"), current};
+    }
+    return current;
+}
 
 PathResolver::PathResolver(const PathRules &rules)
     : m_rules(rules)

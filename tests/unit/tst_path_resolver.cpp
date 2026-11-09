@@ -261,6 +261,82 @@ private slots:
         QCOMPARE(templatePaths(files), QStringList{QStringLiteral("<winDocuments>/Game/real.sav")});
     }
 
+    void restoreTargetsResolveOnThisMachine()
+    {
+        QTemporaryDir tmp;
+        const ResolveContext ctx = contextFor(tmp.path());
+        const auto target = resolveRestoreTarget(QStringLiteral("<winAppData>/Studio/Game/<storeUserId>/slot.sl2"),
+                                                 {{QStringLiteral("storeUserId"), QStringLiteral("42")}}, ctx);
+        QVERIFY(target.ok());
+        QCOMPARE(target.value(), tmp.path() + QStringLiteral("/winAppData/Studio/Game/42/slot.sl2"));
+    }
+
+    void restoreTargetsReuseExistingSpelling()
+    {
+        QTemporaryDir tmp;
+        const ResolveContext ctx = contextFor(tmp.path());
+        touch(tmp.path() + QStringLiteral("/winAppData"), QStringLiteral("Studio/GAME/old.sav"));
+        const auto target = resolveRestoreTarget(QStringLiteral("<winAppData>/Studio/Game/new.sav"), {}, ctx);
+        QVERIFY(target.ok());
+        QCOMPARE(target.value(), tmp.path() + QStringLiteral("/winAppData/Studio/GAME/new.sav"));
+    }
+
+    void restoreTargetsRejectUnsafeInput_data()
+    {
+        QTest::addColumn<QString>("path");
+        QTest::addColumn<QString>("binding");
+        QTest::addColumn<int>("code");
+        const int invalid = static_cast<int>(ErrorCode::InvalidArgument);
+        QTest::newRow("traversal") << QStringLiteral("<home>/Game/../.ssh/id_rsa") << QString() << invalid;
+        QTest::newRow("glob") << QStringLiteral("<home>/Game/*.sav") << QString() << invalid;
+        QTest::newRow("binding with separator") << QStringLiteral("<home>/Game/<storeUserId>/a.sav")
+                                                << QStringLiteral("../../x") << invalid;
+        QTest::newRow("binding is dot-dot") << QStringLiteral("<home>/Game/<storeUserId>/a.sav") << QStringLiteral("..")
+                                            << invalid;
+        QTest::newRow("missing binding") << QStringLiteral("<home>/Game/<storeUserId>/a.sav") << QString() << invalid;
+        QTest::newRow("sensitive") << QStringLiteral("<home>/Game/.ssh/key") << QString()
+                                   << static_cast<int>(ErrorCode::PermissionDenied);
+        QTest::newRow("unavailable root") << QStringLiteral("<macAppSupport>/Game/a.sav") << QString()
+                                          << static_cast<int>(ErrorCode::NotFound);
+    }
+    void restoreTargetsRejectUnsafeInput()
+    {
+        QFETCH(QString, path);
+        QFETCH(QString, binding);
+        QFETCH(int, code);
+        QTemporaryDir tmp;
+        QHash<QString, QString> bindings;
+        if (!binding.isEmpty())
+            bindings.insert(QStringLiteral("storeUserId"), binding);
+        const auto target = resolveRestoreTarget(path, bindings, contextFor(tmp.path()));
+        QVERIFY(!target.ok());
+        QCOMPARE(static_cast<int>(target.error().code), code);
+    }
+
+    void restoreTargetsRefuseLinks()
+    {
+        QTemporaryDir tmp;
+        QTemporaryDir outside;
+        const ResolveContext ctx = contextFor(tmp.path());
+        QVERIFY(QDir().mkpath(tmp.path() + QStringLiteral("/winDocuments/Game")));
+        const QString link = tmp.path() + QStringLiteral("/winDocuments/Game/saves");
+#if defined(Q_OS_WIN)
+        QProcess mklink;
+        mklink.setStandardOutputFile(QProcess::nullDevice());
+        mklink.start(QStringLiteral("cmd"), {QStringLiteral("/c"), QStringLiteral("mklink"), QStringLiteral("/J"),
+                                             QDir::toNativeSeparators(link), QDir::toNativeSeparators(outside.path())});
+        mklink.waitForFinished();
+        if (!QFileInfo(link).isJunction())
+            QSKIP("cannot create junctions on this system");
+#else
+        if (!QFile::link(outside.path(), link))
+            QSKIP("cannot create symbolic links on this system");
+#endif
+        const auto target = resolveRestoreTarget(QStringLiteral("<winDocuments>/Game/saves/slot.sav"), {}, ctx);
+        QVERIFY(!target.ok());
+        QCOMPARE(target.error().code, ErrorCode::PermissionDenied);
+    }
+
     void latestNKeepsNewestByModificationTime()
     {
         QTemporaryDir tmp;

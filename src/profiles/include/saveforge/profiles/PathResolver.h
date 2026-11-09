@@ -59,4 +59,22 @@ private:
     const PathRules &m_rules;
 };
 
+// Maps a concrete path in template form (a snapshot's `path`) to the absolute
+// location it must be restored to on this machine
+// (saveforge-specs/vault/SPEC.md section 4, profile/path-rules.md run-time obligations):
+//
+// - the root placeholder is resolved with `context.folders` (NotFound when the
+//   placeholder is not available here, e.g. the game is not installed);
+// - segment placeholders are replaced with `bindings` (the snapshot's values,
+//   possibly remapped to another store account);
+// - the result must stay below the root folder, must not be a sensitive
+//   location and must not traverse a symbolic link or junction
+//   (PermissionDenied otherwise);
+// - with case-insensitive contexts, existing folders are reused with their
+//   real on-disk spelling.
+[[nodiscard]] Result<QString> resolveRestoreTarget(const QString &templatePath,
+                                                   const QHash<QString, QString> &bindings,
+                                                   const ResolveContext &context,
+                                                   const PathRules &rules = PathRules::builtin());
+
 } // namespace saveforge::profiles
