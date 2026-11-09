@@ -14,6 +14,7 @@ QString errorCodeName(ErrorCode code)
     case ErrorCode::PermissionDenied: return QStringLiteral("permission_denied");
     case ErrorCode::Cancelled: return QStringLiteral("cancelled");
     case ErrorCode::Untrusted: return QStringLiteral("untrusted");
+    case ErrorCode::Network: return QStringLiteral("network");
     }
     return QStringLiteral("unknown");
 }

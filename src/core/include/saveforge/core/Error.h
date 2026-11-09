@@ -15,6 +15,7 @@ enum class ErrorCode {
     PermissionDenied,
     Cancelled,
     Untrusted,      // signature, trust chain or anti-rollback check failed
+    Network,        // a remote source could not be reached or answered with an error
 };
 
 // Erro de domínio: código estável + mensagem legível + contexto opcional
