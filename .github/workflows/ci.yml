@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows (MSVC)
+            os: windows-latest
+            qt-arch: win64_msvc2022_64
+          - name: Linux (GCC)
+            os: ubuntu-24.04
+            qt-arch: linux_gcc_64
+          - name: macOS (Clang)
+            os: macos-latest
+            qt-arch: clang_64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.12.*"
+          arch: ${{ matrix.qt-arch }}
+          cache: true
+
+      - name: Instalar Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
+
+      - name: Ambiente MSVC
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Dependências de sistema (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libxkbcommon-dev
+
+      - name: Configurar
+        run: cmake --preset ci
+
+      - name: Compilar
+        run: cmake --build --preset ci
+
+      - name: qmllint
+        run: cmake --build --preset ci --target all_qmllint
+
+      - name: Testes
+        run: ctest --preset ci
