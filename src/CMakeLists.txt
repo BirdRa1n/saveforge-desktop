@@ -4,5 +4,6 @@
 add_subdirectory(core)
 add_subdirectory(platform)
 add_subdirectory(profiles)
+add_subdirectory(vault)
 add_subdirectory(app)
 add_subdirectory(cli)
