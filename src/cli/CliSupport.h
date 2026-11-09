@@ -14,9 +14,12 @@ namespace saveforge::cli {
 // <app data>/registry
 [[nodiscard]] QString registryCacheDirectory();
 
+// <app data>/profiles: local profiles and manual games.
+[[nodiscard]] QString localProfilesDirectory();
+
 using CatalogLoad = services::CatalogLoad;
 
-// The profile catalog from the local registry cache (see services::loadCatalogFromCache).
+// The profile catalog: local profiles plus the registry cache (see services::loadCatalogFromCache).
 [[nodiscard]] CatalogLoad loadCatalog();
 
 // Prints warnings to `err`, one per line.

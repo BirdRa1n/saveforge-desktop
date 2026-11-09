@@ -15,9 +15,14 @@ QString registryCacheDirectory()
     return platform::appDataDirectory() + QStringLiteral("/registry");
 }
 
+QString localProfilesDirectory()
+{
+    return platform::appDataDirectory() + QStringLiteral("/profiles");
+}
+
 CatalogLoad loadCatalog()
 {
-    return services::loadCatalogFromCache(registryCacheDirectory(), appVersion());
+    return services::loadCatalogFromCache(registryCacheDirectory(), appVersion(), localProfilesDirectory());
 }
 
 void printWarnings(const QStringList &warnings, QTextStream &err)

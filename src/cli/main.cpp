@@ -11,6 +11,7 @@
 //   saveforge-cli --version
 //   saveforge-cli detect [--profiles <dir>] [--no-save-scan]
 //   saveforge-cli registry update | registry import <dir> | registry status
+//   saveforge-cli profiles list | add --name <name> --folder <dir> | import <file> | remove <id>
 //   saveforge-cli backup --vault <dir> (--game <id> | --profile <file>) [--label <text>]
 //   saveforge-cli snapshots --vault <dir> [--game <id>]
 //   saveforge-cli restore --vault <dir> (--game <id> | --profile <file>) --snapshot <id> [--cloud <policy>] [--yes]
@@ -22,7 +23,8 @@ void printUsage(QTextStream &out)
            "Commands:\n"
            "  detect     List installed games and match them to profiles (read-only)\n"
            "  registry   Download or import signed profiles, or show the cache status\n"
-           "  backup     Back up a game into a vault\n"
+           "  profiles   Add games by hand and manage local profiles\n"
+           "  backup    Back up a game into a vault\n"
            "  snapshots  List the snapshots in a vault\n"
            "  restore    Plan a restore, and perform it with --yes\n\n"
            "Options:\n"
@@ -64,6 +66,8 @@ int main(int argc, char *argv[])
         return saveforge::cli::runSnapshots(commandArgs, out, err);
     if (command == u"restore")
         return saveforge::cli::runRestore(commandArgs, out, err);
+    if (command == u"profiles")
+        return saveforge::cli::runProfiles(commandArgs, out, err);
     if (command == u"registry")
         return saveforge::cli::runRegistry(commandArgs, out, err);
 

@@ -21,7 +21,11 @@ int runSnapshots(const QStringList &arguments, QTextStream &out, QTextStream &er
 // Prints the plan; writes files only with --yes.
 int runRestore(const QStringList &arguments, QTextStream &out, QTextStream &err);
 
-// `saveforge-cli registry import <dir> [--channel <name>]` and `saveforge-cli registry status`
+// `saveforge-cli profiles list | add --name <name> --folder <dir>... | import <file> | remove <id>`
+// Manages local profiles: games added by hand and imported profile files.
+int runProfiles(const QStringList &arguments, QTextStream &out, QTextStream &err);
+
+// `saveforge-cli registry update | import <dir> [--channel <name>] | status`
 int runRegistry(const QStringList &arguments, QTextStream &out, QTextStream &err);
 
 } // namespace saveforge::cli

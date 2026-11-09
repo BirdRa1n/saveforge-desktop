@@ -4,6 +4,7 @@ qt_add_executable(saveforge_cli
     CliSupport.cpp
     Commands.h
     DetectCommand.cpp
+    ProfilesCommand.cpp
     RegistryCommand.cpp
     VaultCommands.cpp
 )
