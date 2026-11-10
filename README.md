@@ -7,9 +7,10 @@ Aplicativo desktop open source para encontrar, fazer backup e restaurar saves de
 > - detecção de jogos (Steam, Epic, GOG e Heroic, com prefixos Wine/Proton, além da busca por saves de jogos não instalados);
 > - backup no vault local (deduplicação, compressão, verificação de integridade);
 > - restauração segura (plano prévio, ponto de desfazer, troca atômica, política de cloud do launcher);
-> - jogos adicionados à mão e perfis locais, que têm prioridade sobre o Registry.
+> - jogos adicionados à mão e perfis locais, que têm prioridade sobre o Registry;
+> - saves com nome, entre os quais se alterna sem perder o progresso de nenhum, e backups automáticos (ao fechar o jogo ou periódicos), com o app na bandeja do sistema.
 >
-> Ainda faltam as chaves de produção do Registry, o registro do Windows, os backups automáticos e a exportação `.gamesave`.
+> Ainda faltam as chaves de produção do Registry, o registro do Windows, a retenção de backups e a exportação `.gamesave`.
 
 ## Stack
 
@@ -131,6 +132,10 @@ Em `backup` e `restore`, `--profile <arquivo.json>` substitui `--game` para usar
 Em builds de desenvolvimento, que confiam nas chaves de teste, o mirror padrão é a distribuição de teste que o `saveforge-registry` publica em `https://birdra1n.github.io/saveforge-registry/v1/`. Builds com outro trust anchor começam sem mirror e devem definir o próprio. A distribuição embutida fica vazia por padrão. Para testar com uma distribuição local, rode `saveforge-cli registry update --mirror <pasta-ou-url>`. Também é possível definir `mirrors=<url>` no grupo `[registry]` do `settings.ini`.
 
 **Jogos adicionados à mão.** Viram perfis locais (`profile.v1`, com origem `local`), guardados em `<dados do app>/profiles/<id>.json`, e passam pela mesma validação dos perfis do Registry. Perfis descrevem locais por placeholders, nunca por caminhos absolutos. Por isso, as pastas de saves precisam ficar dentro das pastas do usuário (pasta pessoal, Documentos, AppData e equivalentes no Linux e no macOS). Pastas dentro da instalação do jogo ainda não são aceitas.
+
+**Saves com nome.** Na página de um jogo, "Salvar como novo save" dá um nome ao progresso atual, por exemplo outro personagem. "Continuar este save" troca para outro save, depois de mostrar o plano de restauração. O progresso do save que fica para trás é guardado nele, e os backups seguintes vão para o save em uso. O botão "Abrir pasta dos saves" abre a pasta do jogo no gerenciador de arquivos. Veja a [ADR 0004](docs/adr/0004-save-slots-and-automatic-backups.md).
+
+**Backups automáticos.** O app faz backup quando um jogo fecha e, se você quiser, a cada 1, 6 ou 24 horas, mas só quando os saves mudaram. Fechar a janela deixa o app na bandeja do sistema para os backups continuarem; isso pode ser desligado em Configurações.
 
 **Capas dos jogos.** O app usa as imagens que os launchers já guardam no computador: a capa, o banner e o logo do cache da Steam (`appcache/librarycache`) e o ícone que a GOG instala junto do jogo. Jogos com ID da Steam que não têm capa local, como os não instalados, podem ter a capa baixada do CDN de imagens da Steam. O pedido só informa o ID do jogo, e o download pode ser desligado em Configurações. As capas baixadas ficam em `<dados do app>/covers`.
 
