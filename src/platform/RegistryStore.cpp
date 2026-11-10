@@ -14,9 +14,6 @@ namespace saveforge::platform {
 
 namespace {
 
-constexpr int kMaxDepth = 32;
-constexpr qsizetype kMaxKeys = 10'000;
-
 Error invalidKey(const QString &key)
 {
     return Error{ErrorCode::PermissionDenied, QStringLiteral("only keys under HKCU/Software can be used"), key};
@@ -34,6 +31,10 @@ public:
 };
 
 #if defined(Q_OS_WIN)
+
+// Limits of a key tree read, against runaway or hostile hives.
+constexpr int kMaxDepth = 32;
+constexpr qsizetype kMaxKeys = 10'000;
 
 // "HKCU/Software/A/B" -> L"Software\\A\\B"
 std::wstring subPath(const QString &key)
