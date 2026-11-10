@@ -43,7 +43,7 @@ external/
   specs/     submódulo saveforge-specs (schemas, catálogos e vetores de teste)
 ```
 
-Novos módulos (`db`, `archive`) entram conforme o roadmap.
+O módulo `db` (índice SQLite) entra conforme o roadmap.
 
 Decisões locais deste repositório ficam em [`docs/adr/`](docs/adr/README.md).
 
