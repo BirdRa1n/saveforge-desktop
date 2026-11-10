@@ -79,6 +79,9 @@ QString writeZip(const QString &path, const QList<Entry> &entries)
 
 } // namespace
 
+// Before the first use of QList<Entry> as test data (GCC and Clang insist).
+Q_DECLARE_METATYPE(Entry)
+
 class TestGamesave : public QObject {
     Q_OBJECT
 
@@ -274,7 +277,6 @@ private slots:
     }
 };
 
-Q_DECLARE_METATYPE(Entry)
 
 QTEST_GUILESS_MAIN(TestGamesave)
 #include "tst_gamesave.moc"
