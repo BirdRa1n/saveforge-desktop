@@ -25,6 +25,17 @@ ApplicationWindow {
         function onNotify(text, kind) { toast.show(text, kind) }
     }
 
+    // With a tray icon and the user's consent, closing only hides the window
+    // so automatic backups keep running; otherwise it quits the app.
+    onClosing: close => {
+        if (AppController.trayAvailable && AppController.runInBackground) {
+            close.accepted = false
+            window.hide()
+        } else {
+            Qt.quit()
+        }
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 0

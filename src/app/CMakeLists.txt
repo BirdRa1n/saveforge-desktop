@@ -49,7 +49,7 @@ qt_add_qml_module(saveforge_ui
 target_link_libraries(saveforge_ui PRIVATE Qt6::Quick Qt6::QuickControls2 Qt6::QuickDialogs2 saveforge_backend)
 
 # --- Executável GUI ---
-qt_add_executable(saveforge_app WIN32 MACOSX_BUNDLE main.cpp)
+qt_add_executable(saveforge_app WIN32 MACOSX_BUNDLE main.cpp TrayIcon.h TrayIcon.cpp)
 
 # App icon (source: icons/saveforge.svg; regenerate with tools/icons/generate.py).
 # The PNG is the window icon at run time; the .rc and .icns give the
@@ -77,7 +77,8 @@ target_link_libraries(saveforge_app PRIVATE
     saveforge::core
     saveforge_uiplugin
     saveforge_backendplugin
-    Qt6::Gui Qt6::Quick Qt6::QuickControls2
+    Qt6::Gui Qt6::Quick Qt6::QuickControls2 Qt6::Widgets
+    saveforge_backend
 )
 saveforge_set_warnings(saveforge_app)
 

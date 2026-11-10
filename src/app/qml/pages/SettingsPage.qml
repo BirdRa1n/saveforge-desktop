@@ -112,6 +112,48 @@ Item {
             }
 
             Section {
+                title: qsTr("Backups automáticos")
+                Paragraph {
+                    text: qsTr("O SaveForge pode guardar o progresso sozinho. Ele só cria um backup quando os saves mudaram desde o último.")
+                }
+                ToggleSetting {
+                    Layout.fillWidth: true
+                    text: qsTr("Fazer backup quando um jogo fechar")
+                    checked: AppController.backupOnGameExit
+                    onToggled: AppController.backupOnGameExit = checked
+                }
+                Paragraph {
+                    text: qsTr("Backup periódico dos jogos com saves novos:")
+                }
+                RowLayout {
+                    spacing: Theme.space2
+                    ButtonGroup { id: intervalGroup }
+                    Repeater {
+                        model: [
+                            { hours: 0, label: qsTr("Desligado") },
+                            { hours: 1, label: qsTr("A cada hora") },
+                            { hours: 6, label: qsTr("A cada 6 horas") },
+                            { hours: 24, label: qsTr("Uma vez por dia") }
+                        ]
+                        delegate: FilterChip {
+                            required property var modelData
+                            text: modelData.label
+                            checked: AppController.backupIntervalHours === modelData.hours
+                            ButtonGroup.group: intervalGroup
+                            onClicked: AppController.backupIntervalHours = modelData.hours
+                        }
+                    }
+                }
+                ToggleSetting {
+                    Layout.fillWidth: true
+                    visible: AppController.trayAvailable
+                    text: qsTr("Continuar na bandeja do sistema ao fechar a janela, para os backups automáticos seguirem funcionando")
+                    checked: AppController.runInBackground
+                    onToggled: AppController.runInBackground = checked
+                }
+            }
+
+            Section {
                 title: qsTr("Perfis de jogos")
                 Paragraph {
                     text: qsTr("Perfis disponíveis: %1. Os perfis dizem ao SaveForge onde cada jogo guarda os saves.")
