@@ -1,6 +1,6 @@
-# ADRs do SaveForge Desktop
+# ADRs do SaveVault Desktop
 
-Decisões que afetam só este repositório. As decisões que afetam mais de um repositório ficam em `saveforge-docs/adr/`.
+Decisões que afetam só este repositório. As decisões que afetam mais de um repositório ficam em `savevault-docs/adr/`.
 
 | ADR | Título | Status |
 |---|---|---|
@@ -10,3 +10,4 @@ Decisões que afetam só este repositório. As decisões que afetam mais de um r
 | [0004](0004-save-slots-and-automatic-backups.md) | Saves com nome e backups automáticos | Aceita |
 | [0005](0005-miniz-for-gamesave-archives.md) | miniz para os arquivos `.gamesave` | Aceita |
 | [0006](0006-console-studio-interface.md) | Interface Console × Studio e barra de título integrada | Aceita |
+| [0007](0007-rename-to-savevault.md) | O projeto passa a se chamar SaveVault | Aceita |
