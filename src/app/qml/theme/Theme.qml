@@ -30,6 +30,9 @@ QtObject {
     readonly property color successFg: "#86EFAC"
     readonly property color warningBg: "#3A2A12"
     readonly property color warningFg: "#FCD34D"
+    readonly property color dangerFg: "#F87171"
+    // Text of unselected filter chips: between textMuted and text.
+    readonly property color chipText: "#CDBFAE"
     readonly property color neutralBg: "#2E2820"
     readonly property color neutralFg: "#D6CBBD"
 

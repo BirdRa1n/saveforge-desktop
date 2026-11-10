@@ -52,7 +52,7 @@ Item {
                     Layout.preferredWidth: 8
                     Layout.preferredHeight: 8
                     radius: 4
-                    color: entry.modelData.kind === "error" ? "#F87171"
+                    color: entry.modelData.kind === "error" ? Theme.dangerFg
                          : entry.modelData.kind === "warning" ? Theme.warningFg
                          : entry.modelData.kind === "success" ? Theme.successFg : Theme.textSubtle
                 }

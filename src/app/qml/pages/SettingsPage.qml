@@ -101,7 +101,7 @@ Item {
                 Paragraph {
                     id: vaultError
                     visible: text.length > 0
-                    color: "#F87171"
+                    color: Theme.dangerFg
                     text: AppController.vaultError
                 }
                 SecondaryButton {

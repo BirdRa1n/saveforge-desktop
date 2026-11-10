@@ -23,7 +23,7 @@ Rectangle {
     height: layout.implicitHeight + 2 * Theme.space3
     radius: Theme.radiusControl
     color: Theme.surfaceRaised
-    border.color: kind === "error" ? "#F87171" : kind === "warning" ? Theme.warningFg
+    border.color: kind === "error" ? Theme.dangerFg : kind === "warning" ? Theme.warningFg
                 : kind === "success" ? Theme.successFg : Theme.borderStrong
     Accessible.role: Accessible.AlertMessage
     Accessible.name: label.text

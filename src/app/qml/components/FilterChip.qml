@@ -22,7 +22,7 @@ AbstractButton {
     contentItem: Text {
         id: label
         text: control.text
-        color: control.checked ? Theme.bg : "#CDBFAE"
+        color: control.checked ? Theme.bg : Theme.chipText
         font.family: Theme.fontBody
         font.pixelSize: 13
         font.weight: Font.Medium
