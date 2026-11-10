@@ -22,7 +22,14 @@ Item {
         asynchronous: true
         cache: true
         fillMode: Image.PreserveAspectCrop
-        sourceSize.width: Math.ceil(root.width * Screen.devicePixelRatio)
+        // Decode at the device-pixel size of the whole area: with
+        // PreserveAspectCrop, Qt scales the image to cover both dimensions, so a
+        // landscape cover in a square slot is not decoded small and then
+        // stretched (which made thumbnails blurry).
+        sourceSize: Qt.size(Math.ceil(root.width * Screen.devicePixelRatio),
+                            Math.ceil(root.height * Screen.devicePixelRatio))
+        smooth: true
+        mipmap: true
     }
 
     Rectangle {

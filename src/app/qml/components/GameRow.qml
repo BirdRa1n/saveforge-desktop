@@ -76,8 +76,11 @@ AbstractButton {
             }
         }
 
+        // preferredWidth 1 + fillWidth: the column takes the free space without
+        // its text width pushing the status column, so statuses line up.
         ColumnLayout {
             Layout.fillWidth: true
+            Layout.preferredWidth: 1
             spacing: 1
             Text {
                 Layout.fillWidth: true
@@ -101,6 +104,8 @@ AbstractButton {
         // Status: a dot in the status colour plus its text (never colour alone).
         RowLayout {
             Layout.preferredWidth: 132
+            Layout.minimumWidth: 132
+            Layout.maximumWidth: 132
             Layout.rightMargin: Theme.space2
             spacing: 6
             Rectangle {
