@@ -90,6 +90,16 @@ public:
     [[nodiscard]] Result<Snapshot> createSnapshot(const SnapshotRequest &request,
                                                   const FileReadCallback &onFileRead = {});
 
+    // Supplies the original bytes of a blob by SHA-256 (e.g. from a .gamesave).
+    using BlobSource = std::function<Result<QByteArray>(const QString &sha256)>;
+
+    // Stores a snapshot taken elsewhere with its original id and contents
+    // (gamesave/SPEC.md section 5). Blobs the vault lacks are read from
+    // `source` and must hash to their name. Returns false when a snapshot with
+    // that id already exists (imports are idempotent), true when it was added.
+    // The document is written last, after every blob is durable.
+    [[nodiscard]] Result<bool> importSnapshot(const Snapshot &snapshot, const BlobSource &source);
+
     // Game ids that have at least one snapshot.
     [[nodiscard]] QStringList games() const;
     // Snapshots of a game, oldest first. Unreadable snapshot files are skipped

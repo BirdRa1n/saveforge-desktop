@@ -8,3 +8,4 @@ Decisões que afetam só este repositório. As decisões que afetam mais de um r
 | [0002](0002-monocypher-for-ed25519.md) | Monocypher para verificar assinaturas Ed25519 | Aceita |
 | [0003](0003-registry-download.md) | Download do Registry por mirrors e Registry embutido | Aceita |
 | [0004](0004-save-slots-and-automatic-backups.md) | Saves com nome e backups automáticos | Aceita |
+| [0005](0005-miniz-for-gamesave-archives.md) | miniz para os arquivos `.gamesave` | Aceita |

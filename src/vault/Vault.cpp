@@ -3,6 +3,7 @@
 #include "saveforge/core/Uuid.h"
 #include "saveforge/platform/FileSync.h"
 
+#include <QBuffer>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -208,6 +209,42 @@ Result<Snapshot> Vault::createSnapshot(const SnapshotRequest &request, const Fil
         !written.ok())
         return written.error();
     return snapshot;
+}
+
+Result<bool> Vault::importSnapshot(const Snapshot &snapshot, const BlobSource &source)
+{
+    WriterLock lock(m_dir);
+    if (auto acquired = lock.acquire(); !acquired.ok())
+        return acquired.error();
+    if (QFile::exists(snapshotPath(snapshot.gameId, snapshot.snapshotId)))
+        return false;
+
+    const QByteArray json = toJson(snapshot);
+    if (auto check = parseSnapshot(json); !check.ok())
+        return Error{ErrorCode::InvalidArgument, QStringLiteral("snapshot is invalid: ") + check.error().message,
+                     check.error().context};
+
+    for (const SnapshotFile &file : snapshot.files) {
+        if (m_blobs.contains(file.sha256))
+            continue;
+        auto bytes = source ? source(file.sha256)
+                            : Result<QByteArray>(Error{ErrorCode::NotFound, QStringLiteral("blob missing"), file.sha256});
+        if (!bytes.ok())
+            return bytes.error();
+        QBuffer buffer(&bytes.value());
+        if (!buffer.open(QIODevice::ReadOnly))
+            return ioError(QStringLiteral("cannot read blob data"), file.sha256);
+        auto stored = m_blobs.store(buffer);
+        if (!stored.ok())
+            return stored.error();
+        if (stored.value().sha256 != file.sha256)
+            return Error{ErrorCode::Corrupted, QStringLiteral("blob content does not match its hash"), file.sha256};
+    }
+    if (auto written = writeDurably(m_blobs.tmpDir(), snapshotPath(snapshot.gameId, snapshot.snapshotId), json);
+        !written.ok())
+        return written.error();
+    qCInfo(lcVault) << "imported snapshot" << uuidToString(snapshot.snapshotId) << "of" << snapshot.gameId;
+    return true;
 }
 
 QStringList Vault::games() const

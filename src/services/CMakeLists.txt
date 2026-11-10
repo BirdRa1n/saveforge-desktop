@@ -20,6 +20,6 @@ add_library(saveforge::services ALIAS saveforge_services)
 
 target_include_directories(saveforge_services PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(saveforge_services
-    PUBLIC saveforge::core saveforge::platform saveforge::profiles saveforge::vault saveforge::detection saveforge::registry Qt6::Core
+    PUBLIC saveforge::core saveforge::platform saveforge::profiles saveforge::vault saveforge::archive saveforge::detection saveforge::registry Qt6::Core
 )
 saveforge_set_warnings(saveforge_services)

@@ -64,3 +64,22 @@ target_include_directories(saveforge_monocypher SYSTEM PUBLIC
     "${monocypher_SOURCE_DIR}/src/optional"
 )
 set_target_properties(saveforge_monocypher PROPERTIES C_STANDARD 99 POSITION_INDEPENDENT_CODE ON)
+
+# --- miniz: ZIP container of .gamesave exports -----------------------------
+# Release: https://github.com/richgel999/miniz/releases/tag/3.1.2
+# SHA-256 matches the digest GitHub publishes for the release asset.
+# The release asset is the single-file amalgamation (miniz.c + miniz.h), built
+# here as a static library; zstd stays the vault's compressor.
+FetchContent_Declare(miniz
+    URL https://github.com/richgel999/miniz/releases/download/3.1.2/miniz-3.1.2.zip
+    URL_HASH SHA256=f0446d863f9c19926ad9483c523fdc42e42b8d4a6a431d27e09d49c79a140d9a
+)
+# The archive has no CMake project, so this only downloads and unpacks it.
+FetchContent_MakeAvailable(miniz)
+
+add_library(saveforge_miniz STATIC "${miniz_SOURCE_DIR}/miniz.c")
+add_library(saveforge::miniz ALIAS saveforge_miniz)
+target_include_directories(saveforge_miniz SYSTEM PUBLIC "${miniz_SOURCE_DIR}")
+# Keep zlib's names free in case a system zlib is linked into the same binary.
+target_compile_definitions(saveforge_miniz PUBLIC MINIZ_NO_ZLIB_COMPATIBLE_NAMES)
+set_target_properties(saveforge_miniz PROPERTIES C_STANDARD 99 POSITION_INDEPENDENT_CODE ON)
