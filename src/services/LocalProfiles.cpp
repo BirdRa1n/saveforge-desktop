@@ -159,13 +159,29 @@ Result<profiles::Profile> LocalProfileStore::importProfile(const QString &file)
         return Error{ErrorCode::InvalidArgument, QStringLiteral("file is too large for a profile"), file};
     if (!source.open(QIODevice::ReadOnly))
         return Error{ErrorCode::Io, source.errorString(), file};
-    const QByteArray bytes = source.readAll();
-    auto profile = profiles::parseProfile(bytes);
+    return importProfileJson(source.readAll());
+}
+
+Result<profiles::Profile> LocalProfileStore::importProfileJson(const QByteArray &json)
+{
+    if (json.size() > kMaxProfileBytes)
+        return Error{ErrorCode::InvalidArgument, QStringLiteral("too large for a profile"), {}};
+    auto profile = profiles::parseProfile(json);
     if (!profile.ok())
         return profile.error();
-    if (auto written = write(profile.value().id, bytes); !written.ok())
+    if (auto written = write(profile.value().id, json); !written.ok())
         return written.error();
     return profile;
+}
+
+Result<QByteArray> LocalProfileStore::profileJson(const QString &profileId) const
+{
+    QFile file(m_dir + u'/' + profileId + QStringLiteral(".json"));
+    if (!file.exists())
+        return Error{ErrorCode::NotFound, QStringLiteral("no local profile with this id"), profileId};
+    if (!file.open(QIODevice::ReadOnly))
+        return Error{ErrorCode::Io, file.errorString(), file.fileName()};
+    return file.readAll();
 }
 
 Result<void> LocalProfileStore::remove(const QString &profileId)

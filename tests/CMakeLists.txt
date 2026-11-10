@@ -72,6 +72,10 @@ saveforge_add_test(tst_gamesave
     SOURCES unit/tst_gamesave.cpp
     LIBS saveforge::archive saveforge::miniz)
 
+saveforge_add_test(tst_transfer
+    SOURCES unit/tst_transfer.cpp
+    LIBS saveforge::services)
+
 saveforge_add_test(tst_auto_backup
     SOURCES unit/tst_auto_backup.cpp
     LIBS saveforge::services)

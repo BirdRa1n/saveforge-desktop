@@ -44,6 +44,10 @@ public:
     // Validates a profile.v1 JSON file and stores a copy, replacing a local
     // profile with the same id.
     [[nodiscard]] Result<profiles::Profile> importProfile(const QString &file);
+    // Same, from profile.v1 JSON already in memory (e.g. from a .gamesave).
+    [[nodiscard]] Result<profiles::Profile> importProfileJson(const QByteArray &json);
+    // The stored JSON of a local profile, as written (for exports).
+    [[nodiscard]] Result<QByteArray> profileJson(const QString &profileId) const;
 
     // Deletes a local profile. NotFound if there is none with that id.
     [[nodiscard]] Result<void> remove(const QString &profileId);
