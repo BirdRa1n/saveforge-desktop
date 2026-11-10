@@ -67,10 +67,13 @@ public:
 
     // Executes a plan. Refused while the game runs and, on a launcher-cloud
     // conflict, unless the policy is PreferSaveForge. Before writing, the
-    // current files are captured in a "pre-restore" snapshot. All files are
-    // first written next to their targets and verified, then swapped in with
-    // renames; any failure restores the previous files.
-    [[nodiscard]] Result<RestoreReport> execute(const GameTarget &target, const RestorePlan &plan, CloudPolicy policy);
+    // current files are captured in a "pre-restore" snapshot that belongs to
+    // `currentSlot`, the save slot those files are part of (so switching slots
+    // keeps the progress of the slot being left). All files are first written
+    // next to their targets and verified, then swapped in with renames; any
+    // failure restores the previous files.
+    [[nodiscard]] Result<RestoreReport> execute(const GameTarget &target, const RestorePlan &plan, CloudPolicy policy,
+                                                const QString &currentSlot = {});
 
 private:
     vault::Vault &m_vault;

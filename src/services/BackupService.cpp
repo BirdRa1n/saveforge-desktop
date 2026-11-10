@@ -27,6 +27,7 @@ Result<vault::Snapshot> BackupService::backup(const GameTarget &target, const Ba
     request.kind = options.kind;
     request.trigger = options.trigger;
     request.label = options.label;
+    request.slot = options.slot;
     request.machineId = m_env.machineId;
     request.appVersion = m_env.appVersion;
     request.profile = {target.channel, target.profile.id, target.profile.revision};

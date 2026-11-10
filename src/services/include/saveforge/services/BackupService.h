@@ -10,6 +10,7 @@ struct BackupOptions {
     vault::SnapshotKind kind = vault::SnapshotKind::Manual;
     std::optional<vault::SnapshotTrigger> trigger;
     QString label;
+    QString slot;                         // save slot the files on disk belong to; empty: unnamed progress
     vault::FileReadCallback onFileRead;   // progress and cancellation
 };
 

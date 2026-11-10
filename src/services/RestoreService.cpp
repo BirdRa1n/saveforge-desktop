@@ -120,7 +120,8 @@ Result<RestorePlan> RestoreService::plan(const GameTarget &target, const QUuid &
     return plan;
 }
 
-Result<RestoreReport> RestoreService::execute(const GameTarget &target, const RestorePlan &plan, CloudPolicy policy)
+Result<RestoreReport> RestoreService::execute(const GameTarget &target, const RestorePlan &plan, CloudPolicy policy,
+                                              const QString &currentSlot)
 {
     if (isGameRunning(target, m_env.processes()))
         return Error{ErrorCode::PermissionDenied, QStringLiteral("close the game before restoring"), target.profile.id};
@@ -141,6 +142,7 @@ Result<RestoreReport> RestoreService::execute(const GameTarget &target, const Re
     // 1. Undo point: capture what is on disk now.
     BackupOptions undo;
     undo.kind = vault::SnapshotKind::PreRestore;
+    undo.slot = currentSlot;
     auto preRestore = BackupService(m_vault, m_env).backup(target, undo);
     if (preRestore.ok())
         report.preRestoreSnapshotId = preRestore.value().snapshotId;
