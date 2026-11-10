@@ -3,11 +3,13 @@
 #include "AppSettings.h"
 #include "LibraryModel.h"
 
+#include "saveforge/services/AutoBackup.h"
 #include "saveforge/services/Library.h"
 #include "saveforge/services/RestoreService.h"
 #include "saveforge/vault/Vault.h"
 
 #include <QFutureWatcher>
+#include <QTimer>
 #include <QObject>
 #include <QUrl>
 #include <QVariantList>
@@ -47,6 +49,11 @@ class AppController : public QObject {
     Q_PROPERTY(bool autoUpdateRegistry READ autoUpdateRegistry WRITE setAutoUpdateRegistry NOTIFY registryChanged)
     Q_PROPERTY(QString registryCheckedText READ registryCheckedText NOTIFY registryChanged)
     Q_PROPERTY(bool downloadCovers READ downloadCovers WRITE setDownloadCovers NOTIFY coversChanged)
+    Q_PROPERTY(bool backupOnGameExit READ backupOnGameExit WRITE setBackupOnGameExit NOTIFY autoBackupChanged)
+    Q_PROPERTY(int backupIntervalHours READ backupIntervalHours WRITE setBackupIntervalHours NOTIFY autoBackupChanged)
+    Q_PROPERTY(bool runInBackground READ runInBackground WRITE setRunInBackground NOTIFY autoBackupChanged)
+    // Set by the executable when it shows a system tray icon.
+    Q_PROPERTY(bool trayAvailable READ trayAvailable WRITE setTrayAvailable NOTIFY trayAvailableChanged)
 
 public:
     explicit AppController(QObject *parent = nullptr);
@@ -70,6 +77,18 @@ public:
     [[nodiscard]] bool autoUpdateRegistry() const { return m_settings.autoUpdateRegistry(); }
     [[nodiscard]] bool downloadCovers() const { return m_settings.downloadCovers(); }
     void setDownloadCovers(bool enabled);
+    [[nodiscard]] bool backupOnGameExit() const { return m_settings.backupOnGameExit(); }
+    void setBackupOnGameExit(bool enabled);
+    [[nodiscard]] int backupIntervalHours() const { return m_settings.backupIntervalHours(); }
+    void setBackupIntervalHours(int hours);
+    [[nodiscard]] bool runInBackground() const { return m_settings.runInBackground(); }
+    void setRunInBackground(bool enabled);
+    [[nodiscard]] bool trayAvailable() const { return m_trayAvailable; }
+    void setTrayAvailable(bool available);
+
+    // Checks for games that closed and for the backup schedule now (it also
+    // runs on a timer). Exposed for tests.
+    Q_INVOKABLE void checkAutomaticBackups();
     void setAutoUpdateRegistry(bool enabled);
     // "Verificado há 2 horas", "Ainda não verificado", for the settings page.
     [[nodiscard]] QString registryCheckedText() const;
@@ -125,6 +144,10 @@ signals:
     void activityChanged();
     void registryChanged();
     void coversChanged();
+    void autoBackupChanged();
+    void trayAvailableChanged();
+    // An automatic backup finished; for notifications while the window is hidden.
+    void automaticBackupDone(const QString &text);
     // The active save slot of a game changed.
     void slotsChanged(const QString &gameId);
     // A message the interface may show transiently. kind: "success", "warning", "error", "info".
@@ -142,6 +165,8 @@ private:
     // Downloads, in the background, the Steam covers the library still lacks
     // (when the user allows it), then updates the library's art.
     void downloadMissingCovers();
+    // Backs up the queued games whose saves changed (kind "auto").
+    void runAutomaticBackups();
     // Starts a backup of one game into `slot`; `done` runs on success.
     void runBackup(const QString &gameId, const QString &slot, std::function<void()> done = {});
     [[nodiscard]] services::ServiceEnvironment serviceEnvironment();
@@ -162,6 +187,11 @@ private:
     QFutureWatcherBase *m_running = nullptr;
     bool m_autoUpdateChecked = false;
     QFutureWatcherBase *m_coverDownload = nullptr;
+    bool m_trayAvailable = false;
+    QTimer m_autoTimer;
+    services::GameExitTracker m_exitTracker;
+    // Games waiting for an automatic backup, with the trigger that queued them.
+    QList<QPair<QString, vault::SnapshotTrigger>> m_autoQueue;
 };
 
 } // namespace saveforge::backend

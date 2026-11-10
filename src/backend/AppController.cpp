@@ -11,6 +11,7 @@
 #include "saveforge/services/BackupService.h"
 #include "saveforge/services/GameArt.h"
 #include "saveforge/services/LocalProfiles.h"
+#include "saveforge/platform/Processes.h"
 #include "saveforge/services/SaveSlots.h"
 
 #include <QCoreApplication>
@@ -61,6 +62,15 @@ struct RegistryUpdateResult {
 // Automatic checks run at most this often.
 constexpr qint64 kRegistryCheckIntervalSecs = 24 * 60 * 60;
 
+// How often running games and the backup schedule are checked.
+constexpr int kAutoBackupCheckMs = 15'000;
+
+struct AutoBackupResult {
+    QList<services::LibraryGame> updated;
+    QStringList names;     // games backed up, for the activity log
+    QStringList failures;
+};
+
 struct BackupAllResult {
     QList<services::LibraryGame> updated;
     QStringList failures;
@@ -94,6 +104,9 @@ AppController::AppController(QObject *parent)
     openVault();
     // Scan once the interface is up, so the window appears immediately.
     QTimer::singleShot(0, this, &AppController::refresh);
+    m_autoTimer.setInterval(kAutoBackupCheckMs);
+    connect(&m_autoTimer, &QTimer::timeout, this, &AppController::checkAutomaticBackups);
+    m_autoTimer.start();
 }
 
 AppController::~AppController()
@@ -193,6 +206,136 @@ void AppController::refresh()
             log(countText(result.scan.games.size(), tr("jogo encontrado"), tr("jogos encontrados")), QStringLiteral("info"));
             downloadMissingCovers();
             maybeUpdateRegistry();
+        });
+}
+
+void AppController::setBackupOnGameExit(bool enabled)
+{
+    if (enabled == m_settings.backupOnGameExit())
+        return;
+    m_settings.setBackupOnGameExit(enabled);
+    emit autoBackupChanged();
+}
+
+void AppController::setBackupIntervalHours(int hours)
+{
+    if (hours == m_settings.backupIntervalHours())
+        return;
+    m_settings.setBackupIntervalHours(hours);
+    // A new schedule starts counting now.
+    m_settings.setLastScheduledBackup(QDateTime::currentDateTimeUtc());
+    emit autoBackupChanged();
+}
+
+void AppController::setRunInBackground(bool enabled)
+{
+    if (enabled == m_settings.runInBackground())
+        return;
+    m_settings.setRunInBackground(enabled);
+    emit autoBackupChanged();
+}
+
+void AppController::setTrayAvailable(bool available)
+{
+    if (available == m_trayAvailable)
+        return;
+    m_trayAvailable = available;
+    emit trayAvailableChanged();
+}
+
+void AppController::checkAutomaticBackups()
+{
+    if (!m_vault || m_library.count() == 0)
+        return;
+    const auto enqueue = [this](const QString &gameId, vault::SnapshotTrigger trigger) {
+        const bool queued = std::any_of(m_autoQueue.cbegin(), m_autoQueue.cend(),
+                                        [&gameId](const auto &entry) { return entry.first == gameId; });
+        if (!queued)
+            m_autoQueue.append({gameId, trigger});
+    };
+
+    // Always track running games, so turning the option on later works at once.
+    const QStringList exited = m_exitTracker.update(m_library.games(), platform::runningProcesses());
+    if (m_settings.backupOnGameExit()) {
+        for (const QString &gameId : exited)
+            enqueue(gameId, vault::SnapshotTrigger::GameExit);
+    }
+
+    const int hours = m_settings.backupIntervalHours();
+    const QDateTime now = QDateTime::currentDateTimeUtc();
+    const QDateTime last = m_settings.lastScheduledBackup();
+    if (hours > 0 && (!last.isValid() || last.secsTo(now) >= qint64(hours) * 3600)) {
+        m_settings.setLastScheduledBackup(now);
+        for (const services::LibraryGame &game : m_library.games()) {
+            // A game that is running is backed up when it closes instead.
+            if (!m_exitTracker.running().contains(game.id()))
+                enqueue(game.id(), vault::SnapshotTrigger::Schedule);
+        }
+    }
+    runAutomaticBackups();
+}
+
+void AppController::runAutomaticBackups()
+{
+    if (m_autoQueue.isEmpty() || busy() || !m_vault)
+        return;
+    struct Job {
+        services::LibraryGame game;
+        vault::SnapshotTrigger trigger;
+        QString slot;
+    };
+    QList<Job> jobs;
+    for (const auto &[gameId, trigger] : std::as_const(m_autoQueue)) {
+        if (const services::LibraryGame *game = m_library.game(gameId))
+            jobs.append({*game, trigger, m_settings.activeSlot(gameId)});
+    }
+    m_autoQueue.clear();
+    if (jobs.isEmpty())
+        return;
+
+    vault::Vault *vaultPtr = &*m_vault;
+    const services::ServiceEnvironment env = serviceEnvironment();
+    run<AutoBackupResult>(
+        tr("Backup automático…"),
+        [vaultPtr, env, jobs] {
+            AutoBackupResult result;
+            services::BackupService service(*vaultPtr, env);
+            for (Job job : jobs) {
+                const vault::Snapshot *last = job.game.lastSnapshot ? &*job.game.lastSnapshot : nullptr;
+                if (!services::savesChangedSince(job.game.target, last))
+                    continue;
+                services::BackupOptions options;
+                options.kind = vault::SnapshotKind::Auto;
+                options.trigger = job.trigger;
+                options.slot = job.slot;
+                auto snapshot = service.backup(job.game.target, options);
+                if (snapshot.ok()) {
+                    job.game.lastSnapshot = snapshot.value();
+                    ++job.game.snapshotCount;
+                    result.updated.append(job.game);
+                    result.names.append(job.game.target.profile.name);
+                } else if (snapshot.error().code != ErrorCode::NotFound
+                           && snapshot.error().code != ErrorCode::PermissionDenied) {
+                    // Missing saves and running games are retried at the next trigger.
+                    result.failures.append(job.game.target.profile.name + QStringLiteral(": ") + snapshot.error().message);
+                }
+            }
+            return result;
+        },
+        [this](AutoBackupResult result) {
+            for (const services::LibraryGame &game : std::as_const(result.updated))
+                m_library.updateGame(game);
+            for (const QString &failure : std::as_const(result.failures))
+                log(tr("Backup automático falhou: %1").arg(failure), QStringLiteral("error"));
+            if (!result.names.isEmpty()) {
+                const QString text = result.names.size() == 1
+                                         ? tr("Backup automático de %1 salvo.").arg(result.names.first())
+                                         : tr("Backup automático salvo: %1.").arg(result.names.join(QStringLiteral(", ")));
+                log(text, QStringLiteral("success"));
+                emit automaticBackupDone(text);
+            }
+            // Triggers that arrived meanwhile.
+            runAutomaticBackups();
         });
 }
 

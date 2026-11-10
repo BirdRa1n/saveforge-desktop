@@ -7,6 +7,8 @@
 #include <QDir>
 #include <QSettings>
 
+#include <algorithm>
+
 namespace saveforge::backend {
 
 namespace {
@@ -47,6 +49,54 @@ void AppSettings::setActiveSlot(const QString &gameId, const QString &slot)
         settings.remove(QStringLiteral("activeSlots/") + gameId);
     else
         settings.setValue(QStringLiteral("activeSlots/") + gameId, slot);
+}
+
+bool AppSettings::backupOnGameExit() const
+{
+    const QSettings settings(file(), QSettings::IniFormat);
+    return settings.value(QStringLiteral("autoBackup/onGameExit"), true).toBool();
+}
+
+void AppSettings::setBackupOnGameExit(bool enabled)
+{
+    QSettings settings(file(), QSettings::IniFormat);
+    settings.setValue(QStringLiteral("autoBackup/onGameExit"), enabled);
+}
+
+int AppSettings::backupIntervalHours() const
+{
+    const QSettings settings(file(), QSettings::IniFormat);
+    return std::clamp(settings.value(QStringLiteral("autoBackup/intervalHours"), 0).toInt(), 0, 24 * 7);
+}
+
+void AppSettings::setBackupIntervalHours(int hours)
+{
+    QSettings settings(file(), QSettings::IniFormat);
+    settings.setValue(QStringLiteral("autoBackup/intervalHours"), std::clamp(hours, 0, 24 * 7));
+}
+
+QDateTime AppSettings::lastScheduledBackup() const
+{
+    const QSettings settings(file(), QSettings::IniFormat);
+    return QDateTime::fromString(settings.value(QStringLiteral("autoBackup/lastScheduled")).toString(), Qt::ISODate);
+}
+
+void AppSettings::setLastScheduledBackup(const QDateTime &when)
+{
+    QSettings settings(file(), QSettings::IniFormat);
+    settings.setValue(QStringLiteral("autoBackup/lastScheduled"), when.toUTC().toString(Qt::ISODate));
+}
+
+bool AppSettings::runInBackground() const
+{
+    const QSettings settings(file(), QSettings::IniFormat);
+    return settings.value(QStringLiteral("app/runInBackground"), true).toBool();
+}
+
+void AppSettings::setRunInBackground(bool enabled)
+{
+    QSettings settings(file(), QSettings::IniFormat);
+    settings.setValue(QStringLiteral("app/runInBackground"), enabled);
 }
 
 QString AppSettings::coverCacheDirectory() const

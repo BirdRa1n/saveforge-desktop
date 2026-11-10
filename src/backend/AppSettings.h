@@ -44,6 +44,18 @@ public:
     [[nodiscard]] QString activeSlot(const QString &gameId) const;
     void setActiveSlot(const QString &gameId, const QString &slot);
 
+    // Automatic backups: when a game closes, and every N hours (0 = off).
+    [[nodiscard]] bool backupOnGameExit() const;
+    void setBackupOnGameExit(bool enabled);
+    [[nodiscard]] int backupIntervalHours() const;
+    void setBackupIntervalHours(int hours);
+    [[nodiscard]] QDateTime lastScheduledBackup() const;
+    void setLastScheduledBackup(const QDateTime &when);
+    // Whether closing the window keeps the app running in the system tray,
+    // so automatic backups keep working.
+    [[nodiscard]] bool runInBackground() const;
+    void setRunInBackground(bool enabled);
+
     // Covers downloaded for games without local art.
     [[nodiscard]] QString coverCacheDirectory() const;
     // Whether covers missing on this machine may be downloaded from Steam's CDN.

@@ -1,6 +1,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFontDatabase>
+#include <QSettings>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QQuickWindow>
@@ -201,6 +202,35 @@ private slots:
             QMetaObject::invokeMethod(controller, "activeSlot", Q_RETURN_ARG(QString, active), Q_ARG(QString, gameId));
             QCOMPARE(active, QStringLiteral("Personagem A"));
             window->setProperty("selectedGameId", QString());
+
+            // A due schedule backs up games whose saves changed, as kind "auto",
+            // into the active slot.
+            writeSave("character A, later");
+            QVERIFY(controller->setProperty("backupIntervalHours", 1));
+            {
+                QSettings settings(m_data.path() + QStringLiteral("/settings.ini"), QSettings::IniFormat);
+                settings.setValue(QStringLiteral("autoBackup/lastScheduled"),
+                                  QDateTime::currentDateTimeUtc().addDays(-1).toString(Qt::ISODate));
+            }
+            QMetaObject::invokeMethod(controller, "checkAutomaticBackups");
+            QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
+            QVariantList history;
+            QMetaObject::invokeMethod(controller, "snapshots", Q_RETURN_ARG(QVariantList, history), Q_ARG(QString, gameId));
+            QVERIFY(!history.isEmpty());
+            const QVariantMap newest = history.first().toMap();
+            QCOMPARE(newest.value(QStringLiteral("slot")).toString(), QStringLiteral("Personagem A"));
+            QCOMPARE(newest.value(QStringLiteral("kindText")).toString(), QStringLiteral("Automático"));
+            // Nothing changed since: the next due schedule adds no snapshot.
+            {
+                QSettings settings(m_data.path() + QStringLiteral("/settings.ini"), QSettings::IniFormat);
+                settings.setValue(QStringLiteral("autoBackup/lastScheduled"),
+                                  QDateTime::currentDateTimeUtc().addDays(-1).toString(Qt::ISODate));
+            }
+            QMetaObject::invokeMethod(controller, "checkAutomaticBackups");
+            QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
+            QVariantList again;
+            QMetaObject::invokeMethod(controller, "snapshots", Q_RETURN_ARG(QVariantList, again), Q_ARG(QString, gameId));
+            QCOMPARE(again.size(), history.size());
 
             QMetaObject::invokeMethod(controller, "removeLocalGame", Q_ARG(QString, QStringLiteral("local-manual-game")));
             QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
