@@ -132,7 +132,9 @@ Em builds de desenvolvimento, que confiam nas chaves de teste, o mirror padrão 
 
 **Jogos adicionados à mão.** Viram perfis locais (`profile.v1`, com origem `local`), guardados em `<dados do app>/profiles/<id>.json`, e passam pela mesma validação dos perfis do Registry. Perfis descrevem locais por placeholders, nunca por caminhos absolutos. Por isso, as pastas de saves precisam ficar dentro das pastas do usuário (pasta pessoal, Documentos, AppData e equivalentes no Linux e no macOS). Pastas dentro da instalação do jogo ainda não são aceitas.
 
-Os dados do app (cache do Registry, perfis locais e configurações) ficam em `%LOCALAPPDATA%/SaveForge` no Windows, `~/.local/share/SaveForge` no Linux e `~/Library/Application Support/SaveForge` no macOS. A variável `SAVEFORGE_DATA_DIR` permite trocar esse local.
+**Capas dos jogos.** O app usa as imagens que os launchers já guardam no computador: a capa, o banner e o logo do cache da Steam (`appcache/librarycache`) e o ícone que a GOG instala junto do jogo. Jogos com ID da Steam que não têm capa local, como os não instalados, podem ter a capa baixada do CDN de imagens da Steam. O pedido só informa o ID do jogo, e o download pode ser desligado em Configurações. As capas baixadas ficam em `<dados do app>/covers`.
+
+Os dados do app (cache do Registry, perfis locais, capas e configurações) ficam em `%LOCALAPPDATA%/SaveForge` no Windows, `~/.local/share/SaveForge` no Linux e `~/Library/Application Support/SaveForge` no macOS. A variável `SAVEFORGE_DATA_DIR` permite trocar esse local.
 
 Na restauração:
 - sempre é criado antes um snapshot `pre-restore`, que permite desfazer a operação;
