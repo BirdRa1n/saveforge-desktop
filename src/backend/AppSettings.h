@@ -74,6 +74,12 @@ public:
     [[nodiscard]] bool downloadCovers() const;
     void setDownloadCovers(bool enabled);
 
+    // Appearance: "system", "dark" or "light", and the accent colour as #RRGGBB.
+    [[nodiscard]] QString themeMode() const;
+    void setThemeMode(const QString &mode);
+    [[nodiscard]] QString accentColor() const;
+    void setAccentColor(const QString &color);
+
 private:
     [[nodiscard]] QString file() const;
     QString m_dataDir;

@@ -50,6 +50,8 @@ class AppController : public QObject {
     Q_PROPERTY(bool autoUpdateRegistry READ autoUpdateRegistry WRITE setAutoUpdateRegistry NOTIFY registryChanged)
     Q_PROPERTY(QString registryCheckedText READ registryCheckedText NOTIFY registryChanged)
     Q_PROPERTY(bool downloadCovers READ downloadCovers WRITE setDownloadCovers NOTIFY coversChanged)
+    Q_PROPERTY(QString themeMode READ themeMode WRITE setThemeMode NOTIFY appearanceChanged)
+    Q_PROPERTY(QString accentColor READ accentColor WRITE setAccentColor NOTIFY appearanceChanged)
     Q_PROPERTY(bool backupOnGameExit READ backupOnGameExit WRITE setBackupOnGameExit NOTIFY autoBackupChanged)
     Q_PROPERTY(int backupIntervalHours READ backupIntervalHours WRITE setBackupIntervalHours NOTIFY autoBackupChanged)
     Q_PROPERTY(bool runInBackground READ runInBackground WRITE setRunInBackground NOTIFY autoBackupChanged)
@@ -81,6 +83,12 @@ public:
     [[nodiscard]] bool autoUpdateRegistry() const { return m_settings.autoUpdateRegistry(); }
     [[nodiscard]] bool downloadCovers() const { return m_settings.downloadCovers(); }
     void setDownloadCovers(bool enabled);
+    // "system", "dark" or "light".
+    [[nodiscard]] QString themeMode() const { return m_settings.themeMode(); }
+    void setThemeMode(const QString &mode);
+    // Accent colour of the interface, as #RRGGBB.
+    [[nodiscard]] QString accentColor() const { return m_settings.accentColor(); }
+    void setAccentColor(const QString &color);
     [[nodiscard]] bool backupOnGameExit() const { return m_settings.backupOnGameExit(); }
     void setBackupOnGameExit(bool enabled);
     [[nodiscard]] int backupIntervalHours() const { return m_settings.backupIntervalHours(); }
@@ -183,6 +191,7 @@ signals:
     void activityChanged();
     void registryChanged();
     void coversChanged();
+    void appearanceChanged();
     void autoBackupChanged();
     void retentionChanged();
     void trayAvailableChanged();

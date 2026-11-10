@@ -5,6 +5,7 @@
 #include "saveforge/registry/RegistryUpdater.h"
 
 #include <QDir>
+#include <QRegularExpression>
 #include <QSettings>
 
 #include <algorithm>
@@ -12,6 +13,8 @@
 namespace saveforge::backend {
 
 namespace {
+// Cyan, the default accent of the Console x Studio design.
+constexpr const char *kDefaultAccent = "#22D3EE";
 const QStringList kPolicies{QStringLiteral("ask"), QStringLiteral("prefer-launcher"), QStringLiteral("prefer-saveforge")};
 }
 
@@ -155,6 +158,33 @@ void AppSettings::setDownloadCovers(bool enabled)
 {
     QSettings settings(file(), QSettings::IniFormat);
     settings.setValue(QStringLiteral("covers/download"), enabled);
+}
+
+QString AppSettings::themeMode() const
+{
+    const QSettings settings(file(), QSettings::IniFormat);
+    const QString mode = settings.value(QStringLiteral("appearance/theme")).toString();
+    return mode == QLatin1String("dark") || mode == QLatin1String("light") ? mode : QStringLiteral("system");
+}
+
+void AppSettings::setThemeMode(const QString &mode)
+{
+    QSettings settings(file(), QSettings::IniFormat);
+    settings.setValue(QStringLiteral("appearance/theme"), mode);
+}
+
+QString AppSettings::accentColor() const
+{
+    const QSettings settings(file(), QSettings::IniFormat);
+    const QString color = settings.value(QStringLiteral("appearance/accent")).toString();
+    static const QRegularExpression hex(QStringLiteral("^#[0-9A-Fa-f]{6}$"));
+    return hex.match(color).hasMatch() ? color.toUpper() : QString::fromLatin1(kDefaultAccent);
+}
+
+void AppSettings::setAccentColor(const QString &color)
+{
+    QSettings settings(file(), QSettings::IniFormat);
+    settings.setValue(QStringLiteral("appearance/accent"), color);
 }
 
 QString AppSettings::vaultPath() const

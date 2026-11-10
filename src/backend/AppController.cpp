@@ -17,6 +17,7 @@
 
 #include <QCoreApplication>
 #include <QDir>
+#include <QRegularExpression>
 #include <QFileInfo>
 #include <QLocale>
 #include <QJsonDocument>
@@ -489,6 +490,25 @@ void AppController::runAutomaticBackups()
             // Triggers that arrived meanwhile.
             runAutomaticBackups();
         });
+}
+
+void AppController::setThemeMode(const QString &mode)
+{
+    if (mode != QLatin1String("system") && mode != QLatin1String("dark") && mode != QLatin1String("light"))
+        return;
+    if (mode == m_settings.themeMode())
+        return;
+    m_settings.setThemeMode(mode);
+    emit appearanceChanged();
+}
+
+void AppController::setAccentColor(const QString &color)
+{
+    static const QRegularExpression hex(QStringLiteral("^#[0-9A-Fa-f]{6}$"));
+    if (!hex.match(color).hasMatch() || color.compare(m_settings.accentColor(), Qt::CaseInsensitive) == 0)
+        return;
+    m_settings.setAccentColor(color.toUpper());
+    emit appearanceChanged();
 }
 
 void AppController::setDownloadCovers(bool enabled)
