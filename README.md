@@ -11,7 +11,7 @@ Aplicativo desktop open source para encontrar, fazer backup e restaurar saves de
 > - saves com nome, entre os quais se alterna sem perder o progresso de nenhum, e backups automáticos (ao fechar o jogo ou periódicos), com o app na bandeja do sistema;
 > - exportação e importação de arquivos `.gamesave` (completa ou incremental) para levar saves a outro computador.
 >
-> Ainda faltam as chaves de produção do Registry, o registro do Windows e a retenção de backups.
+> Ainda faltam as chaves de produção do Registry e o registro do Windows.
 
 ## Stack
 
@@ -142,6 +142,8 @@ Em builds de desenvolvimento, que confiam nas chaves de teste, o mirror padrão 
 **Backups automáticos.** O app faz backup quando um jogo fecha e, se você quiser, a cada 1, 6 ou 24 horas, mas só quando os saves mudaram. Fechar a janela deixa o app na bandeja do sistema para os backups continuarem; isso pode ser desligado em Configurações.
 
 **Importar e exportar.** A página "Importar / Exportar" grava os backups dos jogos escolhidos num arquivo `.gamesave`, que é um ZIP comum (formato em `saveforge-specs/gamesave`). Dá para levar só o backup mais recente ou todo o histórico, e para fazer uma exportação incremental, que leva só o que mudou desde a anterior. Importar adiciona os backups ao histórico depois de verificar o arquivo inteiro e nunca sobrescreve saves: a restauração continua sendo feita na página de cada jogo. O caminho das pastas do usuário só entra no arquivo se você pedir. Veja a [ADR 0005](docs/adr/0005-miniz-for-gamesave-archives.md).
+
+**Espaço e manutenção.** Em Configurações, dá para guardar todos os backups de cada jogo ou só os 10, 30 ou 100 mais recentes, e opcionalmente tudo o que tiver menos de 30 dias, 90 dias ou 1 ano. Nunca são apagados os backups fixados (o ícone de alfinete no histórico), o estado atual de cada save com nome nem o ponto de desfazer da última restauração. Toda semana o app verifica o vault (cada arquivo contra o seu hash) e libera o espaço dos arquivos que nenhum backup usa. Os botões "Limpar agora" e "Verificar o vault" fazem isso na hora.
 
 **Capas dos jogos.** O app usa as imagens que os launchers já guardam no computador: a capa, o banner e o logo do cache da Steam (`appcache/librarycache`) e o ícone que a GOG instala junto do jogo. Jogos com ID da Steam que não têm capa local, como os não instalados, podem ter a capa baixada do CDN de imagens da Steam. O pedido só informa o ID do jogo, e o download pode ser desligado em Configurações. As capas baixadas ficam em `<dados do app>/covers`.
 
