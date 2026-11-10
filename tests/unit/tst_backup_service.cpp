@@ -68,6 +68,57 @@ private slots:
         QVERIFY(!isGameRunning(target, {{3, QStringLiteral("x.exe"), f.installDir() + QStringLiteral(" 2/x.exe")}}));
     }
 
+    void asksBeforeBackingUpMoreThanExpected()
+    {
+        ServiceFixture f;
+        writeFile(f.saveDir() + QStringLiteral("/slot1.sav"), QByteArray(100, 'x'));
+        GameTarget target = f.target();
+        target.profile.backup.maxBytes = 50;
+        BackupService service(*f.vault, f.environment());
+        const auto refused = service.backup(target);
+        QVERIFY(!refused.ok());
+        QCOMPARE(refused.error().code, ErrorCode::TooLarge);
+        QCOMPARE(refused.error().context, QStringLiteral("100"));
+        BackupOptions options;
+        options.allowLargerThanExpected = true;
+        QVERIFY(service.backup(target, options).ok());
+    }
+
+    void rereadsConsistentGroupsTogether()
+    {
+        ServiceFixture f;
+        const QString db = f.saveDir() + QStringLiteral("/world.sav");
+        const QString journal = f.saveDir() + QStringLiteral("/world.sav-journal.sav");
+        writeFile(db, "db v1");
+        writeFile(journal, "journal v1");
+        GameTarget target = f.target();
+        target.profile.backup.consistentGroups = {{QStringLiteral("world.sav*")}};
+
+        // The game rewrites the database while the journal is being read.
+        bool changed = false;
+        BackupOptions options;
+        options.onFileRead = [&](const QString &path, qsizetype, qsizetype) {
+            if (!changed && path == journal) {
+                changed = true;
+                QFile file(db);
+                if (file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                    file.write("db v2, written later");
+                file.close();
+                file.setFileTime(QDateTime::currentDateTimeUtc().addSecs(5), QFileDevice::FileModificationTime);
+            }
+            return true;
+        };
+        const auto snapshot = BackupService(*f.vault, f.environment()).backup(target, options);
+        QVERIFY(snapshot.ok());
+        QVERIFY(changed);
+        QCOMPARE(snapshot.value().consistency, vault::Consistency::Consistent);
+        // The group was read again, so the snapshot holds the newer database.
+        const auto dbFile = std::find_if(snapshot.value().files.cbegin(), snapshot.value().files.cend(),
+                                         [](const vault::SnapshotFile &file) { return file.path.endsWith(u"/world.sav"); });
+        QVERIFY(dbFile != snapshot.value().files.cend());
+        QCOMPARE(dbFile->size, qint64(QByteArray("db v2, written later").size()));
+    }
+
     void findsTheFoldersThatHoldTheSaves()
     {
         ServiceFixture f;

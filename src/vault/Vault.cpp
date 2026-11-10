@@ -168,7 +168,12 @@ Result<Snapshot> Vault::createSnapshot(const SnapshotRequest &request, const Fil
     }
 
     const qsizetype total = request.files.size();
-    for (qsizetype index = 0; index < total; ++index) {
+    // Per request file: its position in snapshot.files (-1 when it vanished)
+    // and its state right after it was read.
+    QList<qsizetype> position(total, -1);
+    QList<FileState> readState(total);
+    // Reads one file into the blob store, re-reading it while it changes.
+    const auto capture = [&](qsizetype index) -> Result<void> {
         const SnapshotSource &source = request.files.at(index);
         bool stable = false;
         FileState after;
@@ -190,13 +195,50 @@ Result<Snapshot> Vault::createSnapshot(const SnapshotRequest &request, const Fil
             stable = after == before && after.size == blob.size;
         }
         if (blob.sha256.isEmpty())
-            continue;
+            return {};
         if (!stable) {
             snapshot.consistency = Consistency::Inconsistent;
             qCWarning(lcVault) << "file kept changing while being read:" << source.absolutePath;
         }
-        snapshot.files.append(SnapshotFile{source.templatePath, source.bindings, source.ruleId, blob.sha256, blob.size,
-                                           after.exists ? after.mtime : QDateTime::currentDateTimeUtc()});
+        const SnapshotFile file{source.templatePath, source.bindings, source.ruleId, blob.sha256, blob.size,
+                                after.exists ? after.mtime : QDateTime::currentDateTimeUtc()};
+        if (position.at(index) < 0) {
+            position[index] = snapshot.files.size();
+            snapshot.files.append(file);
+        } else {
+            snapshot.files[position.at(index)] = file;
+        }
+        readState[index] = after;
+        return {};
+    };
+    for (qsizetype index = 0; index < total; ++index) {
+        if (auto captured = capture(index); !captured.ok())
+            return captured.error();
+    }
+
+    // Files that must be read together: when a member changed after it was
+    // read (e.g. a database written while its journal was copied), read the
+    // whole group again.
+    for (const QList<qsizetype> &group : request.consistentGroups) {
+        bool consistent = false;
+        for (int attempt = 0; attempt < kMaxReadAttempts && !consistent; ++attempt) {
+            consistent = std::all_of(group.cbegin(), group.cend(), [&](qsizetype index) {
+                return index < 0 || index >= total || position.at(index) < 0
+                       || stat(request.files.at(index).absolutePath) == readState.at(index);
+            });
+            if (consistent)
+                break;
+            for (qsizetype index : group) {
+                if (index >= 0 && index < total) {
+                    if (auto captured = capture(index); !captured.ok())
+                        return captured.error();
+                }
+            }
+        }
+        if (!consistent) {
+            snapshot.consistency = Consistency::Inconsistent;
+            qCWarning(lcVault) << "a group of files kept changing while being read";
+        }
     }
 
     snapshot.createdAt = QDateTime::currentDateTimeUtc();

@@ -15,6 +15,7 @@ QString errorCodeName(ErrorCode code)
     case ErrorCode::Cancelled: return QStringLiteral("cancelled");
     case ErrorCode::Untrusted: return QStringLiteral("untrusted");
     case ErrorCode::Network: return QStringLiteral("network");
+    case ErrorCode::TooLarge: return QStringLiteral("too_large");
     }
     return QStringLiteral("unknown");
 }

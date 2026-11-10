@@ -33,6 +33,10 @@ struct SnapshotRequest {
     ProfileRef profile;
     QList<SnapshotSource> files;
     QList<RegistryKey> registry;
+    // Indexes into `files` of files that must be read together (a profile's
+    // backup.consistentGroups): if any member changes while the snapshot is
+    // taken, the whole group is read again.
+    QList<QList<qsizetype>> consistentGroups;
 };
 
 struct SnapshotRef {

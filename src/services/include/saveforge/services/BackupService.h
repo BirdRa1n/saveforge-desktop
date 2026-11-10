@@ -11,6 +11,8 @@ struct BackupOptions {
     std::optional<vault::SnapshotTrigger> trigger;
     QString label;
     QString slot;                         // save slot the files on disk belong to; empty: unnamed progress
+    // Back up even when the files exceed the profile's backup.maxBytes.
+    bool allowLargerThanExpected = false;
     vault::FileReadCallback onFileRead;   // progress and cancellation
 };
 
@@ -20,6 +22,8 @@ struct BackupOptions {
 // in one snapshot. Errors:
 //   - PermissionDenied: the game is running and its profile requires it closed;
 //   - NotFound: the profile matched no file and no registry key;
+//   - TooLarge: the files exceed the profile's maxBytes (context: the size in
+//     bytes) and the options do not allow it; callers ask the user first;
 //   - anything the vault reports (lock held, I/O, cancellation).
 // Registry rules are captured with their subkeys when registryRulesApply().
 class BackupService {
