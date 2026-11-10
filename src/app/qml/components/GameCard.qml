@@ -11,7 +11,9 @@ AbstractButton {
     property string statusText
     property int statusKind: StatusBadge.Neutral
     property url coverSource
-    property color placeholderColor: "#3B4A6B"
+    // True when coverSource is a small icon rather than a landscape cover.
+    property bool iconOnly: false
+    property color placeholderColor: Theme.neutralBg
 
     implicitWidth: 180
     implicitHeight: 236
@@ -34,6 +36,8 @@ AbstractButton {
     contentItem: ColumnLayout {
         spacing: 0
 
+        // Cover: the game's art when known, otherwise its initials on a colour
+        // derived from the id. A small icon (iconOnly) sits centred on the colour.
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 150
@@ -41,11 +45,10 @@ AbstractButton {
             topLeftRadius: Theme.radiusCard - 1
             topRightRadius: Theme.radiusCard - 1
             color: control.placeholderColor
-            clip: true
 
             Text {
                 anchors.centerIn: parent
-                visible: cover.status !== Image.Ready
+                visible: control.iconOnly ? icon.status !== Image.Ready : cover.status !== Image.Ready
                 text: control.initials(control.name)
                 color: Qt.rgba(1, 1, 1, 0.88)
                 font.family: Theme.fontDisplay
@@ -53,11 +56,26 @@ AbstractButton {
                 font.weight: Font.Bold
             }
 
-            Image {
+            RoundedImage {
                 id: cover
                 anchors.fill: parent
-                source: control.coverSource
-                fillMode: Image.PreserveAspectCrop
+                visible: !control.iconOnly
+                source: control.iconOnly ? "" : control.coverSource
+                topLeftRadius: Theme.radiusCard - 1
+                topRightRadius: Theme.radiusCard - 1
+                bottomLeftRadius: 0
+                bottomRightRadius: 0
+            }
+
+            Image {
+                id: icon
+                anchors.centerIn: parent
+                width: 64
+                height: 64
+                visible: control.iconOnly
+                source: control.iconOnly ? control.coverSource : ""
+                sourceSize: Qt.size(128, 128)
+                fillMode: Image.PreserveAspectFit
                 asynchronous: true
             }
         }

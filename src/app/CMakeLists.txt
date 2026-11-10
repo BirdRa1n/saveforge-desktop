@@ -27,6 +27,7 @@ qt_add_qml_module(saveforge_ui
         qml/components/Toast.qml
         qml/components/ToggleSetting.qml
         qml/components/FormField.qml
+        qml/components/RoundedImage.qml
         qml/pages/ActivityPage.qml
         qml/pages/AddGameDialog.qml
         qml/pages/GameDetailPage.qml

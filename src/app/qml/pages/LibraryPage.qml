@@ -92,13 +92,15 @@ Item {
 
             Item { Layout.fillWidth: true }
 
+            // With games on screen, progress shows here; an empty grid shows it in the middle.
             Spinner {
                 Layout.preferredWidth: 18
                 Layout.preferredHeight: 18
-                running: AppController.busy
+                visible: AppController.busy && filtered.count > 0
+                running: visible
             }
             Text {
-                visible: AppController.busy
+                visible: AppController.busy && filtered.count > 0
                 text: AppController.busyText
                 color: Theme.textMuted
                 font.family: Theme.fontBody
@@ -113,60 +115,95 @@ Item {
             }
         }
 
-        GridView {
-            id: grid
+        // Content area: always fills the rest of the page, so the header stays
+        // at the top whether the grid, the loading state or an empty state shows.
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            visible: filtered.count > 0
-            clip: true
-            cellWidth: Math.max(198, width / Math.max(1, Math.floor(width / 198)))
-            cellHeight: 254
-            model: filtered
-            boundsBehavior: Flickable.StopAtBounds
-            ScrollBar.vertical: ScrollBar {}
 
-            delegate: Item {
-                id: cell
-                required property string gameId
-                required property string name
-                required property string store
-                required property string statusText
-                required property int statusKind
-                required property color coverColor
-                width: grid.cellWidth
-                height: grid.cellHeight
+            GridView {
+                id: grid
+                anchors.fill: parent
+                visible: filtered.count > 0
+                clip: true
+                cellWidth: Math.max(198, width / Math.max(1, Math.floor(width / 198)))
+                cellHeight: 254
+                model: filtered
+                boundsBehavior: Flickable.StopAtBounds
+                ScrollBar.vertical: ScrollBar {}
 
-                GameCard {
-                    anchors.fill: parent
-                    anchors.rightMargin: 18
-                    anchors.bottomMargin: 18
-                    name: cell.name
-                    store: cell.store
-                    statusText: cell.statusText
-                    statusKind: cell.statusKind
-                    placeholderColor: cell.coverColor
-                    onClicked: root.gameSelected(cell.gameId)
+                delegate: Item {
+                    id: cell
+                    required property string gameId
+                    required property string name
+                    required property string store
+                    required property string statusText
+                    required property int statusKind
+                    required property color coverColor
+                    required property url cover
+                    required property bool iconOnly
+                    width: grid.cellWidth
+                    height: grid.cellHeight
+
+                    GameCard {
+                        anchors.fill: parent
+                        anchors.rightMargin: 18
+                        anchors.bottomMargin: 18
+                        name: cell.name
+                        store: cell.store
+                        statusText: cell.statusText
+                        statusKind: cell.statusKind
+                        placeholderColor: cell.coverColor
+                        coverSource: cell.cover
+                        iconOnly: cell.iconOnly
+                        onClicked: root.gameSelected(cell.gameId)
+                    }
                 }
             }
-        }
 
-        EmptyState {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            visible: filtered.count === 0 && !(AppController.busy && AppController.profileCount === 0)
-            title: AppController.profileCount === 0 ? qsTr("Nenhum perfil de jogo instalado")
-                 : AppController.library.count === 0 ? qsTr("Nenhum jogo encontrado ainda")
-                 : qsTr("Nenhum jogo corresponde ao filtro")
-            description: AppController.profileCount === 0
-                         ? qsTr("O SaveForge precisa dos perfis de jogos para saber onde ficam os saves. Procure ou importe perfis em Configurações, ou adicione um jogo à mão.")
-                         : AppController.library.count === 0
-                           ? qsTr("Nenhum jogo instalado ou save conhecido foi encontrado nesta máquina. Clique em Escanear depois de instalar ou jogar algo, ou adicione um jogo à mão.")
-                           : qsTr("Tente outro termo de busca ou outra loja.")
+            // First scan: nothing to show yet.
+            ColumnLayout {
+                anchors.centerIn: parent
+                visible: filtered.count === 0 && AppController.busy
+                spacing: Theme.space3
 
-            SecondaryButton {
-                visible: AppController.profileCount === 0
-                text: qsTr("Abrir Configurações")
-                onClicked: root.openSettings()
+                Spinner {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredWidth: 28
+                    Layout.preferredHeight: 28
+                    running: parent.visible
+                }
+                Text {
+                    Layout.alignment: Qt.AlignHCenter
+                    text: AppController.busyText
+                    color: Theme.textMuted
+                    font.family: Theme.fontBody
+                    font.pixelSize: Theme.textBody
+                }
+            }
+
+            EmptyState {
+                anchors.fill: parent
+                visible: filtered.count === 0 && !AppController.busy
+                title: AppController.profileCount === 0 ? qsTr("Nenhum perfil de jogo instalado")
+                     : AppController.library.count === 0 ? qsTr("Nenhum jogo encontrado ainda")
+                     : qsTr("Nenhum jogo corresponde ao filtro")
+                description: AppController.profileCount === 0
+                             ? qsTr("O SaveForge precisa dos perfis de jogos para saber onde ficam os saves. Procure ou importe perfis em Configurações, ou adicione um jogo à mão.")
+                             : AppController.library.count === 0
+                               ? qsTr("Nenhum jogo instalado ou save conhecido foi encontrado nesta máquina. Clique em Escanear depois de instalar ou jogar algo, ou adicione um jogo à mão.")
+                               : qsTr("Tente outro termo de busca ou outra loja.")
+
+                SecondaryButton {
+                    visible: AppController.profileCount === 0
+                    text: qsTr("Abrir Configurações")
+                    onClicked: root.openSettings()
+                }
+                SecondaryButton {
+                    visible: AppController.library.count === 0
+                    text: qsTr("Adicionar jogo")
+                    onClicked: addGameDialog.openEmpty()
+                }
             }
         }
     }

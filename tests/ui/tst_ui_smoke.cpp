@@ -33,7 +33,7 @@ private slots:
             // The test must not download profiles from the network.
             QFile settings(m_data.path() + QStringLiteral("/settings.ini"));
             QVERIFY(settings.open(QIODevice::WriteOnly));
-            settings.write("[registry]\nautoUpdate=false\n");
+            settings.write("[registry]\nautoUpdate=false\n[covers]\ndownload=false\n");
         }
         QQuickStyle::setStyle(QStringLiteral("Basic"));
         // Qualquer aviso vindo de um arquivo QML (tipos ausentes, bindings quebrados) falha o teste.

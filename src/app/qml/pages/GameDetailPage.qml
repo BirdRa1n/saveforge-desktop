@@ -50,23 +50,81 @@ Item {
             onClicked: root.back()
         }
 
+        // Banner with the game's logo, when the launcher has them (Steam).
+        Item {
+            id: banner
+            readonly property bool hasHero: (root.info.hero || "").toString().length > 0
+            Layout.fillWidth: true
+            Layout.preferredHeight: hasHero ? Math.min(240, width * 0.28) : 0
+            visible: hasHero
+
+            RoundedImage {
+                id: hero
+                anchors.fill: parent
+                source: banner.hasHero ? root.info.hero : ""
+            }
+            // Fades the banner into the page so the logo stays readable.
+            Rectangle {
+                anchors.fill: parent
+                radius: Theme.radiusCard
+                gradient: Gradient {
+                    GradientStop { position: 0.4; color: "transparent" }
+                    GradientStop { position: 1.0; color: Theme.bg }
+                }
+            }
+            Image {
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                anchors.margins: Theme.space6
+                width: Math.min(360, parent.width * 0.4)
+                height: parent.height * 0.42
+                source: (root.info.logo || "").toString().length > 0 ? root.info.logo : ""
+                fillMode: Image.PreserveAspectFit
+                horizontalAlignment: Image.AlignLeft
+                verticalAlignment: Image.AlignBottom
+                asynchronous: true
+                smooth: true
+                mipmap: true
+            }
+        }
+
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.space5
 
+            // Cover: landscape art, the store icon on a colour tile, or initials.
+            // Hidden under a banner, which already shows the game's art and logo.
             Rectangle {
-                Layout.preferredWidth: 120
-                Layout.preferredHeight: 120
+                readonly property bool hasCover: (root.info.cover || "").toString().length > 0
+                readonly property bool landscape: hasCover && root.info.iconOnly !== true
+                visible: !banner.hasHero
+                Layout.preferredWidth: landscape ? 230 : 108
+                Layout.preferredHeight: 108
                 radius: Theme.radiusCard
                 color: root.info.coverColor || Theme.card
 
                 Text {
                     anchors.centerIn: parent
+                    visible: !parent.hasCover
                     text: root.initials(root.info.name)
                     color: Qt.rgba(1, 1, 1, 0.88)
                     font.family: Theme.fontDisplay
                     font.pixelSize: 40
                     font.weight: Font.Bold
+                }
+                RoundedImage {
+                    anchors.fill: parent
+                    visible: parent.landscape
+                    source: parent.landscape ? root.info.cover : ""
+                }
+                Image {
+                    anchors.centerIn: parent
+                    width: 56
+                    height: 56
+                    visible: parent.hasCover && !parent.landscape
+                    source: visible ? root.info.cover : ""
+                    sourceSize: Qt.size(112, 112)
+                    fillMode: Image.PreserveAspectFit
                 }
             }
 

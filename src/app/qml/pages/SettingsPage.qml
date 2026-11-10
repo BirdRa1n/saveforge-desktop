@@ -190,6 +190,19 @@ Item {
             }
 
             Section {
+                title: qsTr("Capas dos jogos")
+                Paragraph {
+                    text: qsTr("O SaveForge usa as capas que a Steam e a GOG já guardam neste computador. Para os jogos sem capa local, ele pode baixar a capa do servidor de imagens da Steam. O pedido informa só o número do jogo na loja.")
+                }
+                ToggleSetting {
+                    Layout.fillWidth: true
+                    text: qsTr("Baixar as capas que faltam")
+                    checked: AppController.downloadCovers
+                    onToggled: AppController.downloadCovers = checked
+                }
+            }
+
+            Section {
                 title: qsTr("Cloud dos launchers")
                 Paragraph {
                     text: qsTr("Quando um launcher (como a Steam) também sincroniza os saves de um jogo, ele pode sobrescrever uma restauração. Escolha o comportamento padrão; você ainda pode mudar a decisão em cada restauração.")
