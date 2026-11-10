@@ -4,14 +4,14 @@ Aplicativo desktop open source para encontrar, fazer backup e restaurar saves de
 
 > **Estado:** em desenvolvimento inicial (0.1.0). O núcleo da Fase 1 do [roadmap](../saveforge-docs/planejamento/PLANEJAMENTO-TECNICO.md#18-roadmap-com-dependências) já funciona, pela interface e pela linha de comando:
 > - perfis de jogos vindos do Registry assinado (22 mil jogos via Ludusavi): baixados dos mirrors, embutidos no build ou importados de uma pasta, sempre verificados e guardados em cache para uso offline;
-> - detecção de jogos (Steam, Epic, GOG e Heroic, com prefixos Wine/Proton, além da busca por saves de jogos não instalados);
+> - detecção de jogos (Steam, Epic, GOG, Heroic e Lutris, com prefixos Wine/Proton, além da busca por saves de jogos não instalados);
 > - backup no vault local (deduplicação, compressão, verificação de integridade);
 > - restauração segura (plano prévio, ponto de desfazer, troca atômica, política de cloud do launcher);
 > - jogos adicionados à mão e perfis locais, que têm prioridade sobre o Registry;
 > - saves com nome, entre os quais se alterna sem perder o progresso de nenhum, e backups automáticos (ao fechar o jogo ou periódicos), com o app na bandeja do sistema;
 > - exportação e importação de arquivos `.gamesave` (completa ou incremental) para levar saves a outro computador.
 >
-> Ainda faltam as chaves de produção do Registry e o registro do Windows.
+> Ainda faltam as chaves de produção do Registry e os saves no registro dentro de prefixos Wine/Proton.
 
 ## Stack
 
@@ -28,7 +28,7 @@ src/
   profiles/  perfis de jogos: parser v1, regras de segurança de caminhos, resolução de arquivos
   vault/     vault local: blobs por conteúdo (SHA-256 + zstd), snapshots, verificação e coleta de lixo
   archive/   arquivos .gamesave: leitura com todas as verificações da spec e escrita verificada
-  detection/ detecção de jogos instalados (Steam, Epic, GOG, Heroic) e associação a perfis
+  detection/ detecção de jogos instalados (Steam, Epic, GOG, Heroic, Lutris) e associação a perfis
   registry/  Registry: verificação Ed25519, download dos mirrors, cache local dos canais e catálogo de perfis
   services/  casos de uso: biblioteca, perfis locais e jogos manuais, backup e restauração (checagem de jogo aberto, plano, desfazer)
   backend/   módulo QML SaveForge.Backend: controlador, modelos de lista e configurações do app
@@ -144,6 +144,8 @@ Em builds de desenvolvimento, que confiam nas chaves de teste, o mirror padrão 
 **Importar e exportar.** A página "Importar / Exportar" grava os backups dos jogos escolhidos num arquivo `.gamesave`, que é um ZIP comum (formato em `saveforge-specs/gamesave`). Dá para levar só o backup mais recente ou todo o histórico, e para fazer uma exportação incremental, que leva só o que mudou desde a anterior. Importar adiciona os backups ao histórico depois de verificar o arquivo inteiro e nunca sobrescreve saves: a restauração continua sendo feita na página de cada jogo. O caminho das pastas do usuário só entra no arquivo se você pedir. Veja a [ADR 0005](docs/adr/0005-miniz-for-gamesave-archives.md).
 
 **Espaço e manutenção.** Em Configurações, dá para guardar todos os backups de cada jogo ou só os 10, 30 ou 100 mais recentes, e opcionalmente tudo o que tiver menos de 30 dias, 90 dias ou 1 ano. Nunca são apagados os backups fixados (o ícone de alfinete no histórico), o estado atual de cada save com nome nem o ponto de desfazer da última restauração. Toda semana o app verifica o vault (cada arquivo contra o seu hash) e libera o espaço dos arquivos que nenhum backup usa. Os botões "Limpar agora" e "Verificar o vault" fazem isso na hora.
+
+**Registro do Windows.** Perfis com regras de registro (chaves em `HKCU\Software`) têm essas chaves salvas junto com os arquivos, incluindo as subchaves, quando o jogo roda no Windows. Na restauração, o plano mostra quantas chaves serão restauradas; em outro sistema, elas são puladas e o plano avisa. Registros dentro de prefixos Wine/Proton ainda não são lidos.
 
 **Capas dos jogos.** O app usa as imagens que os launchers já guardam no computador: a capa, o banner e o logo do cache da Steam (`appcache/librarycache`) e o ícone que a GOG instala junto do jogo. Jogos com ID da Steam que não têm capa local, como os não instalados, podem ter a capa baixada do CDN de imagens da Steam. O pedido só informa o ID do jogo, e o download pode ser desligado em Configurações. As capas baixadas ficam em `<dados do app>/covers`.
 
