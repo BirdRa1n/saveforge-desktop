@@ -131,6 +131,21 @@ public:
     Q_INVOKABLE QString importProfile(const QUrl &file);
     // Deletes a local profile (games added by hand or imported). Backups stay in the vault.
     Q_INVOKABLE void removeLocalGame(const QString &gameId);
+    // Games with at least one backup, for the export list: [{id, name, snapshots, cover, coverColor}]
+    Q_INVOKABLE QVariantList exportableGames() const;
+    // The previous export, for incremental exports: {exists, date, games}
+    Q_INVOKABLE QVariantMap lastExport() const;
+    // Writes the chosen games' backups to a .gamesave. With `incremental`,
+    // files the previous export carried are left out; `includeUserFolders`
+    // adds the user's folder paths to the manifest (diagnostics only).
+    Q_INVOKABLE void exportGames(const QStringList &gameIds, const QUrl &file, bool allHistory, bool incremental,
+                                 bool includeUserFolders);
+    // Opens and checks a .gamesave without importing it:
+    // {ok, error, games: [{name, snapshots}], incremental, date, sourceOs, missingBase}
+    Q_INVOKABLE QVariantMap inspectGamesave(const QUrl &file) const;
+    // Adds the backups of a .gamesave to the vault; restores nothing.
+    Q_INVOKABLE void importGamesave(const QUrl &file);
+
     // Verifies and caches a registry distribution chosen by the user, then refreshes.
     Q_INVOKABLE void importRegistry(const QUrl &folder);
     // Switches to another vault directory; returns an error message or "".

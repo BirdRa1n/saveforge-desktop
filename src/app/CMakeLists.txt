@@ -29,6 +29,7 @@ qt_add_qml_module(saveforge_ui
         qml/components/FormField.qml
         qml/components/RoundedImage.qml
         qml/components/ActionMenu.qml
+        qml/components/CheckItem.qml
         qml/pages/ActivityPage.qml
         qml/pages/AddGameDialog.qml
         qml/pages/GameDetailPage.qml
@@ -37,6 +38,7 @@ qt_add_qml_module(saveforge_ui
         qml/pages/RestoreDialog.qml
         qml/pages/SaveSlotDialog.qml
         qml/pages/SettingsPage.qml
+        qml/pages/TransferPage.qml
     RESOURCES
         fonts/inter/Inter-Regular.ttf
         fonts/inter/Inter-Medium.ttf

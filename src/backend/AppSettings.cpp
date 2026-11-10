@@ -99,6 +99,11 @@ void AppSettings::setRunInBackground(bool enabled)
     settings.setValue(QStringLiteral("app/runInBackground"), enabled);
 }
 
+QString AppSettings::exportLogDirectory() const
+{
+    return m_dataDir + QStringLiteral("/exports");
+}
+
 QString AppSettings::coverCacheDirectory() const
 {
     return m_dataDir + QStringLiteral("/covers");

@@ -232,6 +232,30 @@ private slots:
             QMetaObject::invokeMethod(controller, "snapshots", Q_RETURN_ARG(QVariantList, again), Q_ARG(QString, gameId));
             QCOMPARE(again.size(), history.size());
 
+            // Export the game's history, then inspect the file as the import dialog does.
+            QVariantList exportable;
+            QMetaObject::invokeMethod(controller, "exportableGames", Q_RETURN_ARG(QVariantList, exportable));
+            QCOMPARE(exportable.size(), 1);
+            const QString exported = m_data.path() + QStringLiteral("/manual.gamesave");
+            QMetaObject::invokeMethod(controller, "exportGames", Q_ARG(QStringList, QStringList{gameId}),
+                                      Q_ARG(QUrl, QUrl::fromLocalFile(exported)), Q_ARG(bool, true), Q_ARG(bool, false),
+                                      Q_ARG(bool, false));
+            QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
+            QVERIFY(QFile::exists(exported));
+            QVariantMap preview;
+            QMetaObject::invokeMethod(controller, "inspectGamesave", Q_RETURN_ARG(QVariantMap, preview),
+                                      Q_ARG(QUrl, QUrl::fromLocalFile(exported)));
+            QVERIFY(preview.value(QStringLiteral("ok")).toBool());
+            QCOMPARE(preview.value(QStringLiteral("games")).toList().size(), 1);
+            QVariantMap last;
+            QMetaObject::invokeMethod(controller, "lastExport", Q_RETURN_ARG(QVariantMap, last));
+            QVERIFY(last.value(QStringLiteral("exists")).toBool());
+            sidebar->setProperty("currentIndex", 2);
+            QCoreApplication::processEvents();
+            if (!shotDir.isEmpty())
+                QVERIFY(window->grabWindow().save(shotDir + QStringLiteral("/transfer.png")));
+            sidebar->setProperty("currentIndex", 0);
+
             QMetaObject::invokeMethod(controller, "removeLocalGame", Q_ARG(QString, QStringLiteral("local-manual-game")));
             QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
             QMetaObject::invokeMethod(controller, "gameInfo", Q_RETURN_ARG(QVariantMap, info),

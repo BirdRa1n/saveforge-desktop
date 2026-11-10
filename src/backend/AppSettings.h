@@ -56,6 +56,9 @@ public:
     [[nodiscard]] bool runInBackground() const;
     void setRunInBackground(bool enabled);
 
+    // What earlier .gamesave exports carried (services::ExportLog).
+    [[nodiscard]] QString exportLogDirectory() const;
+
     // Covers downloaded for games without local art.
     [[nodiscard]] QString coverCacheDirectory() const;
     // Whether covers missing on this machine may be downloaded from Steam's CDN.

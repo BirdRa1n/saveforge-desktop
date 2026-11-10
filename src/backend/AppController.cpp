@@ -13,9 +13,11 @@
 #include "saveforge/services/LocalProfiles.h"
 #include "saveforge/platform/Processes.h"
 #include "saveforge/services/SaveSlots.h"
+#include "saveforge/services/Transfer.h"
 
 #include <QCoreApplication>
 #include <QDir>
+#include <QJsonDocument>
 #include <QTime>
 #include <QTimer>
 #include <QtConcurrent/QtConcurrentRun>
@@ -774,6 +776,153 @@ void AppController::restore(const QString &gameId, const QString &snapshotId, co
                 log(tr("%1 restaurado (%2). Os arquivos anteriores estão no histórico como \"Antes de restaurar\".")
                         .arg(copy.target.profile.name, countText(report.value().written, tr("arquivo"), tr("arquivos"))),
                     QStringLiteral("success"));
+        });
+}
+
+QVariantList AppController::exportableGames() const
+{
+    QVariantList list;
+    for (const services::LibraryGame &game : m_library.games()) {
+        if (game.snapshotCount == 0)
+            continue;
+        const services::GameArt art = m_library.art(game.id());
+        list.append(QVariantMap{{QStringLiteral("id"), game.id()},
+                                {QStringLiteral("name"), game.target.profile.name},
+                                {QStringLiteral("snapshots"), static_cast<int>(game.snapshotCount)},
+                                {QStringLiteral("cover"), art.header.isEmpty() ? QUrl() : QUrl::fromLocalFile(art.header)},
+                                {QStringLiteral("coverColor"), coverColor(game.id())}});
+    }
+    return list;
+}
+
+QVariantMap AppController::lastExport() const
+{
+    const auto record = services::ExportLog(m_settings.exportLogDirectory()).latest();
+    if (!record)
+        return {{QStringLiteral("exists"), false}};
+    return {{QStringLiteral("exists"), true},
+            {QStringLiteral("date"), record->createdAt.toLocalTime().toString(QStringLiteral("dd/MM/yyyy HH:mm"))},
+            {QStringLiteral("games"), static_cast<int>(record->gameIds.size())}};
+}
+
+void AppController::exportGames(const QStringList &gameIds, const QUrl &file, bool allHistory, bool incremental,
+                                bool includeUserFolders)
+{
+    if (!m_vault) {
+        log(tr("O vault não está disponível: %1").arg(m_vaultError), QStringLiteral("error"));
+        return;
+    }
+    QString path = file.isLocalFile() ? file.toLocalFile() : file.toString();
+    if (path.isEmpty() || gameIds.isEmpty())
+        return;
+    if (!path.endsWith(QLatin1String(archive::kGamesaveExtension), Qt::CaseInsensitive))
+        path += QLatin1String(archive::kGamesaveExtension);
+
+    services::ExportRequest request;
+    request.path = path;
+    request.allHistory = allHistory;
+    request.appVersion = appVersion();
+    request.sourceOs = platform::osName(platform::hostOs());
+    const services::LocalProfileStore local(m_settings.localProfilesDirectory());
+    for (const QString &id : gameIds) {
+        const services::LibraryGame *game = m_library.game(id);
+        services::ExportGame entry{id, game ? game->target.profile.name : id, std::nullopt};
+        if (game && game->target.channel == u"local") {
+            if (auto json = local.profileJson(id); json.ok())
+                entry.localProfile = QJsonDocument::fromJson(json.value()).object();
+        }
+        request.games.append(entry);
+    }
+    services::ExportLog exportLog(m_settings.exportLogDirectory());
+    if (incremental)
+        request.base = exportLog.latest();
+    if (includeUserFolders) {
+        const platform::FolderMap folders = detection::DetectionEnvironment::host().userFolders;
+        for (const QString &name : folders.placeholders())
+            request.placeholders.insert(u'<' + name + u'>', folders.value(name));
+    }
+
+    const vault::Vault *vaultPtr = &*m_vault;
+    const QString logDir = m_settings.exportLogDirectory();
+    run<Result<services::ExportRecord>>(
+        tr("Exportando…"),
+        [vaultPtr, request, logDir] {
+            auto record = services::exportGames(*vaultPtr, request);
+            if (record.ok())
+                (void)services::ExportLog(logDir).add(record.value());
+            return record;
+        },
+        [this, path](Result<services::ExportRecord> record) {
+            if (!record.ok()) {
+                log(tr("A exportação falhou: %1").arg(record.error().message), QStringLiteral("error"));
+                return;
+            }
+            log(tr("%1 exportado para %2.")
+                    .arg(countText(record.value().gameIds.size(), tr("jogo"), tr("jogos")), QDir::toNativeSeparators(path)),
+                QStringLiteral("success"));
+        });
+}
+
+QVariantMap AppController::inspectGamesave(const QUrl &file) const
+{
+    const QString path = file.isLocalFile() ? file.toLocalFile() : file.toString();
+    const auto reader = archive::GamesaveReader::open(path);
+    if (!reader.ok())
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), reader.error().code == ErrorCode::Unsupported
+                                              ? tr("Este arquivo foi criado por uma versão mais nova do SaveForge. Atualize o app para abri-lo.")
+                                              : tr("O arquivo não é um .gamesave válido ou está danificado.")}};
+    const archive::GamesaveManifest &manifest = reader.value().manifest();
+    QVariantList games;
+    for (const archive::GamesaveGame &game : manifest.games)
+        games.append(QVariantMap{{QStringLiteral("name"), game.name},
+                                 {QStringLiteral("snapshots"), static_cast<int>(game.snapshots.size())}});
+    bool missingBase = false;
+    for (const QString &blob : reader.value().missingBlobs()) {
+        if (!m_vault || !m_vault->blobs().contains(blob)) {
+            missingBase = true;
+            break;
+        }
+    }
+    return {{QStringLiteral("ok"), true},
+            {QStringLiteral("games"), games},
+            {QStringLiteral("incremental"), manifest.incremental()},
+            {QStringLiteral("missingBase"), missingBase},
+            {QStringLiteral("date"), manifest.createdAt.toLocalTime().toString(QStringLiteral("dd/MM/yyyy HH:mm"))},
+            {QStringLiteral("sourceOs"), manifest.sourceOs}};
+}
+
+void AppController::importGamesave(const QUrl &file)
+{
+    if (!m_vault) {
+        log(tr("O vault não está disponível: %1").arg(m_vaultError), QStringLiteral("error"));
+        return;
+    }
+    const QString path = file.isLocalFile() ? file.toLocalFile() : file.toString();
+    QSet<QString> known;
+    for (const services::LibraryGame &game : m_library.games())
+        known.insert(game.id());
+    vault::Vault *vaultPtr = &*m_vault;
+    const QString localDir = m_settings.localProfilesDirectory();
+    run<Result<services::ImportReport>>(
+        tr("Importando…"),
+        [vaultPtr, path, localDir, known]() -> Result<services::ImportReport> {
+            const auto reader = archive::GamesaveReader::open(path);
+            if (!reader.ok())
+                return reader.error();
+            services::LocalProfileStore local(localDir);
+            return services::importGamesave(*vaultPtr, reader.value(), &local, known);
+        },
+        [this](Result<services::ImportReport> report) {
+            if (!report.ok()) {
+                log(tr("A importação falhou: %1").arg(report.error().message), QStringLiteral("error"));
+                return;
+            }
+            log(tr("%1 importado de %2. Nada foi restaurado: abra o jogo na biblioteca para escolher um backup.")
+                    .arg(countText(report.value().imported, tr("backup"), tr("backups")),
+                         report.value().games.join(QStringLiteral(", "))),
+                QStringLiteral("success"));
+            refresh();
         });
 }
 

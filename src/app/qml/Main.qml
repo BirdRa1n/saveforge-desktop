@@ -64,10 +64,8 @@ ApplicationWindow {
             ActivityPage {
                 objectName: "activityPage"
             }
-            PlaceholderPage {
-                title: qsTr("Importar / Exportar")
-                iconPath: Icons.transfer
-                description: qsTr("Aqui você poderá exportar seus saves em um arquivo .gamesave e importá-los em outro computador.")
+            TransferPage {
+                objectName: "transferPage"
             }
             SettingsPage {
                 objectName: "settingsPage"
