@@ -33,4 +33,12 @@ struct ServiceEnvironment {
 // the game's install folder (<base>). Comparisons ignore case.
 [[nodiscard]] bool isGameRunning(const GameTarget &target, const QList<platform::ProcessInfo> &processes);
 
+// Folders that hold the game's saves on this machine, for opening them in the
+// file manager: the fixed part of each save path (up to the first glob or
+// segment placeholder) of the rules that apply here, when it exists. A folder
+// inside another one is left out, and folders that contain save files the
+// profile matches come first. Never returns a root placeholder's folder itself
+// (such as the whole Documents folder) when a deeper one exists.
+[[nodiscard]] QStringList saveFolders(const GameTarget &target);
+
 } // namespace saveforge::services

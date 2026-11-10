@@ -67,6 +67,35 @@ private slots:
         // A sibling folder that merely shares the prefix is not the game.
         QVERIFY(!isGameRunning(target, {{3, QStringLiteral("x.exe"), f.installDir() + QStringLiteral(" 2/x.exe")}}));
     }
+
+    void findsTheFoldersThatHoldTheSaves()
+    {
+        ServiceFixture f;
+        GameTarget target = f.target();
+        QDir(f.saveDir()).removeRecursively();
+        QVERIFY(saveFolders(target).isEmpty()); // nothing on disk yet
+
+        QVERIFY(QDir().mkpath(f.saveDir()));
+        QCOMPARE(saveFolders(target), QStringList{f.saveDir()});
+
+        // A root-only rule (all of AppData) and a nested rule add nothing new;
+        // a rule naming one file contributes the file's folder.
+        profiles::SaveRule extra;
+        extra.id = QStringLiteral("config");
+        extra.tags = {profiles::Tag::Config};
+        extra.paths = {QStringLiteral("<winAppData>/*.cfg"),
+                       QStringLiteral("<winAppData>/Fictional Studio/Fictional Game/Profiles/<storeUserId>/*.sav"),
+                       QStringLiteral("<winAppData>/Other Studio/settings.ini")};
+        target.profile.saves.append(extra);
+        writeFile(f.appData() + QStringLiteral("/Other Studio/settings.ini"), "x");
+        // Folders that hold files the profile matches come first: only
+        // settings.ini exists so far.
+        QCOMPARE(saveFolders(target), (QStringList{f.appData() + QStringLiteral("/Other Studio"), f.saveDir()}));
+
+        writeFile(f.saveDir() + QStringLiteral("/slot1.sav"), "x");
+        QDir().remove(f.appData() + QStringLiteral("/Other Studio/settings.ini"));
+        QCOMPARE(saveFolders(target).first(), f.saveDir());
+    }
 };
 
 QTEST_GUILESS_MAIN(TestBackupService)
