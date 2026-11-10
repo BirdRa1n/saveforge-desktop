@@ -46,6 +46,7 @@ class AppController : public QObject {
     Q_PROPERTY(bool canUpdateRegistry READ canUpdateRegistry CONSTANT)
     Q_PROPERTY(bool autoUpdateRegistry READ autoUpdateRegistry WRITE setAutoUpdateRegistry NOTIFY registryChanged)
     Q_PROPERTY(QString registryCheckedText READ registryCheckedText NOTIFY registryChanged)
+    Q_PROPERTY(bool downloadCovers READ downloadCovers WRITE setDownloadCovers NOTIFY coversChanged)
 
 public:
     explicit AppController(QObject *parent = nullptr);
@@ -67,6 +68,8 @@ public:
     // True when this build or the settings name at least one registry mirror.
     [[nodiscard]] bool canUpdateRegistry() const { return !m_settings.registryMirrors().isEmpty(); }
     [[nodiscard]] bool autoUpdateRegistry() const { return m_settings.autoUpdateRegistry(); }
+    [[nodiscard]] bool downloadCovers() const { return m_settings.downloadCovers(); }
+    void setDownloadCovers(bool enabled);
     void setAutoUpdateRegistry(bool enabled);
     // "Verificado há 2 horas", "Ainda não verificado", for the settings page.
     [[nodiscard]] QString registryCheckedText() const;
@@ -77,7 +80,8 @@ public:
     // Backs up every game whose saves exist on this machine.
     Q_INVOKABLE void backupAll();
 
-    // {name, store, reason, installDir, launcherCloud, cloudStores, snapshotCount, saveFiles}
+    // {name, store, reason, installDir, launcherCloud, snapshotCount, coverColor, profileSource,
+    //  local, cover, iconOnly, hero, logo}
     Q_INVOKABLE QVariantMap gameInfo(const QString &gameId) const;
     // Newest first: [{id, date, relative, kind, kindText, files, label, inconsistent}]
     Q_INVOKABLE QVariantList snapshots(const QString &gameId) const;
@@ -110,6 +114,7 @@ signals:
     void cloudPolicyChanged();
     void activityChanged();
     void registryChanged();
+    void coversChanged();
     // A message the interface may show transiently. kind: "success", "warning", "error", "info".
     void notify(const QString &text, const QString &kind);
 
@@ -122,6 +127,9 @@ private:
     // last check is more than a day old.
     void maybeUpdateRegistry();
     void runRegistryUpdate(bool quiet);
+    // Downloads, in the background, the Steam covers the library still lacks
+    // (when the user allows it), then updates the library's art.
+    void downloadMissingCovers();
     [[nodiscard]] services::ServiceEnvironment serviceEnvironment();
     [[nodiscard]] QString appVersion() const;
 
@@ -139,6 +147,7 @@ private:
     QString m_planGameId;
     QFutureWatcherBase *m_running = nullptr;
     bool m_autoUpdateChecked = false;
+    QFutureWatcherBase *m_coverDownload = nullptr;
 };
 
 } // namespace saveforge::backend

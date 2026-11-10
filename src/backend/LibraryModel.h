@@ -1,5 +1,6 @@
 #pragma once
 
+#include "saveforge/services/GameArt.h"
 #include "saveforge/services/Library.h"
 
 #include <QAbstractListModel>
@@ -26,6 +27,8 @@ public:
         CoverColorRole,
         SnapshotCountRole,
         LauncherCloudRole,
+        CoverRole,          // file URL of the landscape cover, or of the icon; empty URL when none
+        IconOnlyRole,       // true when CoverRole is a small icon rather than a cover
     };
     Q_ENUM(Role)
 
@@ -34,6 +37,9 @@ public:
     void setGames(QList<services::LibraryGame> games);
     // Replaces one game (e.g. after a backup); no-op if the id is unknown.
     void updateGame(const services::LibraryGame &game);
+    // Art of the games, by game id. Kept across setGames() until replaced.
+    void setArt(QHash<QString, services::GameArt> art);
+    [[nodiscard]] services::GameArt art(const QString &id) const { return m_art.value(id); }
 
     [[nodiscard]] const services::LibraryGame *game(const QString &id) const;
     [[nodiscard]] const QList<services::LibraryGame> &games() const { return m_games; }
@@ -48,6 +54,7 @@ signals:
 
 private:
     QList<services::LibraryGame> m_games;
+    QHash<QString, services::GameArt> m_art;
 };
 
 // Search and store filter on top of LibraryModel, for the library grid.

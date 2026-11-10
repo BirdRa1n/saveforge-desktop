@@ -34,6 +34,23 @@ QString AppSettings::localProfilesDirectory() const
     return m_dataDir + QStringLiteral("/profiles");
 }
 
+QString AppSettings::coverCacheDirectory() const
+{
+    return m_dataDir + QStringLiteral("/covers");
+}
+
+bool AppSettings::downloadCovers() const
+{
+    const QSettings settings(file(), QSettings::IniFormat);
+    return settings.value(QStringLiteral("covers/download"), true).toBool();
+}
+
+void AppSettings::setDownloadCovers(bool enabled)
+{
+    QSettings settings(file(), QSettings::IniFormat);
+    settings.setValue(QStringLiteral("covers/download"), enabled);
+}
+
 QString AppSettings::vaultPath() const
 {
     const QSettings settings(file(), QSettings::IniFormat);

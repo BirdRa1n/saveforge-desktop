@@ -7,7 +7,9 @@
 #include "saveforge/detection/Launchers.h"
 #include "saveforge/registry/RegistryCache.h"
 #include "saveforge/registry/RegistryUpdater.h"
+#include "saveforge/registry/Fetcher.h"
 #include "saveforge/services/BackupService.h"
+#include "saveforge/services/GameArt.h"
 #include "saveforge/services/LocalProfiles.h"
 
 #include <QCoreApplication>
@@ -25,7 +27,30 @@ constexpr qsizetype kMaxActivity = 200;
 struct RefreshResult {
     services::CatalogLoad catalog;
     services::LibraryScan scan;
+    QHash<QString, services::GameArt> art;
 };
+
+// Art found on this machine plus covers downloaded earlier.
+QHash<QString, services::GameArt> findArt(const QList<services::LibraryGame> &games,
+                                          const detection::DetectionEnvironment &env, const QString &coverDir)
+{
+    const services::LocalArtFinder finder(detection::steamRoots(env));
+    const services::SteamArtCache cache(coverDir);
+    QHash<QString, services::GameArt> art;
+    for (const services::LibraryGame &game : games) {
+        services::GameArt found = finder.find(game);
+        if (found.header.isEmpty()) {
+            for (const QString &appId : services::steamAppIds(game)) {
+                found.header = cache.cachedHeader(appId);
+                if (!found.header.isEmpty())
+                    break;
+            }
+        }
+        if (!found.isEmpty())
+            art.insert(game.id(), found);
+    }
+    return art;
+}
 
 struct RegistryUpdateResult {
     QList<registry::ChannelUpdate> channels;
@@ -74,6 +99,8 @@ AppController::~AppController()
 {
     if (m_running)
         m_running->waitForFinished();
+    if (m_coverDownload)
+        m_coverDownload->waitForFinished();
 }
 
 QString AppController::appVersion() const
@@ -143,11 +170,12 @@ void AppController::refresh()
     const vault::Vault *vaultPtr = m_vault ? &*m_vault : nullptr;
     run<RefreshResult>(
         tr("Procurando jogos…"),
-        [cacheDir, localDir, version, vaultPtr] {
+        [cacheDir, localDir, coverDir = m_settings.coverCacheDirectory(), version, vaultPtr] {
             RefreshResult result;
             result.catalog = services::loadCatalogFromCache(cacheDir, version, localDir);
             const detection::DetectionEnvironment env = detection::DetectionEnvironment::host();
             result.scan = services::scanLibrary(result.catalog.catalog, detection::detectInstalledGames(env), env, vaultPtr);
+            result.art = findArt(result.scan.games, env, coverDir);
             return result;
         },
         [this](RefreshResult result) {
@@ -160,9 +188,82 @@ void AppController::refresh()
             m_notices.removeDuplicates();
             emit catalogChanged();
             m_library.setGames(result.scan.games);
+            m_library.setArt(result.art);
             log(countText(result.scan.games.size(), tr("jogo encontrado"), tr("jogos encontrados")), QStringLiteral("info"));
+            downloadMissingCovers();
             maybeUpdateRegistry();
         });
+}
+
+void AppController::setDownloadCovers(bool enabled)
+{
+    if (enabled == m_settings.downloadCovers())
+        return;
+    m_settings.setDownloadCovers(enabled);
+    emit coversChanged();
+    if (enabled)
+        downloadMissingCovers();
+}
+
+void AppController::downloadMissingCovers()
+{
+    if (m_coverDownload || !m_settings.downloadCovers())
+        return;
+    const QString coverDir = m_settings.coverCacheDirectory();
+    const services::SteamArtCache cache(coverDir);
+    // game id -> Steam app ids to try, for games that still have no cover.
+    QList<QPair<QString, QStringList>> wanted;
+    for (const services::LibraryGame &game : m_library.games()) {
+        if (!m_library.art(game.id()).header.isEmpty())
+            continue;
+        QStringList ids;
+        for (const QString &appId : services::steamAppIds(game)) {
+            if (!cache.knownMissing(appId))
+                ids.append(appId);
+        }
+        if (!ids.isEmpty())
+            wanted.append({game.id(), ids});
+    }
+    if (wanted.isEmpty())
+        return;
+
+    // Runs beside the other operations: covers never make the app busy.
+    const QString userAgent = QStringLiteral("SaveForge/") + appVersion();
+    auto *watcher = new QFutureWatcher<QHash<QString, QString>>(this);
+    m_coverDownload = watcher;
+    connect(watcher, &QFutureWatcherBase::finished, this, [this, watcher] {
+        m_coverDownload = nullptr;
+        const QHash<QString, QString> downloaded = watcher->result();
+        if (!downloaded.isEmpty()) {
+            QHash<QString, services::GameArt> art;
+            for (const services::LibraryGame &game : m_library.games())
+                art.insert(game.id(), m_library.art(game.id()));
+            for (auto it = downloaded.cbegin(); it != downloaded.cend(); ++it)
+                art[it.key()].header = it.value();
+            m_library.setArt(art);
+        }
+        watcher->deleteLater();
+    });
+    watcher->setFuture(QtConcurrent::run([wanted, coverDir, userAgent] {
+        QHash<QString, QString> downloaded;
+        auto fetcher = registry::makeFetcher(QString::fromLatin1(services::SteamArtCache::kCdnBase), userAgent);
+        if (!fetcher.ok())
+            return downloaded;
+        services::SteamArtCache covers(coverDir);
+        for (const auto &[gameId, appIds] : wanted) {
+            for (const QString &appId : appIds) {
+                auto cover = covers.download(appId, *fetcher.value());
+                if (cover.ok()) {
+                    downloaded.insert(gameId, cover.value());
+                    break;
+                }
+                // Offline: stop instead of waiting for every timeout.
+                if (cover.error().code == ErrorCode::Network)
+                    return downloaded;
+            }
+        }
+        return downloaded;
+    }));
 }
 
 void AppController::setAutoUpdateRegistry(bool enabled)
@@ -344,6 +445,8 @@ QVariantMap AppController::gameInfo(const QString &gameId) const
     const services::LibraryGame *game = m_library.game(gameId);
     if (!game)
         return {};
+    const services::GameArt art = m_library.art(gameId);
+    const auto fileUrl = [](const QString &path) { return path.isEmpty() ? QUrl() : QUrl::fromLocalFile(path); };
     return {{QStringLiteral("name"), game->target.profile.name},
             {QStringLiteral("store"), storeLabel(*game)},
             {QStringLiteral("reason"), game->install || game->saveFilesFound > 0
@@ -354,7 +457,11 @@ QVariantMap AppController::gameInfo(const QString &gameId) const
             {QStringLiteral("snapshotCount"), static_cast<int>(game->snapshotCount)},
             {QStringLiteral("coverColor"), coverColor(gameId)},
             {QStringLiteral("profileSource"), game->target.channel},
-            {QStringLiteral("local"), game->target.channel == u"local"}};
+            {QStringLiteral("local"), game->target.channel == u"local"},
+            {QStringLiteral("cover"), fileUrl(art.header.isEmpty() ? art.icon : art.header)},
+            {QStringLiteral("iconOnly"), art.header.isEmpty() && !art.icon.isEmpty()},
+            {QStringLiteral("hero"), fileUrl(art.hero)},
+            {QStringLiteral("logo"), fileUrl(art.logo)}};
 }
 
 QVariantList AppController::snapshots(const QString &gameId) const

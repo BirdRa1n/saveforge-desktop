@@ -3,6 +3,7 @@
 #include "Formatting.h"
 
 #include <QCoreApplication>
+#include <QUrl>
 
 namespace saveforge::backend {
 
@@ -29,6 +30,13 @@ void LibraryModel::updateGame(const services::LibraryGame &game)
             return;
         }
     }
+}
+
+void LibraryModel::setArt(QHash<QString, services::GameArt> art)
+{
+    m_art = std::move(art);
+    if (!m_games.isEmpty())
+        emit dataChanged(index(0), index(static_cast<int>(m_games.size()) - 1), {CoverRole, IconOnlyRole});
 }
 
 const services::LibraryGame *LibraryModel::game(const QString &id) const
@@ -63,6 +71,15 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
     case CoverColorRole: return coverColor(game.id());
     case SnapshotCountRole: return static_cast<int>(game.snapshotCount);
     case LauncherCloudRole: return game.launcherCloud;
+    case CoverRole: {
+        const services::GameArt art = m_art.value(game.id());
+        const QString file = art.header.isEmpty() ? art.icon : art.header;
+        return file.isEmpty() ? QUrl() : QUrl::fromLocalFile(file);
+    }
+    case IconOnlyRole: {
+        const services::GameArt art = m_art.value(game.id());
+        return art.header.isEmpty() && !art.icon.isEmpty();
+    }
     default: return {};
     }
 }
@@ -72,7 +89,8 @@ QHash<int, QByteArray> LibraryModel::roleNames() const
     return {{GameIdRole, "gameId"},           {NameRole, "name"},           {StoreRole, "store"},
             {StoreKeyRole, "storeKey"},       {StatusTextRole, "statusText"}, {StatusKindRole, "statusKind"},
             {CoverColorRole, "coverColor"},   {SnapshotCountRole, "snapshotCount"},
-            {LauncherCloudRole, "launcherCloud"}};
+            {LauncherCloudRole, "launcherCloud"}, {CoverRole, "cover"},
+            {IconOnlyRole, "iconOnly"}};
 }
 
 LibraryFilterModel::LibraryFilterModel(QObject *parent)

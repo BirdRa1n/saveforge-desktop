@@ -39,6 +39,12 @@ public:
     [[nodiscard]] QDateTime lastRegistryCheck() const;
     void setLastRegistryCheck(const QDateTime &when);
 
+    // Covers downloaded for games without local art.
+    [[nodiscard]] QString coverCacheDirectory() const;
+    // Whether covers missing on this machine may be downloaded from Steam's CDN.
+    [[nodiscard]] bool downloadCovers() const;
+    void setDownloadCovers(bool enabled);
+
 private:
     [[nodiscard]] QString file() const;
     QString m_dataDir;
