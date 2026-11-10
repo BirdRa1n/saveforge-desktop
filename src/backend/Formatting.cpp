@@ -61,6 +61,8 @@ QString storeLabel(const services::LibraryGame &game)
         label = store;
     if (game.install->launcher == u"heroic")
         label += tr(" via Heroic");
+    else if (game.install->launcher == u"lutris")
+        label = label.isEmpty() ? QStringLiteral("Lutris") : label + tr(" via Lutris");
     return label;
 }
 

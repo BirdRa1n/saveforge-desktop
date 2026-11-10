@@ -254,6 +254,52 @@ private slots:
         QCOMPARE(stardew->name, QStringLiteral("Stardew Valley")); // falls back to the folder name
     }
 
+    void lutrisReadsGameFilesWithPrefixes()
+    {
+        QTemporaryDir tmp;
+        const QString home = tmp.path();
+        const QString games = home + QStringLiteral("/.config/lutris/games");
+        // A Windows game in a Wine prefix (absolute exe), and a native one (relative exe).
+        const QString prefix = home + QStringLiteral("/Games/hollow-knight");
+        const QString hkDir = prefix + QStringLiteral("/drive_c/Games/Hollow Knight");
+        write(hkDir + QStringLiteral("/hollow_knight.exe"));
+        mkdir(prefix + QStringLiteral("/drive_c/users/player"));
+        write(games + QStringLiteral("/hollow-knight-1699999999.yml"),
+              "game:\n  exe: '" + hkDir.toUtf8() + "/hollow_knight.exe'\n  prefix: " + prefix.toUtf8()
+                  + "\nsystem:\n  exe: ignored\nwine:\n  version: lutris-7.2\n");
+        const QString nativeDir = home + QStringLiteral("/Games/celeste");
+        write(nativeDir + QStringLiteral("/Celeste"));
+        write(games + QStringLiteral("/celeste-1700000000.yml"),
+              "game:\n  exe: Celeste\n  working_dir: \"" + nativeDir.toUtf8() + "\"\n");
+        write(games + QStringLiteral("/broken-1.yml"), "game:\n  exe: /nowhere/x.exe\n");
+
+        const QList<InstallCandidate> found = detectLutris(environment(home, Os::Linux));
+        QCOMPARE(found.size(), 2);
+        const auto byName = [&found](const QString &name) -> const InstallCandidate * {
+            for (const InstallCandidate &c : found)
+                if (c.name == name)
+                    return &c;
+            return nullptr;
+        };
+        const InstallCandidate *hk = byName(QStringLiteral("Hollow Knight"));
+        QVERIFY(hk);
+        QCOMPARE(hk->launcher, QStringLiteral("lutris"));
+        QVERIFY(hk->store.isEmpty());
+        QCOMPARE(hk->gameOs, Os::Windows);
+        QCOMPARE(hk->installDir, hkDir);
+        QCOMPARE(hk->winePrefix, prefix);
+        QCOMPARE(hk->wineUser, QStringLiteral("player"));
+        QVERIFY(hk->executables.contains(QStringLiteral("hollow_knight.exe")));
+        const InstallCandidate *celeste = byName(QStringLiteral("Celeste"));
+        QVERIFY(celeste);
+        QCOMPARE(celeste->gameOs, Os::Linux);
+        QCOMPARE(celeste->installDir, nativeDir);
+        QVERIFY(celeste->executables.contains(QStringLiteral("Celeste")));
+
+        // Lutris exists only on Linux.
+        QVERIFY(detectLutris(environment(home, Os::Windows)).isEmpty());
+    }
+
     void missingLaunchersYieldNothing()
     {
         QTemporaryDir tmp;

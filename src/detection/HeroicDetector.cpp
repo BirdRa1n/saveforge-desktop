@@ -133,7 +133,7 @@ QList<InstallCandidate> detectHeroic(const DetectionEnvironment &env)
 
 QList<InstallCandidate> detectInstalledGames(const DetectionEnvironment &env)
 {
-    return detectSteam(env) + detectEpic(env) + detectGog(env) + detectHeroic(env);
+    return detectSteam(env) + detectEpic(env) + detectGog(env) + detectHeroic(env) + detectLutris(env);
 }
 
 } // namespace saveforge::detection

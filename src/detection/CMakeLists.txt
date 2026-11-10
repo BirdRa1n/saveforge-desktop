@@ -8,6 +8,7 @@ qt_add_library(saveforge_detection STATIC
     EpicGogDetector.cpp
     GameMatcher.cpp
     HeroicDetector.cpp
+    LutrisDetector.cpp
     InstallCandidate.cpp
     SteamDetector.cpp
     Vdf.cpp

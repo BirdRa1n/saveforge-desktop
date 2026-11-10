@@ -33,6 +33,11 @@ namespace saveforge::detection {
 // Proton prefixes and the Flatpak installation.
 [[nodiscard]] QList<InstallCandidate> detectHeroic(const DetectionEnvironment &env);
 
+// Lutris on Linux (native and Flatpak): the game files in lutris/games/*.yml,
+// with the Wine prefix of Windows games. Lutris keeps the store of a game in
+// its database, so candidates have no store and match by executable or folder.
+[[nodiscard]] QList<InstallCandidate> detectLutris(const DetectionEnvironment &env);
+
 // All detectors above.
 [[nodiscard]] QList<InstallCandidate> detectInstalledGames(const DetectionEnvironment &env);
 
