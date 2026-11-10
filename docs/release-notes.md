@@ -10,6 +10,12 @@
   - **Atalhos:** `Ctrl+K` busca, `Ctrl+B` faz backup, `Ctrl+R` restaura, `Ctrl+T` troca de save e as setas navegam pela lista.
 - **Ícone novo:** uma porta de cofre.
 
+### Correções da alpha.2
+
+- **Barra de título:** no Windows e no macOS, o logo e a busca agora ficam na mesma faixa dos botões da janela. O título borrado que aparecia no Windows não existe mais.
+- **Capas:** as capas da biblioteca ficaram nítidas; antes elas eram ampliadas e saíam borradas.
+- **Lista:** o status de backup fica sempre alinhado, mesmo com nomes de jogos longos.
+
 ### Como instalar
 
 | Sistema | Arquivo | Como usar |
