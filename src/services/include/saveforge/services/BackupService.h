@@ -19,9 +19,9 @@ struct BackupOptions {
 // The profile is resolved on this machine and every matched file is captured
 // in one snapshot. Errors:
 //   - PermissionDenied: the game is running and its profile requires it closed;
-//   - NotFound: the profile matched no file;
+//   - NotFound: the profile matched no file and no registry key;
 //   - anything the vault reports (lock held, I/O, cancellation).
-// Windows registry rules are not captured yet.
+// Registry rules are captured with their subkeys when registryRulesApply().
 class BackupService {
 public:
     BackupService(vault::Vault &vault, ServiceEnvironment env);

@@ -26,6 +26,12 @@ bool isGameRunning(const GameTarget &target, const QList<platform::ProcessInfo> 
     return false;
 }
 
+bool registryRulesApply(const GameTarget &target, const ServiceEnvironment &env)
+{
+    return !target.profile.registry.isEmpty() && env.hostOs == platform::Os::Windows
+           && target.context.gameOs == platform::Os::Windows && env.registry && env.registry->available();
+}
+
 QStringList saveFolders(const GameTarget &target)
 {
     const Qt::CaseSensitivity cs = target.context.caseInsensitive ? Qt::CaseInsensitive : Qt::CaseSensitive;

@@ -9,7 +9,11 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QLoggingCategory>
+#include <QHash>
+#include <QJsonValue>
 #include <QSet>
+
+#include <algorithm>
 #include <QTimeZone>
 
 Q_LOGGING_CATEGORY(lcRestore, "saveforge.restore")
@@ -117,8 +121,60 @@ Result<RestorePlan> RestoreService::plan(const GameTarget &target, const QUuid &
         if (!targets.contains(key(current.absolutePath)))
             plan.extraFiles.append(current.absolutePath);
     }
+
+    // Registry keys whose values differ from what the snapshot holds.
+    if (!plan.snapshot.registry.isEmpty()) {
+        if (!registryRulesApply(target, m_env)) {
+            plan.skippedRegistryKeys = plan.snapshot.registry.size();
+        } else {
+            for (const vault::RegistryKey &saved : plan.snapshot.registry) {
+                if (!platform::isUserSoftwareKey(saved.key)) {
+                    ++plan.skippedRegistryKeys;
+                    continue;
+                }
+                auto current = m_env.registry->readTree(saved.key);
+                QHash<QString, QPair<QString, QJsonValue>> now;
+                if (current.ok() && !current.value().isEmpty()
+                    && current.value().first().key.compare(saved.key, Qt::CaseInsensitive) == 0) {
+                    for (const platform::RegistryValueData &v : current.value().first().values)
+                        now.insert(v.name.toLower(), {v.type, v.data});
+                }
+                const bool differs = std::any_of(saved.values.cbegin(), saved.values.cend(), [&now](const vault::RegistryValue &v) {
+                    const auto it = now.constFind(v.name.toLower());
+                    return it == now.cend() || it->first != v.type || it->second != v.data;
+                });
+                if (differs || (saved.values.isEmpty() && (!current.ok() || current.value().isEmpty())))
+                    plan.registryKeys.append(saved);
+            }
+        }
+    }
     return plan;
 }
+
+namespace {
+
+// Writes the given keys; on failure, writes `previous` back (best effort).
+Result<void> writeRegistry(platform::RegistryStore &store, const QList<vault::RegistryKey> &keys,
+                           const QList<vault::RegistryKey> &previous)
+{
+    for (const vault::RegistryKey &key : keys) {
+        platform::RegistryKeyData data{key.key, {}};
+        for (const vault::RegistryValue &value : key.values)
+            data.values.append({value.name, value.type, value.data});
+        if (auto written = store.writeValues(data); !written.ok()) {
+            for (const vault::RegistryKey &old : previous) {
+                platform::RegistryKeyData back{old.key, {}};
+                for (const vault::RegistryValue &value : old.values)
+                    back.values.append({value.name, value.type, value.data});
+                (void)store.writeValues(back);
+            }
+            return written.error();
+        }
+    }
+    return {};
+}
+
+} // namespace
 
 Result<RestoreReport> RestoreService::execute(const GameTarget &target, const RestorePlan &plan, CloudPolicy policy,
                                               const QString &currentSlot)
@@ -180,7 +236,20 @@ Result<RestoreReport> RestoreService::execute(const GameTarget &target, const Re
         out.close();
     }
 
-    // 3. Swap in: move each current file aside, then move the staged file in.
+    // 3. Registry values first: unlike files, they cannot be staged, so a
+    //    failure here leaves the files untouched and puts the old values back.
+    const QList<vault::RegistryKey> previousRegistry =
+        preRestore.ok() ? preRestore.value().registry : QList<vault::RegistryKey>{};
+    if (!plan.registryKeys.isEmpty()) {
+        if (auto written = writeRegistry(*m_env.registry, plan.registryKeys, previousRegistry); !written.ok()) {
+            discardStaged();
+            return Error{written.error().code,
+                         QStringLiteral("cannot restore the registry; nothing was changed: ") + written.error().message,
+                         written.error().context};
+        }
+    }
+
+    // 4. Swap in: move each current file aside, then move the staged file in.
     for (StagedFile &s : staged) {
         bool ok = true;
         if (QFileInfo::exists(s.target)) {
@@ -197,12 +266,14 @@ Result<RestoreReport> RestoreService::execute(const GameTarget &target, const Re
                     QFile::rename(it->previous, it->target);
                 QFile::remove(it->staged);
             }
+            if (!plan.registryKeys.isEmpty())
+                (void)writeRegistry(*m_env.registry, previousRegistry, {});
             return Error{ErrorCode::Io, QStringLiteral("restore failed; the previous files were put back"), s.target};
         }
         s.committed = true;
     }
 
-    // 4. Done: drop the moved-aside files and persist directory entries.
+    // 5. Done: drop the moved-aside files and persist directory entries.
     QSet<QString> dirs;
     for (const StagedFile &s : std::as_const(staged)) {
         if (!s.previous.isEmpty())
@@ -212,7 +283,7 @@ Result<RestoreReport> RestoreService::execute(const GameTarget &target, const Re
     for (const QString &dir : std::as_const(dirs))
         platform::syncDirectory(dir);
 
-    report.written = staged.size();
+    report.written = staged.size() + plan.registryKeys.size();
     qCInfo(lcRestore) << "restored" << report.written << "file(s) of" << target.effectiveGameId() << "from snapshot"
                       << uuidToString(plan.snapshot.snapshotId);
     return report;

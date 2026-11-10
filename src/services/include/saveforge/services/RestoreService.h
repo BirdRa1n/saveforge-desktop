@@ -41,9 +41,17 @@ struct RestorePlan {
     QStringList extraFiles;            // matched by the profile today but absent from the snapshot; left untouched
     bool launcherCloudConflict = false;
     bool gameRunning = false;
+    // Registry keys of the snapshot whose values differ from the registry now
+    // (written by execute()); keys the snapshot has but this machine cannot
+    // write, because registry rules do not apply here, are counted in skippedRegistryKeys.
+    QList<vault::RegistryKey> registryKeys;
+    qsizetype skippedRegistryKeys = 0;
 
     [[nodiscard]] qsizetype count(FileAction action) const;
-    [[nodiscard]] bool hasChanges() const { return count(FileAction::Create) + count(FileAction::Overwrite) > 0; }
+    [[nodiscard]] bool hasChanges() const
+    {
+        return count(FileAction::Create) + count(FileAction::Overwrite) > 0 || !registryKeys.isEmpty();
+    }
     [[nodiscard]] bool hasNewerLocalFiles() const;
 };
 

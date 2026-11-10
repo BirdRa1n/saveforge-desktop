@@ -19,7 +19,26 @@ Result<vault::Snapshot> BackupService::backup(const GameTarget &target, const Ba
                      target.profile.id};
 
     const QList<profiles::ResolvedFile> files = profiles::PathResolver().resolve(target.profile, target.context);
-    if (files.isEmpty())
+
+    QList<vault::RegistryKey> registry;
+    if (registryRulesApply(target, m_env)) {
+        for (const profiles::RegistryRule &rule : target.profile.registry) {
+            for (const QString &key : rule.keys) {
+                auto tree = m_env.registry->readTree(key);
+                if (!tree.ok())
+                    return tree.error();
+                for (const platform::RegistryKeyData &data : tree.value()) {
+                    vault::RegistryKey captured;
+                    captured.key = data.key;
+                    captured.ruleId = rule.id;
+                    for (const platform::RegistryValueData &value : data.values)
+                        captured.values.append({value.name, value.type, value.data});
+                    registry.append(captured);
+                }
+            }
+        }
+    }
+    if (files.isEmpty() && registry.isEmpty())
         return Error{ErrorCode::NotFound, QStringLiteral("no save files found for this game"), target.profile.id};
 
     vault::SnapshotRequest request;
@@ -33,6 +52,7 @@ Result<vault::Snapshot> BackupService::backup(const GameTarget &target, const Ba
     request.profile = {target.channel, target.profile.id, target.profile.revision};
     for (const profiles::ResolvedFile &file : files)
         request.files.append({file.absolutePath, file.templatePath, file.ruleId, file.bindings});
+    request.registry = registry;
 
     auto snapshot = m_vault.createSnapshot(request, options.onFileRead);
     if (snapshot.ok())

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "saveforge/platform/Processes.h"
+#include "saveforge/platform/RegistryStore.h"
 #include "saveforge/profiles/PathResolver.h"
 #include "saveforge/profiles/Profile.h"
 
@@ -26,7 +27,14 @@ struct ServiceEnvironment {
     QUuid machineId;
     QString appVersion;
     platform::ProcessProvider processes = &platform::runningProcesses;
+    // The user's registry, for registry save rules (unavailable outside Windows).
+    std::shared_ptr<platform::RegistryStore> registry = platform::hostRegistryStore();
+    platform::Os hostOs = platform::hostOs();
 };
+
+// Whether the target's registry rules apply here: a Windows build running
+// natively on Windows. Registries inside Wine/Proton prefixes are not handled yet.
+[[nodiscard]] bool registryRulesApply(const GameTarget &target, const ServiceEnvironment &env);
 
 // Whether the game appears to be running: a process name listed in the
 // profile's backup.processNames, or any process whose executable lives inside
