@@ -4,7 +4,7 @@ Aplicativo desktop open source para encontrar, fazer backup e restaurar saves de
 
 > Até a versão 0.2 o projeto se chamava **SaveForge**. Ao atualizar, as configurações e os backups da pasta antiga passam para a nova, e os arquivos `.gamesave` exportados antes continuam abrindo (ADR 0007).
 
-> **Estado:** em desenvolvimento (0.2.0, alpha). As Fases 1 e 2 do [roadmap](../savevault-docs/planejamento/PLANEJAMENTO-TECNICO.md#18-roadmap-com-dependências) já funcionam, quase completas, pela interface e pela linha de comando:
+> **Estado:** em desenvolvimento (0.3.0, alpha). As Fases 1 e 2 do [roadmap](../savevault-docs/planejamento/PLANEJAMENTO-TECNICO.md#18-roadmap-com-dependências) já funcionam, quase completas, pela interface e pela linha de comando:
 > - perfis de jogos vindos do Registry assinado (22 mil jogos via Ludusavi): baixados dos mirrors, embutidos no build ou importados de uma pasta, sempre verificados e guardados em cache para uso offline;
 > - detecção de jogos (Steam, Epic, GOG, Heroic e Lutris, com prefixos Wine/Proton, além da busca por saves de jogos não instalados);
 > - backup no vault local (deduplicação, compressão, verificação de integridade);

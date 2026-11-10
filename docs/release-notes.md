@@ -1,5 +1,15 @@
 > **Versão de testes (alpha).** Use-a com cópias dos seus saves ou junto de outro backup.
 
+### Novidades da 0.3
+
+- **Novo nome: SaveVault.** Até a 0.2, o app se chamava SaveForge. Ao abrir a versão nova pela primeira vez, as configurações e os backups da pasta antiga passam para a nova automaticamente. Os arquivos `.gamesave` exportados antes continuam sendo importados normalmente. No Windows, o instalador atualiza a instalação anterior.
+- **Interface nova:**
+  - **Biblioteca:** a lista de jogos fica ao lado do jogo selecionado, que mostra a arte, os botões principais, os saves com nome e o histórico.
+  - **Janela:** no Windows e no macOS, o app ocupa a área da barra de título e mantém os botões nativos da janela.
+  - **Tema e cor:** escolha entre os temas claro, escuro ou do sistema e uma das 6 cores de destaque, em Configurações › Aparência.
+  - **Atalhos:** `Ctrl+K` busca, `Ctrl+B` faz backup, `Ctrl+R` restaura, `Ctrl+T` troca de save e as setas navegam pela lista.
+- **Ícone novo:** uma porta de cofre.
+
 ### Como instalar
 
 | Sistema | Arquivo | Como usar |

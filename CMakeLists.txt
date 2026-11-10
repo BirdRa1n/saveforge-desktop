@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(SaveVault
-    VERSION 0.2.0
+    VERSION 0.3.0
     DESCRIPTION "Gerenciador open source de backups de saves de jogos de PC"
     HOMEPAGE_URL "https://github.com/BirdRa1n/savevault-desktop"
     LANGUAGES C CXX)
