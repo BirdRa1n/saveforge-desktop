@@ -1,22 +1,31 @@
 import QtQuick
 import QtQuick.Layouts
 
+// App mark (accent tile) and name.
 RowLayout {
-    spacing: 10
+    spacing: Theme.space2
 
-    Icon {
-        Layout.preferredWidth: 28
-        Layout.preferredHeight: 28
-        path: Icons.anvil
+    Rectangle {
+        Layout.preferredWidth: 22
+        Layout.preferredHeight: 22
+        radius: 6
         color: Theme.accent
+
+        Icon {
+            anchors.centerIn: parent
+            width: 14
+            height: 14
+            strokeWidth: 2.4
+            path: Icons.anvil
+            color: Theme.textOnAccent
+        }
     }
 
     Text {
         text: "SaveForge"
         color: Theme.text
         font.family: Theme.fontDisplay
-        font.pixelSize: 20
+        font.pixelSize: 16
         font.weight: Font.Bold
-        font.letterSpacing: -0.4
     }
 }

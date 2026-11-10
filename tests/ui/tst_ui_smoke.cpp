@@ -58,7 +58,8 @@ private slots:
         // The bundled fonts are registered (Theme's FontLoaders), with every weight.
         const QStringList families = QFontDatabase::families();
         QVERIFY(families.contains(QStringLiteral("Inter")));
-        QVERIFY(families.contains(QStringLiteral("Space Grotesk")));
+        QVERIFY(families.contains(QStringLiteral("Outfit")));
+        QVERIFY(families.contains(QStringLiteral("JetBrains Mono")));
         QVERIFY(QFontDatabase::isSmoothlyScalable(QStringLiteral("Inter"), QStringLiteral("SemiBold")));
 
         QObject *library = window->findChild<QObject *>(QStringLiteral("libraryPage"));

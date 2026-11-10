@@ -1,46 +1,40 @@
 import QtQuick
 import QtQuick.Controls.Basic
-import QtQuick.Layouts
 
-// Item da barra lateral. `checked` marca a página atual.
+// Icon button of the navigation rail. `checked` marks the current page; `text`
+// is the tooltip and the accessible name.
 AbstractButton {
     id: control
 
     property string iconPath
 
     checkable: true
-    implicitHeight: Theme.minTouchTarget
-    Layout.fillWidth: true
+    implicitWidth: 44
+    implicitHeight: 44
     focusPolicy: Qt.StrongFocus
+    hoverEnabled: true
     Accessible.role: Accessible.PageTab
     Accessible.name: text
 
+    ToolTip.visible: hovered
+    ToolTip.delay: 400
+    ToolTip.text: text
+
     background: Rectangle {
-        radius: Theme.radiusControl
-        color: control.checked ? Theme.selected
+        radius: Theme.radiusCard
+        color: control.checked ? Theme.accentTint
              : control.hovered ? Theme.surfaceRaised : "transparent"
         border.width: control.visualFocus ? 2 : 0
         border.color: Theme.accent
     }
 
-    contentItem: RowLayout {
-        spacing: Theme.space3
-
-        Item { Layout.preferredWidth: 0 }
-
+    contentItem: Item {
         Icon {
+            anchors.centerIn: parent
+            width: 20
+            height: 20
             path: control.iconPath
-            color: control.checked ? Theme.text : Theme.textMuted
-        }
-
-        Text {
-            Layout.fillWidth: true
-            text: control.text
-            color: control.checked ? Theme.text : Theme.textMuted
-            font.family: Theme.fontBody
-            font.pixelSize: Theme.textBody
-            font.weight: control.checked ? Font.DemiBold : Font.Normal
-            elide: Text.ElideRight
+            color: control.checked ? Theme.accentText : Theme.textMuted
         }
     }
 }

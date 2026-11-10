@@ -3,35 +3,22 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 
-Rectangle {
+// Navigation rail: one icon per page, with the page name as tooltip and
+// accessible name. `currentIndex` is the page shown in Main.qml.
+Item {
     id: root
 
     property int currentIndex: 0
-    property string vaultPath
-    property string statusText
 
-    implicitWidth: 240
-    color: Theme.surface
-
-    Rectangle {
-        anchors.right: parent.right
-        width: 1
-        height: parent.height
-        color: Theme.border
-    }
+    implicitWidth: 64
 
     ButtonGroup { id: navGroup }
 
     ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: Theme.space4
-        anchors.topMargin: Theme.space6
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.topMargin: Theme.space1
         spacing: 6
-
-        Logo {
-            Layout.leftMargin: Theme.space2
-            Layout.bottomMargin: Theme.space5
-        }
 
         Repeater {
             model: [
@@ -48,47 +35,6 @@ Rectangle {
                 checked: root.currentIndex === index
                 ButtonGroup.group: navGroup
                 onClicked: root.currentIndex = index
-            }
-        }
-
-        Item { Layout.fillHeight: true }
-
-        Rectangle {
-            Layout.fillWidth: true
-            implicitHeight: vaultInfo.implicitHeight + 2 * Theme.space3 + 4
-            radius: Theme.radiusControl + 2
-            color: Theme.surfaceRaised
-            border.color: Theme.borderStrong
-
-            ColumnLayout {
-                id: vaultInfo
-                anchors.fill: parent
-                anchors.margins: Theme.space3 + 2
-                spacing: 6
-
-                Text {
-                    text: qsTr("Vault local")
-                    color: Theme.text
-                    font.family: Theme.fontBody
-                    font.pixelSize: 13
-                    font.weight: Font.DemiBold
-                }
-                Text {
-                    Layout.fillWidth: true
-                    text: root.vaultPath
-                    color: Theme.textMuted
-                    font.family: Theme.fontBody
-                    font.pixelSize: 13
-                    elide: Text.ElideMiddle
-                }
-                Text {
-                    Layout.fillWidth: true
-                    text: root.statusText
-                    color: Theme.textMuted
-                    font.family: Theme.fontBody
-                    font.pixelSize: 13
-                    wrapMode: Text.Wrap
-                }
             }
         }
     }

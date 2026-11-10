@@ -239,7 +239,7 @@ Item {
             color: Theme.surface
             border.color: Theme.borderStrong
         }
-        Overlay.modal: Rectangle { color: Qt.rgba(0, 0, 0, 0.55) }
+        Overlay.modal: Rectangle { color: Theme.scrim }
 
         contentItem: ColumnLayout {
             spacing: Theme.space4

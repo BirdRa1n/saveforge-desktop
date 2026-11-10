@@ -88,6 +88,77 @@ Item {
             }
 
             Section {
+                title: qsTr("Aparência")
+                Paragraph { text: qsTr("Tema e cor de destaque da interface. A cor aparece nos botões principais, na seleção e no save em uso.") }
+
+                RowLayout {
+                    spacing: 6
+                    ButtonGroup { id: themeGroup }
+                    Repeater {
+                        model: [
+                            { label: qsTr("Sistema"), key: "system" },
+                            { label: qsTr("Escuro"), key: "dark" },
+                            { label: qsTr("Claro"), key: "light" }
+                        ]
+                        delegate: FilterChip {
+                            required property var modelData
+                            text: modelData.label
+                            checked: AppController.themeMode === modelData.key
+                            ButtonGroup.group: themeGroup
+                            onClicked: AppController.themeMode = modelData.key
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Layout.topMargin: Theme.space1
+                    spacing: Theme.space3
+                    Repeater {
+                        model: [
+                            { color: "#22D3EE", name: qsTr("Ciano") },
+                            { color: "#3B82F6", name: qsTr("Azul") },
+                            { color: "#8B5CF6", name: qsTr("Violeta") },
+                            { color: "#22C55E", name: qsTr("Verde") },
+                            { color: "#F97316", name: qsTr("Laranja") },
+                            { color: "#EC4899", name: qsTr("Rosa") }
+                        ]
+                        delegate: AbstractButton {
+                            id: swatch
+                            required property var modelData
+                            readonly property bool current: AppController.accentColor.toUpperCase() === modelData.color
+                            implicitWidth: 32
+                            implicitHeight: 32
+                            focusPolicy: Qt.StrongFocus
+                            hoverEnabled: true
+                            Accessible.role: Accessible.RadioButton
+                            Accessible.name: qsTr("Cor de destaque %1").arg(modelData.name)
+                            Accessible.checked: current
+                            ToolTip.visible: hovered
+                            ToolTip.delay: 400
+                            ToolTip.text: modelData.name
+                            onClicked: AppController.accentColor = modelData.color
+
+                            background: Rectangle {
+                                radius: width / 2
+                                color: "transparent"
+                                border.width: swatch.current || swatch.visualFocus ? 2 : 0
+                                border.color: swatch.modelData.color
+                            }
+                            contentItem: Item {
+                                Rectangle {
+                                    anchors.centerIn: parent
+                                    width: swatch.current || swatch.visualFocus ? 22 : 28
+                                    height: width
+                                    radius: width / 2
+                                    color: swatch.modelData.color
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Section {
                 title: qsTr("Vault")
                 Paragraph { text: qsTr("Pasta onde os backups são guardados. Pode ficar em outro disco ou numa pasta sincronizada com a nuvem.") }
                 Text {

@@ -1,61 +1,98 @@
 pragma Singleton
 import QtQuick
+import SaveForge.Backend
 
-// Tokens da direção visual "Forja" (ver saveforge-docs/design/FORJA.md).
+// Design tokens of the "Console × Studio" direction (see
+// saveforge-docs/design/CONSOLE-STUDIO.md): neutral blue-grey surfaces in dark
+// and light variants, and one accent colour the user picks in Configurações.
+// Components read only these tokens, so the theme switches everywhere at once.
 QtObject {
-    // Superfícies
-    readonly property color bg: "#16130F"
-    readonly property color surface: "#1E1A15"
-    readonly property color card: "#1F1A14"
-    readonly property color surfaceRaised: "#251F18"
-    readonly property color control: "#221D17"
-    readonly property color selected: "#2A231B"
-    readonly property color border: "#2E2820"
-    readonly property color borderStrong: "#3A3127"
+    id: theme
 
-    // Texto
-    readonly property color text: "#F5EFE6"
-    readonly property color textMuted: "#BFB3A3"
-    readonly property color textSubtle: "#A89C8C"
+    // --- Appearance -------------------------------------------------------
+    // "system" follows the OS colour scheme; "dark" and "light" force one.
+    readonly property string mode: AppController.themeMode
+    readonly property bool dark: mode === "dark"
+                                 || (mode === "system" && Application.styleHints.colorScheme !== Qt.ColorScheme.Light)
 
-    // Acento
-    readonly property color accent: "#F97316"
-    readonly property color accentHover: "#FB8A3C"
-    // (não usar o prefixo "on": QML o interpreta como handler de sinal)
-    readonly property color textOnAccent: "#1A1208"
-    readonly property color accentSoft: "#FDBA74"
+    // Accents offered in Configurações; any #RRGGBB works.
+    readonly property var accentPresets: ["#22D3EE", "#3B82F6", "#8B5CF6", "#22C55E", "#F97316", "#EC4899"]
 
-    // Status (sempre acompanhados de rótulo em texto)
-    readonly property color successBg: "#1F3324"
-    readonly property color successFg: "#86EFAC"
-    readonly property color warningBg: "#3A2A12"
-    readonly property color warningFg: "#FCD34D"
-    readonly property color dangerFg: "#F87171"
-    // Text of unselected filter chips: between textMuted and text.
-    readonly property color chipText: "#CDBFAE"
-    readonly property color neutralBg: "#2E2820"
-    readonly property color neutralFg: "#D6CBBD"
+    // --- Surfaces ----------------------------------------------------------
+    // window: the frame (title bar, rail, hint bar); bg: the content panels.
+    readonly property color window: dark ? "#0F1218" : "#E9EDF2"
+    readonly property color bg: dark ? "#151922" : "#FFFFFF"
+    readonly property color surface: dark ? "#1B2029" : "#F6F8FA"
+    readonly property color card: dark ? "#1B2029" : "#F6F8FA"
+    readonly property color surfaceRaised: dark ? "#222834" : "#EEF1F5"
+    readonly property color control: dark ? "#1B2029" : "#FFFFFF"
+    readonly property color selected: accentTint
+    readonly property color border: dark ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(18 / 255, 22 / 255, 32 / 255, 0.10)
+    readonly property color borderSoft: dark ? Qt.rgba(1, 1, 1, 0.05) : Qt.rgba(18 / 255, 22 / 255, 32 / 255, 0.06)
+    readonly property color borderStrong: dark ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(18 / 255, 22 / 255, 32 / 255, 0.18)
+    readonly property color keycap: dark ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(18 / 255, 22 / 255, 32 / 255, 0.08)
+    readonly property color scrim: Qt.rgba(0, 0, 0, dark ? 0.55 : 0.35)
 
-    // Tipografia: Inter e Space Grotesk (SIL OFL 1.1) vêm embutidas no app,
-    // em src/app/fonts. Cada FontLoader registra um peso da família no banco
-    // de fontes do Qt, e os componentes usam o nome da família.
+    // --- Text --------------------------------------------------------------
+    readonly property color text: dark ? "#ECEFF4" : "#121620"
+    readonly property color textMuted: dark ? "#A3ACBA" : "#4F5868"
+    readonly property color textSubtle: dark ? "#8D96A5" : "#5F6878"
+    readonly property color chipText: textMuted
+
+    // --- Accent ------------------------------------------------------------
+    readonly property color accent: AppController.accentColor
+    readonly property color accentHover: dark ? Qt.lighter(accent, 1.12) : Qt.darker(accent, 1.08)
+    readonly property color accentTint: Qt.rgba(accent.r, accent.g, accent.b, dark ? 0.14 : 0.12)
+    readonly property color accentSoft: Qt.lighter(accent, 1.3)
+    // Text on the accent: dark ink on light accents, white on dark ones.
+    // (Never name a property with the "on" prefix: QML reads it as a handler.)
+    readonly property color textOnAccent: luminance(accent) > 0.45 ? "#0B0E14" : "#FFFFFF"
+    // Accent used as text or icon on the panels: darker in light mode for contrast.
+    readonly property color accentText: dark ? accent : Qt.darker(accent, luminance(accent) > 0.45 ? 1.6 : 1.1)
+
+    function luminance(c) {
+        const lin = v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
+        return 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b)
+    }
+
+    // --- Status (always paired with a text label) ---------------------------
+    readonly property color successFg: dark ? "#4ADE80" : "#15803D"
+    readonly property color successBg: dark ? Qt.rgba(74 / 255, 222 / 255, 128 / 255, 0.14) : Qt.rgba(21 / 255, 128 / 255, 61 / 255, 0.10)
+    readonly property color warningFg: dark ? "#FBBF24" : "#B45309"
+    readonly property color warningBg: dark ? Qt.rgba(251 / 255, 191 / 255, 36 / 255, 0.14) : Qt.rgba(180 / 255, 83 / 255, 9 / 255, 0.10)
+    readonly property color dangerFg: dark ? "#F87171" : "#B91C1C"
+    readonly property color neutralFg: dark ? "#C3CAD5" : "#3B4250"
+    readonly property color neutralBg: keycap
+
+    // Controller face buttons, shown next to the actions they trigger.
+    readonly property color padA: "#22C55E"
+    readonly property color padX: "#3B82F6"
+    readonly property color padY: "#EAB308"
+
+    // --- Typography ----------------------------------------------------------
+    // Inter, Outfit and JetBrains Mono (SIL OFL 1.1) ship with the app in
+    // src/app/fonts. Each FontLoader registers one weight of a family.
     readonly property list<FontLoader> fonts: [
         FontLoader { source: "../../fonts/inter/Inter-Regular.ttf" },
         FontLoader { source: "../../fonts/inter/Inter-Medium.ttf" },
         FontLoader { source: "../../fonts/inter/Inter-SemiBold.ttf" },
         FontLoader { source: "../../fonts/inter/Inter-Bold.ttf" },
-        FontLoader { source: "../../fonts/space-grotesk/SpaceGrotesk-Regular.ttf" },
-        FontLoader { source: "../../fonts/space-grotesk/SpaceGrotesk-Medium.ttf" },
-        FontLoader { source: "../../fonts/space-grotesk/SpaceGrotesk-Bold.ttf" }
+        FontLoader { source: "../../fonts/outfit/Outfit-Regular.ttf" },
+        FontLoader { source: "../../fonts/outfit/Outfit-Medium.ttf" },
+        FontLoader { source: "../../fonts/outfit/Outfit-SemiBold.ttf" },
+        FontLoader { source: "../../fonts/outfit/Outfit-Bold.ttf" },
+        FontLoader { source: "../../fonts/jetbrains-mono/JetBrainsMono-Regular.ttf" },
+        FontLoader { source: "../../fonts/jetbrains-mono/JetBrainsMono-Medium.ttf" }
     ]
-    readonly property string fontDisplay: "Space Grotesk"
+    readonly property string fontDisplay: "Outfit"
     readonly property string fontBody: "Inter"
-    readonly property int textPageTitle: 30
-    readonly property int textSectionTitle: 20
+    readonly property string fontMono: "JetBrains Mono"
+    readonly property int textPageTitle: 26
+    readonly property int textSectionTitle: 18
     readonly property int textBody: 14
     readonly property int textMeta: 12
 
-    // Espaçamento
+    // --- Spacing -------------------------------------------------------------
     readonly property int space1: 4
     readonly property int space2: 8
     readonly property int space3: 12
@@ -64,11 +101,12 @@ QtObject {
     readonly property int space6: 24
     readonly property int space8: 32
 
-    // Raios
+    // --- Radii ---------------------------------------------------------------
     readonly property int radiusBadge: 6
-    readonly property int radiusControl: 10
-    readonly property int radiusCard: 14
+    readonly property int radiusControl: 8
+    readonly property int radiusCard: 12
+    readonly property int radiusPanel: 14
 
-    // Acessibilidade
-    readonly property int minTouchTarget: 44
+    // --- Accessibility -------------------------------------------------------
+    readonly property int minTouchTarget: 40
 }

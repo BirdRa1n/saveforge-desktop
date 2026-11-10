@@ -20,7 +20,12 @@ qt_add_qml_module(saveforge_ui
         qml/components/FilterChip.qml
         qml/components/SearchInput.qml
         qml/components/StatusBadge.qml
-        qml/components/GameCard.qml
+        qml/components/GameRow.qml
+        qml/components/TitleBar.qml
+        qml/components/HintBar.qml
+        qml/components/KeyCap.qml
+        qml/components/SectionLabel.qml
+        qml/components/LinkButton.qml
         qml/components/EmptyState.qml
         qml/components/Sidebar.qml
         qml/components/Spinner.qml
@@ -45,9 +50,12 @@ qt_add_qml_module(saveforge_ui
         fonts/inter/Inter-Medium.ttf
         fonts/inter/Inter-SemiBold.ttf
         fonts/inter/Inter-Bold.ttf
-        fonts/space-grotesk/SpaceGrotesk-Regular.ttf
-        fonts/space-grotesk/SpaceGrotesk-Medium.ttf
-        fonts/space-grotesk/SpaceGrotesk-Bold.ttf
+        fonts/outfit/Outfit-Regular.ttf
+        fonts/outfit/Outfit-Medium.ttf
+        fonts/outfit/Outfit-SemiBold.ttf
+        fonts/outfit/Outfit-Bold.ttf
+        fonts/jetbrains-mono/JetBrainsMono-Regular.ttf
+        fonts/jetbrains-mono/JetBrainsMono-Medium.ttf
 )
 target_link_libraries(saveforge_ui PRIVATE Qt6::Quick Qt6::QuickControls2 Qt6::QuickDialogs2 saveforge_backend)
 
