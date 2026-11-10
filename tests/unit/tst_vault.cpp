@@ -1,5 +1,5 @@
-#include "saveforge/core/Uuid.h"
-#include "saveforge/vault/Vault.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/vault/Vault.h"
 
 #include <QDir>
 #include <QFile>
@@ -7,8 +7,8 @@
 #include <QTemporaryDir>
 #include <QTest>
 
-using namespace saveforge;
-using namespace saveforge::vault;
+using namespace savevault;
+using namespace savevault::vault;
 
 namespace {
 

@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.24)
 
-project(SaveForge
+project(SaveVault
     VERSION 0.2.0
     DESCRIPTION "Gerenciador open source de backups de saves de jogos de PC"
-    HOMEPAGE_URL "https://github.com/BirdRa1n/saveforge-desktop"
+    HOMEPAGE_URL "https://github.com/BirdRa1n/savevault-desktop"
     LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -11,8 +11,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(SAVEFORGE_BUILD_TESTS "Compilar os testes" ON)
-option(SAVEFORGE_WARNINGS_AS_ERRORS "Tratar avisos como erros" OFF)
+option(SAVEVAULT_BUILD_TESTS "Compilar os testes" ON)
+option(SAVEVAULT_WARNINGS_AS_ERRORS "Tratar avisos como erros" OFF)
 
 find_package(Qt6 6.8 REQUIRED COMPONENTS Core Gui Network Qml Quick QuickControls2 QuickDialogs2 Concurrent Widgets)
 qt_standard_project_setup(REQUIRES 6.8)
@@ -20,22 +20,22 @@ qt_standard_project_setup(REQUIRES 6.8)
 set(QT_QML_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/qml")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-include(SaveForgeWarnings)
+include(SaveVaultWarnings)
 include(GNUInstallDirs)
-include(SaveForgeDependencies)
+include(SaveVaultDependencies)
 
 # Shared specifications (schemas, placeholder catalog, path rules, test vectors).
-set(SAVEFORGE_SPECS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/specs" CACHE PATH "Path to saveforge-specs")
-if(NOT EXISTS "${SAVEFORGE_SPECS_DIR}/profile/placeholders.json")
+set(SAVEVAULT_SPECS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/specs" CACHE PATH "Path to savevault-specs")
+if(NOT EXISTS "${SAVEVAULT_SPECS_DIR}/profile/placeholders.json")
     message(FATAL_ERROR
-        "saveforge-specs not found at ${SAVEFORGE_SPECS_DIR}.\n"
+        "savevault-specs not found at ${SAVEVAULT_SPECS_DIR}.\n"
         "Run: git submodule update --init")
 endif()
 
 add_subdirectory(src)
-include(SaveForgePackaging)
+include(SaveVaultPackaging)
 
-if(SAVEFORGE_BUILD_TESTS)
+if(SAVEVAULT_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()

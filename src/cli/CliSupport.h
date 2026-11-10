@@ -1,12 +1,12 @@
 #pragma once
 
-#include "saveforge/services/Library.h"
+#include "savevault/services/Library.h"
 
 #include <QString>
 #include <QStringList>
 #include <QTextStream>
 
-namespace saveforge::cli {
+namespace savevault::cli {
 
 // Version string of this build (e.g. "0.1.0").
 [[nodiscard]] QString appVersion();
@@ -28,4 +28,4 @@ using CatalogLoad = services::CatalogLoad;
 // Prints warnings to `err`, one per line.
 void printWarnings(const QStringList &warnings, QTextStream &err);
 
-} // namespace saveforge::cli
+} // namespace savevault::cli

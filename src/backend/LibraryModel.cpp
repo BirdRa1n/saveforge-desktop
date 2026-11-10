@@ -5,7 +5,7 @@
 #include <QCoreApplication>
 #include <QUrl>
 
-namespace saveforge::backend {
+namespace savevault::backend {
 
 LibraryModel::LibraryModel(QObject *parent)
     : QAbstractListModel(parent)
@@ -65,8 +65,8 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
     case StoreRole: return storeLabel(game);
     case StoreKeyRole: return storeKey(game);
     case StatusTextRole:
-        return game.lastSnapshot ? QCoreApplication::translate("SaveForge", "Backup %1").arg(relativeTime(game.lastSnapshot->createdAt))
-                                 : QCoreApplication::translate("SaveForge", "Sem backup");
+        return game.lastSnapshot ? QCoreApplication::translate("SaveVault", "Backup %1").arg(relativeTime(game.lastSnapshot->createdAt))
+                                 : QCoreApplication::translate("SaveVault", "Sem backup");
     case StatusKindRole: return game.lastSnapshot ? 0 : 2;
     case CoverColorRole: return coverColor(game.id());
     case SnapshotCountRole: return static_cast<int>(game.snapshotCount);
@@ -145,4 +145,4 @@ bool LibraryFilterModel::filterAcceptsRow(int sourceRow, const QModelIndex &sour
     return m_search.isEmpty() || index.data(LibraryModel::NameRole).toString().contains(m_search, Qt::CaseInsensitive);
 }
 
-} // namespace saveforge::backend
+} // namespace savevault::backend

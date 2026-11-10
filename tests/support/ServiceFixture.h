@@ -3,8 +3,8 @@
 // Shared fixture for service tests: a temporary "machine" with Windows-style
 // user folders, a vault, a profile for a fictional game and a fake process list.
 
-#include "saveforge/services/GameTarget.h"
-#include "saveforge/vault/Vault.h"
+#include "savevault/services/GameTarget.h"
+#include "savevault/vault/Vault.h"
 
 #include <QDir>
 #include <QFile>
@@ -13,7 +13,7 @@
 
 #include <memory>
 
-namespace saveforge::testing {
+namespace savevault::testing {
 
 inline void writeFile(const QString &path, const QByteArray &content)
 {
@@ -81,4 +81,4 @@ struct ServiceFixture {
     }
 };
 
-} // namespace saveforge::testing
+} // namespace savevault::testing

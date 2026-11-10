@@ -1,26 +1,26 @@
-qt_add_library(saveforge_profiles STATIC
-    include/saveforge/profiles/PlaceholderCatalog.h
-    include/saveforge/profiles/PathRules.h
-    include/saveforge/profiles/Profile.h
-    include/saveforge/profiles/ProfileParser.h
-    include/saveforge/profiles/PathResolver.h
+qt_add_library(savevault_profiles STATIC
+    include/savevault/profiles/PlaceholderCatalog.h
+    include/savevault/profiles/PathRules.h
+    include/savevault/profiles/Profile.h
+    include/savevault/profiles/ProfileParser.h
+    include/savevault/profiles/PathResolver.h
     PlaceholderCatalog.cpp
     PathRules.cpp
     ProfileParser.cpp
     PathResolver.cpp
 )
-add_library(saveforge::profiles ALIAS saveforge_profiles)
+add_library(savevault::profiles ALIAS savevault_profiles)
 
-target_include_directories(saveforge_profiles PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(saveforge_profiles PUBLIC saveforge::core saveforge::platform Qt6::Core)
-saveforge_set_warnings(saveforge_profiles)
+target_include_directories(savevault_profiles PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(savevault_profiles PUBLIC savevault::core savevault::platform Qt6::Core)
+savevault_set_warnings(savevault_profiles)
 
-# Data files come straight from saveforge-specs so the Desktop never carries a
+# Data files come straight from savevault-specs so the Desktop never carries a
 # second copy of the placeholder catalog or the sensitive-location denylist.
-qt_add_resources(saveforge_profiles saveforge_profiles_specs
-    PREFIX "/saveforge/specs"
-    BASE "${SAVEFORGE_SPECS_DIR}"
+qt_add_resources(savevault_profiles savevault_profiles_specs
+    PREFIX "/savevault/specs"
+    BASE "${SAVEVAULT_SPECS_DIR}"
     FILES
-        "${SAVEFORGE_SPECS_DIR}/profile/placeholders.json"
-        "${SAVEFORGE_SPECS_DIR}/profile/path-denylist.json"
+        "${SAVEVAULT_SPECS_DIR}/profile/placeholders.json"
+        "${SAVEVAULT_SPECS_DIR}/profile/path-denylist.json"
 )

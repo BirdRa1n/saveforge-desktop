@@ -1,6 +1,6 @@
-#include "saveforge/services/Retention.h"
+#include "savevault/services/Retention.h"
 
-#include "saveforge/core/Uuid.h"
+#include "savevault/core/Uuid.h"
 
 #include <QHash>
 #include <QLoggingCategory>
@@ -8,9 +8,9 @@
 
 #include <chrono>
 
-Q_LOGGING_CATEGORY(lcRetention, "saveforge.retention")
+Q_LOGGING_CATEGORY(lcRetention, "savevault.retention")
 
-namespace saveforge::services {
+namespace savevault::services {
 
 QList<vault::Snapshot> snapshotsToRemove(const QList<vault::Snapshot> &snapshots, const RetentionPolicy &policy,
                                          const QDateTime &now)
@@ -82,4 +82,4 @@ Result<RetentionReport> applyRetention(vault::Vault &vault, const RetentionPolic
     return report;
 }
 
-} // namespace saveforge::services
+} // namespace savevault::services

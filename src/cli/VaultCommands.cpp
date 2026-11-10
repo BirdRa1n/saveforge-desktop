@@ -3,18 +3,18 @@
 #include "CliSupport.h"
 #include "Commands.h"
 
-#include "saveforge/core/Uuid.h"
-#include "saveforge/detection/GameMatcher.h"
-#include "saveforge/detection/Launchers.h"
-#include "saveforge/profiles/ProfileParser.h"
-#include "saveforge/services/BackupService.h"
-#include "saveforge/services/RestoreService.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/detection/GameMatcher.h"
+#include "savevault/detection/Launchers.h"
+#include "savevault/profiles/ProfileParser.h"
+#include "savevault/services/BackupService.h"
+#include "savevault/services/RestoreService.h"
 
 #include <QCommandLineParser>
 #include <QFile>
 #include <QSysInfo>
 
-namespace saveforge::cli {
+namespace savevault::cli {
 
 namespace {
 
@@ -220,7 +220,7 @@ int runRestore(const QStringList &arguments, QTextStream &out, QTextStream &err)
     parser.setApplicationDescription(QStringLiteral("Show a restore plan and, with --yes, restore a snapshot."));
     const QCommandLineOption snapshot(QStringLiteral("snapshot"), QStringLiteral("Snapshot id."), QStringLiteral("id"));
     const QCommandLineOption cloud(QStringLiteral("cloud"),
-                                   QStringLiteral("Launcher-cloud conflicts: prefer-saveforge or prefer-launcher."),
+                                   QStringLiteral("Launcher-cloud conflicts: prefer-savevault or prefer-launcher."),
                                    QStringLiteral("policy"));
     const QCommandLineOption yes(QStringLiteral("yes"), QStringLiteral("Write the files (otherwise only plan)."));
     parser.addOptions({kVault, kGame, kProfile, kMap, snapshot, cloud, yes});
@@ -261,8 +261,8 @@ int runRestore(const QStringList &arguments, QTextStream &out, QTextStream &err)
         return 0;
     }
     services::CloudPolicy policy = services::CloudPolicy::Ask;
-    if (parser.value(cloud) == u"prefer-saveforge")
-        policy = services::CloudPolicy::PreferSaveForge;
+    if (parser.value(cloud) == u"prefer-savevault")
+        policy = services::CloudPolicy::PreferSaveVault;
     else if (parser.value(cloud) == u"prefer-launcher")
         policy = services::CloudPolicy::PreferLauncher;
 
@@ -278,4 +278,4 @@ int runRestore(const QStringList &arguments, QTextStream &out, QTextStream &err)
     return 0;
 }
 
-} // namespace saveforge::cli
+} // namespace savevault::cli

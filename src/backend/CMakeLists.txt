@@ -1,9 +1,9 @@
-# QML module SaveForge.Backend: the C++ side of the interface (controller and
-# list models). It holds no layout or styling; SaveForge.Ui renders it.
-qt_add_library(saveforge_backend STATIC)
+# QML module SaveVault.Backend: the C++ side of the interface (controller and
+# list models). It holds no layout or styling; SaveVault.Ui renders it.
+qt_add_library(savevault_backend STATIC)
 
-qt_add_qml_module(saveforge_backend
-    URI SaveForge.Backend
+qt_add_qml_module(savevault_backend
+    URI SaveVault.Backend
     VERSION 1.0
     SOURCES
         AppController.h
@@ -15,7 +15,7 @@ qt_add_qml_module(saveforge_backend
         LibraryModel.h
         LibraryModel.cpp
 )
-target_link_libraries(saveforge_backend PUBLIC saveforge::services Qt6::Qml Qt6::Gui Qt6::Concurrent)
+target_link_libraries(savevault_backend PUBLIC savevault::services Qt6::Qml Qt6::Gui Qt6::Concurrent)
 # The executable talks to AppController directly (tray icon), so its headers are public.
-target_include_directories(saveforge_backend PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-saveforge_set_warnings(saveforge_backend)
+target_include_directories(savevault_backend PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+savevault_set_warnings(savevault_backend)

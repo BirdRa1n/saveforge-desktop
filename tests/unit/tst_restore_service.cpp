@@ -1,13 +1,13 @@
 #include "ServiceFixture.h"
 
-#include "saveforge/services/BackupService.h"
-#include "saveforge/services/RestoreService.h"
+#include "savevault/services/BackupService.h"
+#include "savevault/services/RestoreService.h"
 
 #include <QDirIterator>
 
-using namespace saveforge;
-using namespace saveforge::services;
-using namespace saveforge::testing;
+using namespace savevault;
+using namespace savevault::services;
+using namespace savevault::testing;
 
 namespace {
 
@@ -18,7 +18,7 @@ QStringList leftovers(const QString &dir)
     QDirIterator it(dir, QDir::Files | QDir::Hidden, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         const QString path = it.next();
-        if (path.contains(QLatin1String(".saveforge-")))
+        if (path.contains(QLatin1String(".savevault-")))
             found.append(path);
     }
     return found;
@@ -113,7 +113,7 @@ private slots:
         const auto plan = service.plan(f.target(), snapshot.snapshotId);
 
         f.processes = {{77, QStringLiteral("FictionalGame.exe"), f.installDir() + QStringLiteral("/FictionalGame.exe")}};
-        const auto report = service.execute(f.target(), plan.value(), CloudPolicy::PreferSaveForge);
+        const auto report = service.execute(f.target(), plan.value(), CloudPolicy::PreferSaveVault);
         QVERIFY(!report.ok());
         QCOMPARE(report.error().code, ErrorCode::PermissionDenied);
         QCOMPARE(readFile(f.saveDir() + QStringLiteral("/slot1.sav")), QByteArray("changed"));
@@ -136,7 +136,7 @@ private slots:
                  ErrorCode::PermissionDenied);
         QCOMPARE(readFile(f.saveDir() + QStringLiteral("/slot1.sav")), QByteArray("changed"));
 
-        QVERIFY(service.execute(target, plan.value(), CloudPolicy::PreferSaveForge).ok());
+        QVERIFY(service.execute(target, plan.value(), CloudPolicy::PreferSaveVault).ok());
         QCOMPARE(readFile(f.saveDir() + QStringLiteral("/slot1.sav")), QByteArray("slot one, chapter 3"));
 
         // Another store's cloud does not conflict with a Steam install.

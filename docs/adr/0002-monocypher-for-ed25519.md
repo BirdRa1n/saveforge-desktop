@@ -3,14 +3,14 @@
 **Status:** Aceita · **Data:** 2026-11-09 · **Ajusta:** ADR 0006 do ecossistema, que previa libsodium.
 
 ## Contexto
-O Desktop precisa verificar as assinaturas Ed25519 do Registry (`saveforge-specs/registry`). A ADR 0006 do ecossistema citava a libsodium, mas:
+O Desktop precisa verificar as assinaturas Ed25519 do Registry (`savevault-specs/registry`). A ADR 0006 do ecossistema citava a libsodium, mas:
 - a libsodium não tem build CMake oficial: usa autotools ou projetos do Visual Studio. Isso complica o padrão de dependências da ADR 0001 (sistema primeiro, com fallback para `FetchContent` verificado por hash) no MinGW e no MSVC;
 - o Desktop só precisa **verificar** assinaturas, e não da biblioteca inteira.
 
 ## Decisão
 Usar o **Monocypher 4.0.3**: `monocypher.c` mais o opcional `monocypher-ed25519.c` (Ed25519 com SHA-512, compatível com o RFC 8032).
-- O download é fixado e verificado por SHA-512 (o mesmo checksum publicado em monocypher.org), e a biblioteca é compilada como `saveforge::monocypher`.
-- O uso fica encapsulado em `saveforge::registry::verifyEd25519()`, testado com os vetores de `saveforge-specs/registry/test-vectors/signing.json`.
+- O download é fixado e verificado por SHA-512 (o mesmo checksum publicado em monocypher.org), e a biblioteca é compilada como `savevault::monocypher`.
+- O uso fica encapsulado em `savevault::registry::verifyEd25519()`, testado com os vetores de `savevault-specs/registry/test-vectors/signing.json`.
 
 ## Consequências
 - (+) Dois arquivos C, sem dependências, licença CC0 ou BSD-2 (à escolha), com auditoria pública (Cure53, 2020).

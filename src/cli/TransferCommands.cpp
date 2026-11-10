@@ -3,15 +3,15 @@
 #include "CliSupport.h"
 #include "Commands.h"
 
-#include "saveforge/archive/Gamesave.h"
-#include "saveforge/platform/Os.h"
-#include "saveforge/services/LocalProfiles.h"
-#include "saveforge/services/Transfer.h"
+#include "savevault/archive/Gamesave.h"
+#include "savevault/platform/Os.h"
+#include "savevault/services/LocalProfiles.h"
+#include "savevault/services/Transfer.h"
 
 #include <QCommandLineParser>
 #include <QJsonDocument>
 
-namespace saveforge::cli {
+namespace savevault::cli {
 
 namespace {
 
@@ -127,4 +127,4 @@ int runGamesaveImport(const QStringList &arguments, QTextStream &out, QTextStrea
     return 0;
 }
 
-} // namespace saveforge::cli
+} // namespace savevault::cli

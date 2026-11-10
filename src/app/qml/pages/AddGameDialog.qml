@@ -3,7 +3,7 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Dialogs
 import QtQuick.Layouts
-import SaveForge.Backend
+import SaveVault.Backend
 
 // Adds a game the profiles do not cover: a name plus the folders where it
 // keeps its saves. The controller turns them into a local profile.
@@ -62,7 +62,7 @@ Popup {
 
         Text {
             Layout.fillWidth: true
-            text: qsTr("Para jogos que o SaveForge ainda não conhece. Informe o nome e as pastas onde o jogo guarda os saves.")
+            text: qsTr("Para jogos que o SaveVault ainda não conhece. Informe o nome e as pastas onde o jogo guarda os saves.")
             color: Theme.textMuted
             font.family: Theme.fontBody
             font.pixelSize: Theme.textBody

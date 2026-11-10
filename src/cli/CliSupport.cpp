@@ -1,9 +1,9 @@
 #include "CliSupport.h"
 
-#include "saveforge/core/Version.h"
-#include "saveforge/platform/AppPaths.h"
+#include "savevault/core/Version.h"
+#include "savevault/platform/AppPaths.h"
 
-namespace saveforge::cli {
+namespace savevault::cli {
 
 QString appVersion()
 {
@@ -36,4 +36,4 @@ void printWarnings(const QStringList &warnings, QTextStream &err)
         err << "warning: " << warning << Qt::endl;
 }
 
-} // namespace saveforge::cli
+} // namespace savevault::cli

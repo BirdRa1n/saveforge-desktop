@@ -1,4 +1,4 @@
-#include "saveforge/platform/FileSync.h"
+#include "savevault/platform/FileSync.h"
 
 #if defined(Q_OS_WIN)
 #  include <io.h>
@@ -8,7 +8,7 @@
 #  include <unistd.h>
 #endif
 
-namespace saveforge::platform {
+namespace savevault::platform {
 
 bool syncFile(QFile &file)
 {
@@ -33,4 +33,4 @@ void syncDirectory([[maybe_unused]] const QString &directory)
 #endif
 }
 
-} // namespace saveforge::platform
+} // namespace savevault::platform

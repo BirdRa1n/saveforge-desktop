@@ -1,9 +1,9 @@
 pragma Singleton
 import QtQuick
-import SaveForge.Backend
+import SaveVault.Backend
 
 // Design tokens of the "Console × Studio" direction (see
-// saveforge-docs/design/CONSOLE-STUDIO.md): neutral blue-grey surfaces in dark
+// savevault-docs/design/CONSOLE-STUDIO.md): neutral blue-grey surfaces in dark
 // and light variants, and one accent colour the user picks in Configurações.
 // Components read only these tokens, so the theme switches everywhere at once.
 QtObject {

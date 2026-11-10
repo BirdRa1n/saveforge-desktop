@@ -1,4 +1,4 @@
-#include "saveforge/platform/RegistryStore.h"
+#include "savevault/platform/RegistryStore.h"
 
 #include <QJsonArray>
 #include <QStringList>
@@ -10,7 +10,7 @@
 #include <qt_windows.h>
 #endif
 
-namespace saveforge::platform {
+namespace savevault::platform {
 
 namespace {
 
@@ -309,4 +309,4 @@ Result<void> MemoryRegistryStore::removeTree(const QString &key)
     return {};
 }
 
-} // namespace saveforge::platform
+} // namespace savevault::platform

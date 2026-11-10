@@ -1,13 +1,13 @@
 #include "ServiceFixture.h"
 
-#include "saveforge/services/Library.h"
-#include "saveforge/services/LocalProfiles.h"
+#include "savevault/services/Library.h"
+#include "savevault/services/LocalProfiles.h"
 
 #include <QFile>
 
-using namespace saveforge;
-using namespace saveforge::services;
-using namespace saveforge::testing;
+using namespace savevault;
+using namespace savevault::services;
+using namespace savevault::testing;
 
 namespace {
 
@@ -92,7 +92,7 @@ private slots:
     {
         QTemporaryDir dir;
         LocalProfileStore store(dir.path());
-        const QString example = QStringLiteral(SAVEFORGE_SPECS_DIR "/profile/examples/profile.v1/valid");
+        const QString example = QStringLiteral(SAVEVAULT_SPECS_DIR "/profile/examples/profile.v1/valid");
         const QStringList files = QDir(example).entryList({QStringLiteral("*.json")}, QDir::Files, QDir::Name);
         QVERIFY(!files.isEmpty());
         const auto imported = store.importProfile(example + u'/' + files.first());

@@ -12,7 +12,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) first; it is the source of truth for str
 ## Code and docs
 
 - Keep the module dependency rule and folder layout described in CONTRIBUTING.md. New modules come with tests and docs.
-- QML uses `Theme`/`Icons` tokens only (Console × Studio design, see `saveforge-docs/design/CONSOLE-STUDIO.md`).
+- QML uses `Theme`/`Icons` tokens only (Console × Studio design, see `savevault-docs/design/CONSOLE-STUDIO.md`).
 - Document professionally for both humans and agents: public headers get a header comment, behavior changes update README, architectural decisions become ADRs.
 
 ## Language

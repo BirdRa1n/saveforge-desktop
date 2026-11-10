@@ -1,4 +1,4 @@
-#include "saveforge/registry/Fetcher.h"
+#include "savevault/registry/Fetcher.h"
 
 #include <QDir>
 #include <QEventLoop>
@@ -9,7 +9,7 @@
 #include <QNetworkRequest>
 #include <QUrl>
 
-namespace saveforge::registry {
+namespace savevault::registry {
 
 namespace {
 
@@ -139,4 +139,4 @@ Result<std::unique_ptr<Fetcher>> makeFetcher(const QString &mirror, const QStrin
     return Error{ErrorCode::InvalidArgument, QStringLiteral("unsupported mirror scheme"), trimmed};
 }
 
-} // namespace saveforge::registry
+} // namespace savevault::registry

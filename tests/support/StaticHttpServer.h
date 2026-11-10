@@ -13,7 +13,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 
-namespace saveforge::test {
+namespace savevault::test {
 
 class StaticHttpServer : public QObject {
 public:
@@ -69,4 +69,4 @@ private:
     QHash<QTcpSocket *, QByteArray> m_buffers;
 };
 
-} // namespace saveforge::test
+} // namespace savevault::test

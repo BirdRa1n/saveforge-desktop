@@ -4,12 +4,12 @@
 #include <QCryptographicHash>
 #include <QLocale>
 
-namespace saveforge::backend {
+namespace savevault::backend {
 
 namespace {
 QString tr(const char *text)
 {
-    return QCoreApplication::translate("SaveForge", text);
+    return QCoreApplication::translate("SaveVault", text);
 }
 } // namespace
 
@@ -97,4 +97,4 @@ QColor coverColor(const QString &gameId)
     return palette.at(static_cast<quint8>(digest.at(0)) % palette.size());
 }
 
-} // namespace saveforge::backend
+} // namespace savevault::backend

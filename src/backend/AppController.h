@@ -3,11 +3,11 @@
 #include "AppSettings.h"
 #include "LibraryModel.h"
 
-#include "saveforge/services/AutoBackup.h"
-#include "saveforge/services/Library.h"
-#include "saveforge/services/Retention.h"
-#include "saveforge/services/RestoreService.h"
-#include "saveforge/vault/Vault.h"
+#include "savevault/services/AutoBackup.h"
+#include "savevault/services/Library.h"
+#include "savevault/services/Retention.h"
+#include "savevault/services/RestoreService.h"
+#include "savevault/vault/Vault.h"
 
 #include <QFutureWatcher>
 #include <QTimer>
@@ -20,7 +20,7 @@
 #include <functional>
 #include <optional>
 
-namespace saveforge::backend {
+namespace savevault::backend {
 
 // Entry point of the QML interface (singleton `AppController`).
 //
@@ -34,7 +34,7 @@ class AppController : public QObject {
     QML_ELEMENT
     QML_SINGLETON
 
-    Q_PROPERTY(saveforge::backend::LibraryModel *library READ library CONSTANT)
+    Q_PROPERTY(savevault::backend::LibraryModel *library READ library CONSTANT)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(QString busyText READ busyText NOTIFY busyChanged)
     Q_PROPERTY(int profileCount READ profileCount NOTIFY catalogChanged)
@@ -140,7 +140,7 @@ public:
     // {ok, error, create, overwrite, unchanged, skip, newer, extra, cloudConflict, gameRunning, slot, activeSlot,
     //  files: [{target, name, action, reason, newer, backupSize, currentSize}]}
     Q_INVOKABLE QVariantMap planRestore(const QString &gameId, const QString &snapshotId);
-    // Executes the last plan. policy: "prefer-saveforge", "prefer-launcher" or "ask".
+    // Executes the last plan. policy: "prefer-savevault", "prefer-launcher" or "ask".
     Q_INVOKABLE void restore(const QString &gameId, const QString &snapshotId, const QString &policy);
 
     // Downloads newer profiles from the registry mirrors and refreshes the
@@ -249,4 +249,4 @@ private:
     QList<QPair<QString, vault::SnapshotTrigger>> m_autoQueue;
 };
 
-} // namespace saveforge::backend
+} // namespace savevault::backend

@@ -1,9 +1,9 @@
-#include "saveforge/registry/ProfileCatalog.h"
+#include "savevault/registry/ProfileCatalog.h"
 
 #include <QTest>
 
-using namespace saveforge;
-using namespace saveforge::registry;
+using namespace savevault;
+using namespace savevault::registry;
 
 namespace {
 
@@ -44,11 +44,11 @@ private slots:
                             profile(QStringLiteral("terraria"), QStringLiteral("ludusavi"), {105600}, {}, QStringLiteral("Terraria"))});
         // Official profile with another id but based on the same Ludusavi entry.
         catalog.addChannel(QStringLiteral("official"),
-                           {profile(QStringLiteral("hollow-knight-official"), QStringLiteral("saveforge"), {}, QStringLiteral("Hollow Knight"))});
+                           {profile(QStringLiteral("hollow-knight-official"), QStringLiteral("savevault"), {}, QStringLiteral("Hollow Knight"))});
         // Local profile sharing a Steam id with an upstream one.
         catalog.addChannel(QStringLiteral("local"), {profile(QStringLiteral("my-celeste"), QStringLiteral("local"), {504230})});
         // Same id in a lower channel.
-        catalog.addChannel(QStringLiteral("official"), {profile(QStringLiteral("hades"), QStringLiteral("saveforge"))});
+        catalog.addChannel(QStringLiteral("official"), {profile(QStringLiteral("hades"), QStringLiteral("savevault"))});
 
         QCOMPARE(ids(catalog), (QStringList{QStringLiteral("local/my-celeste"), QStringLiteral("official/hollow-knight-official"),
                                             QStringLiteral("official/hades"), QStringLiteral("upstream-ludusavi/terraria")}));

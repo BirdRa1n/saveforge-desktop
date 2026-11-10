@@ -1,11 +1,11 @@
-#include "saveforge/profiles/PlaceholderCatalog.h"
+#include "savevault/profiles/PlaceholderCatalog.h"
 
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 
-namespace saveforge::profiles {
+namespace savevault::profiles {
 
 namespace {
 
@@ -59,7 +59,7 @@ Result<PlaceholderCatalog> PlaceholderCatalog::fromJson(const QByteArray &json)
 const PlaceholderCatalog &PlaceholderCatalog::builtin()
 {
     static const PlaceholderCatalog catalog = [] {
-        QFile file(QStringLiteral(":/saveforge/specs/profile/placeholders.json"));
+        QFile file(QStringLiteral(":/savevault/specs/profile/placeholders.json"));
         const bool opened = file.open(QIODevice::ReadOnly);
         Q_ASSERT_X(opened, "PlaceholderCatalog", "embedded placeholders.json missing");
         auto result = fromJson(opened ? file.readAll() : QByteArray());
@@ -87,4 +87,4 @@ bool PlaceholderCatalog::isSegment(QStringView name) const
     return false;
 }
 
-} // namespace saveforge::profiles
+} // namespace savevault::profiles

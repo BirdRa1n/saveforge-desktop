@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=SaveVault
+GenericName=Backup de saves de jogos
+Comment=Encontre, faça backup e restaure saves de jogos de PC
+Exec=SaveVault
+Icon=savevault
+Terminal=false
+Categories=Game;Utility;Archiving;

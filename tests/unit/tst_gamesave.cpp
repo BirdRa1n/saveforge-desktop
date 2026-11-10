@@ -1,5 +1,5 @@
-#include "saveforge/archive/Gamesave.h"
-#include "saveforge/core/Uuid.h"
+#include "savevault/archive/Gamesave.h"
+#include "savevault/core/Uuid.h"
 
 #include <QCryptographicHash>
 #include <QDir>
@@ -11,12 +11,12 @@
 
 #include <cstring>
 
-using namespace saveforge;
-using namespace saveforge::archive;
+using namespace savevault;
+using namespace savevault::archive;
 
 namespace {
 
-const QString kExamples = QStringLiteral(SAVEFORGE_SPECS_DIR "/gamesave/examples/manifest.v1");
+const QString kExamples = QStringLiteral(SAVEVAULT_SPECS_DIR "/gamesave/examples/manifest.v1");
 
 QString sha(const QByteArray &bytes)
 {

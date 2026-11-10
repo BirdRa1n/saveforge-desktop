@@ -1,14 +1,14 @@
 #pragma once
 
-#include "saveforge/detection/GameMatcher.h"
-#include "saveforge/services/Library.h"
-#include "saveforge/vault/Snapshot.h"
+#include "savevault/detection/GameMatcher.h"
+#include "savevault/services/Library.h"
+#include "savevault/vault/Snapshot.h"
 
 #include <QColor>
 #include <QDateTime>
 #include <QString>
 
-namespace saveforge::backend {
+namespace savevault::backend {
 
 // User-facing text for the QML interface. Strings are translatable (pt-BR is
 // the source language).
@@ -30,7 +30,7 @@ namespace saveforge::backend {
 [[nodiscard]] QString snapshotKindLabel(vault::SnapshotKind kind);
 
 // Stable placeholder cover color for a game id, from a muted palette that
-// keeps white initials readable on the Forja theme.
+// keeps white initials readable on both themes.
 [[nodiscard]] QColor coverColor(const QString &gameId);
 
-} // namespace saveforge::backend
+} // namespace savevault::backend

@@ -1,8 +1,8 @@
 #include "AppSettings.h"
 
-#include "saveforge/core/Uuid.h"
-#include "saveforge/platform/AppPaths.h"
-#include "saveforge/registry/RegistryUpdater.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/platform/AppPaths.h"
+#include "savevault/registry/RegistryUpdater.h"
 
 #include <QDir>
 #include <QRegularExpression>
@@ -10,12 +10,12 @@
 
 #include <algorithm>
 
-namespace saveforge::backend {
+namespace savevault::backend {
 
 namespace {
 // Cyan, the default accent of the Console x Studio design.
 constexpr const char *kDefaultAccent = "#22D3EE";
-const QStringList kPolicies{QStringLiteral("ask"), QStringLiteral("prefer-launcher"), QStringLiteral("prefer-saveforge")};
+const QStringList kPolicies{QStringLiteral("ask"), QStringLiteral("prefer-launcher"), QStringLiteral("prefer-savevault")};
 }
 
 AppSettings::AppSettings()
@@ -213,7 +213,10 @@ QUuid AppSettings::installationId()
 QString AppSettings::cloudPolicy() const
 {
     const QSettings settings(file(), QSettings::IniFormat);
-    const QString policy = settings.value(QStringLiteral("restore/cloudPolicy"), kPolicies.first()).toString();
+    QString policy = settings.value(QStringLiteral("restore/cloudPolicy"), kPolicies.first()).toString();
+    // Value saved before the project was renamed to SaveVault.
+    if (policy == u"prefer-saveforge")
+        policy = QStringLiteral("prefer-savevault");
     return kPolicies.contains(policy) ? policy : kPolicies.first();
 }
 
@@ -256,4 +259,4 @@ void AppSettings::setLastRegistryCheck(const QDateTime &when)
     settings.setValue(QStringLiteral("registry/lastCheck"), when.toUTC().toString(Qt::ISODate));
 }
 
-} // namespace saveforge::backend
+} // namespace savevault::backend

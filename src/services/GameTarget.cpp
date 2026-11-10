@@ -1,13 +1,13 @@
-#include "saveforge/services/GameTarget.h"
+#include "savevault/services/GameTarget.h"
 
-#include "saveforge/profiles/PathResolver.h"
+#include "savevault/profiles/PathResolver.h"
 
 #include <QDir>
 #include <QFileInfo>
 
 #include <algorithm>
 
-namespace saveforge::services {
+namespace savevault::services {
 
 bool isGameRunning(const GameTarget &target, const QList<platform::ProcessInfo> &processes)
 {
@@ -95,4 +95,4 @@ QStringList saveFolders(const GameTarget &target)
     return folders;
 }
 
-} // namespace saveforge::services
+} // namespace savevault::services

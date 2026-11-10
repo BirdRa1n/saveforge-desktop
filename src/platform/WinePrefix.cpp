@@ -1,9 +1,9 @@
-#include "saveforge/platform/UserFolders.h"
+#include "savevault/platform/UserFolders.h"
 
 #include <QDir>
 #include <QFileInfo>
 
-namespace saveforge::platform {
+namespace savevault::platform {
 
 namespace {
 
@@ -41,4 +41,4 @@ FolderMap winePrefixFolders(const QString &prefixDir, const QString &userName)
     return folders;
 }
 
-} // namespace saveforge::platform
+} // namespace savevault::platform

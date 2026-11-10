@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import SaveForge.Backend
+import SaveVault.Backend
 
 // Shows what a restore would do and asks for confirmation. Nothing is written
 // before the user confirms; the controller then executes the reviewed plan.
@@ -14,7 +14,7 @@ Popup {
     property string gameId
     property var snapshot: ({})
     property var plan: ({})
-    // "saveforge" or "launcher" when the launcher's cloud also syncs the saves.
+    // "savevault" or "launcher" when the launcher's cloud also syncs the saves.
     property string cloudChoice: ""
     // Name of the save slot being switched to; empty for a plain restore.
     property string switchTo: ""
@@ -24,7 +24,7 @@ Popup {
     // which save is in use.
     readonly property bool canRestore: plan.ok === true && plan.gameRunning !== true
                                        && (plan.hasChanges === true || switching)
-                                       && (plan.cloudConflict !== true || cloudChoice === "saveforge"
+                                       && (plan.cloudConflict !== true || cloudChoice === "savevault"
                                            || plan.hasChanges !== true)
 
     function openFor(entry) {
@@ -42,7 +42,7 @@ Popup {
         filesToggle.expanded = false
         snapshot = entry
         plan = AppController.planRestore(gameId, entry.id)
-        cloudChoice = AppController.cloudPolicy === "prefer-saveforge" ? "saveforge"
+        cloudChoice = AppController.cloudPolicy === "prefer-savevault" ? "savevault"
                     : AppController.cloudPolicy === "prefer-launcher" ? "launcher" : ""
         open()
     }
@@ -235,10 +235,10 @@ Popup {
                 spacing: Theme.space2
                 ButtonGroup { id: cloudGroup }
                 FilterChip {
-                    text: qsTr("SaveForge: restaurar agora")
-                    checked: root.cloudChoice === "saveforge"
+                    text: qsTr("SaveVault: restaurar agora")
+                    checked: root.cloudChoice === "savevault"
                     ButtonGroup.group: cloudGroup
-                    onClicked: root.cloudChoice = "saveforge"
+                    onClicked: root.cloudChoice = "savevault"
                 }
                 FilterChip {
                     text: qsTr("Launcher: não restaurar")
@@ -249,7 +249,7 @@ Popup {
             }
             Text {
                 Layout.fillWidth: true
-                visible: root.cloudChoice === "saveforge"
+                visible: root.cloudChoice === "savevault"
                 text: qsTr("Depois de restaurar, abra o jogo e, se o launcher avisar sobre conflito, escolha manter os arquivos locais.")
                 color: Theme.textSubtle
                 font.family: Theme.fontBody
@@ -285,7 +285,7 @@ Popup {
                 text: root.switching ? qsTr("Trocar de save") : qsTr("Restaurar")
                 enabled: root.canRestore && !AppController.busy
                 onClicked: {
-                    AppController.restore(root.gameId, root.snapshot.id, "prefer-saveforge")
+                    AppController.restore(root.gameId, root.snapshot.id, "prefer-savevault")
                     root.close()
                 }
             }

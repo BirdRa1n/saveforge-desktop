@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
-import SaveForge.Backend
+import SaveVault.Backend
 
 // Bottom bar: the keyboard shortcuts of the current page and the state of
 // automatic backups and of the vault.

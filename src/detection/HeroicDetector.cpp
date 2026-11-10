@@ -1,4 +1,4 @@
-#include "saveforge/detection/Launchers.h"
+#include "savevault/detection/Launchers.h"
 
 #include <QDir>
 #include <QFile>
@@ -7,7 +7,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-namespace saveforge::detection {
+namespace savevault::detection {
 
 namespace {
 
@@ -136,4 +136,4 @@ QList<InstallCandidate> detectInstalledGames(const DetectionEnvironment &env)
     return detectSteam(env) + detectEpic(env) + detectGog(env) + detectHeroic(env) + detectLutris(env);
 }
 
-} // namespace saveforge::detection
+} // namespace savevault::detection

@@ -7,17 +7,17 @@
 #include <QMenu>
 #include <QQuickWindow>
 
-namespace saveforge::app {
+namespace savevault::app {
 
 TrayIcon::TrayIcon(backend::AppController *controller, QQuickWindow *window, QObject *parent)
     : QObject(parent)
     , m_window(window)
     , m_menu(std::make_unique<QMenu>())
 {
-    m_icon.setIcon(QIcon(QStringLiteral(":/saveforge/icons/saveforge.png")));
-    m_icon.setToolTip(QStringLiteral("SaveForge"));
+    m_icon.setIcon(QIcon(QStringLiteral(":/savevault/icons/savevault.png")));
+    m_icon.setToolTip(QStringLiteral("SaveVault"));
 
-    m_menu->addAction(tr("Abrir o SaveForge"), this, &TrayIcon::showWindow);
+    m_menu->addAction(tr("Abrir o SaveVault"), this, &TrayIcon::showWindow);
     m_menu->addAction(tr("Fazer backup de tudo"), controller, &backend::AppController::backupAll);
     m_menu->addSeparator();
     m_menu->addAction(tr("Sair"), qApp, &QCoreApplication::quit);
@@ -31,15 +31,15 @@ TrayIcon::TrayIcon(backend::AppController *controller, QQuickWindow *window, QOb
 
     connect(controller, &backend::AppController::automaticBackupDone, this, [this](const QString &text) {
         if (m_window && !m_window->isVisible())
-            m_icon.showMessage(QStringLiteral("SaveForge"), text, QSystemTrayIcon::Information, 5000);
+            m_icon.showMessage(QStringLiteral("SaveVault"), text, QSystemTrayIcon::Information, 5000);
     });
     // Tell the user once per session where the app went.
     if (m_window) {
         connect(m_window, &QWindow::visibleChanged, this, [this](bool visible) {
             if (!visible && !m_hiddenNoticeShown && qApp && !QCoreApplication::closingDown()) {
                 m_hiddenNoticeShown = true;
-                m_icon.showMessage(QStringLiteral("SaveForge"),
-                                   tr("O SaveForge continua aberto na bandeja e faz os backups automáticos. "
+                m_icon.showMessage(QStringLiteral("SaveVault"),
+                                   tr("O SaveVault continua aberto na bandeja e faz os backups automáticos. "
                                       "Para fechar de vez, use Sair no menu do ícone."),
                                    QSystemTrayIcon::Information, 6000);
             }
@@ -68,4 +68,4 @@ void TrayIcon::showWindow()
     m_window->requestActivate();
 }
 
-} // namespace saveforge::app
+} // namespace savevault::app

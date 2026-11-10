@@ -1,12 +1,12 @@
-#include "saveforge/core/Result.h"
-#include "saveforge/core/Uuid.h"
-#include "saveforge/core/Version.h"
+#include "savevault/core/Result.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/core/Version.h"
 
 #include <QTest>
 
-using saveforge::Error;
-using saveforge::ErrorCode;
-using saveforge::Result;
+using savevault::Error;
+using savevault::ErrorCode;
+using savevault::Result;
 
 namespace {
 
@@ -73,7 +73,7 @@ private slots:
     void uuidV7Layout()
     {
         const QDateTime when = QDateTime::fromString(QStringLiteral("2026-11-09T12:00:00.123Z"), Qt::ISODateWithMs);
-        const QUuid id = saveforge::createUuidV7(when);
+        const QUuid id = savevault::createUuidV7(when);
         QCOMPARE(id.version(), QUuid::Version(7));
         QCOMPARE(id.variant(), QUuid::DCE);
 
@@ -84,7 +84,7 @@ private slots:
             millis = (millis << 8) | static_cast<quint8>(raw.at(i));
         QCOMPARE(static_cast<qint64>(millis), when.toMSecsSinceEpoch());
 
-        const QString text = saveforge::uuidToString(id);
+        const QString text = savevault::uuidToString(id);
         QCOMPARE(text.size(), 36);
         QCOMPARE(text, text.toLower());
     }
@@ -92,17 +92,17 @@ private slots:
     void uuidV7SortsByTime()
     {
         const QDateTime t0 = QDateTime::currentDateTimeUtc();
-        const QString earlier = saveforge::uuidToString(saveforge::createUuidV7(t0));
-        const QString later = saveforge::uuidToString(saveforge::createUuidV7(t0.addMSecs(1)));
+        const QString earlier = savevault::uuidToString(savevault::createUuidV7(t0));
+        const QString later = savevault::uuidToString(savevault::createUuidV7(t0.addMSecs(1)));
         QVERIFY(earlier < later);
-        QVERIFY(saveforge::createUuidV7(t0) != saveforge::createUuidV7(t0)); // random part differs
+        QVERIFY(savevault::createUuidV7(t0) != savevault::createUuidV7(t0)); // random part differs
     }
 
     void versionIsSemver()
     {
-        QCOMPARE(saveforge::kAppName, std::string_view("SaveForge"));
-        const QString version = QString::fromUtf8(saveforge::kVersion.data(),
-                                                  static_cast<qsizetype>(saveforge::kVersion.size()));
+        QCOMPARE(savevault::kAppName, std::string_view("SaveVault"));
+        const QString version = QString::fromUtf8(savevault::kVersion.data(),
+                                                  static_cast<qsizetype>(savevault::kVersion.size()));
         QCOMPARE(version.split(QLatin1Char('.')).size(), 3);
     }
 };

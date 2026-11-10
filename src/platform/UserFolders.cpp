@@ -1,4 +1,4 @@
-#include "saveforge/platform/UserFolders.h"
+#include "savevault/platform/UserFolders.h"
 
 #include <QDir>
 #include <QStandardPaths>
@@ -9,7 +9,7 @@
 #  include <shlobj.h>
 #endif
 
-namespace saveforge::platform {
+namespace savevault::platform {
 
 namespace {
 
@@ -62,4 +62,4 @@ FolderMap hostUserFolders()
     return folders;
 }
 
-} // namespace saveforge::platform
+} // namespace savevault::platform

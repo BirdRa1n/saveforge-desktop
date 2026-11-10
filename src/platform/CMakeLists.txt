@@ -1,11 +1,11 @@
-qt_add_library(saveforge_platform STATIC
-    include/saveforge/platform/Os.h
-    include/saveforge/platform/AppPaths.h
-    include/saveforge/platform/FileSync.h
-    include/saveforge/platform/FolderMap.h
-    include/saveforge/platform/Processes.h
-    include/saveforge/platform/RegistryStore.h
-    include/saveforge/platform/UserFolders.h
+qt_add_library(savevault_platform STATIC
+    include/savevault/platform/Os.h
+    include/savevault/platform/AppPaths.h
+    include/savevault/platform/FileSync.h
+    include/savevault/platform/FolderMap.h
+    include/savevault/platform/Processes.h
+    include/savevault/platform/RegistryStore.h
+    include/savevault/platform/UserFolders.h
     Os.cpp
     AppPaths.cpp
     FileSync.cpp
@@ -15,12 +15,12 @@ qt_add_library(saveforge_platform STATIC
     UserFolders.cpp
     WinePrefix.cpp
 )
-add_library(saveforge::platform ALIAS saveforge_platform)
+add_library(savevault::platform ALIAS savevault_platform)
 
-target_include_directories(saveforge_platform PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(saveforge_platform PUBLIC saveforge::core Qt6::Core)
+target_include_directories(savevault_platform PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(savevault_platform PUBLIC savevault::core Qt6::Core)
 if(WIN32)
     # SHGetKnownFolderPath / CoTaskMemFree; registry functions (advapi32)
-    target_link_libraries(saveforge_platform PRIVATE shell32 ole32 advapi32)
+    target_link_libraries(savevault_platform PRIVATE shell32 ole32 advapi32)
 endif()
-saveforge_set_warnings(saveforge_platform)
+savevault_set_warnings(savevault_platform)

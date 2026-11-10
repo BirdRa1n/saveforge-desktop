@@ -1,6 +1,6 @@
-#include "saveforge/registry/Channel.h"
+#include "savevault/registry/Channel.h"
 
-#include "saveforge/profiles/ProfileParser.h"
+#include "savevault/profiles/ProfileParser.h"
 
 #include <QCryptographicHash>
 #include <QFile>
@@ -11,7 +11,7 @@
 
 #include <zstd.h>
 
-namespace saveforge::registry {
+namespace savevault::registry {
 
 namespace {
 
@@ -144,7 +144,7 @@ Result<VerifiedChannel> loadChannel(const QString &distributionDir, const QStrin
     if (!result.index.minAppVersion.isEmpty() && !options.appVersion.isEmpty()
         && compareVersions(options.appVersion, result.index.minAppVersion) < 0)
         return Error{ErrorCode::Unsupported,
-                     QStringLiteral("this channel requires SaveForge %1 or newer").arg(result.index.minAppVersion), channel};
+                     QStringLiteral("this channel requires SaveVault %1 or newer").arg(result.index.minAppVersion), channel};
     result.expired = result.index.expires < options.now;
 
     // Bundle: size and hash from the signed index, then bounded decompression.
@@ -202,4 +202,4 @@ Result<VerifiedChannel> loadChannel(const QString &distributionDir, const QStrin
     return result;
 }
 
-} // namespace saveforge::registry
+} // namespace savevault::registry

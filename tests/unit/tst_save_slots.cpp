@@ -1,12 +1,12 @@
 #include "ServiceFixture.h"
 
-#include "saveforge/services/BackupService.h"
-#include "saveforge/services/RestoreService.h"
-#include "saveforge/services/SaveSlots.h"
+#include "savevault/services/BackupService.h"
+#include "savevault/services/RestoreService.h"
+#include "savevault/services/SaveSlots.h"
 
-using namespace saveforge;
-using namespace saveforge::services;
-using namespace saveforge::testing;
+using namespace savevault;
+using namespace savevault::services;
+using namespace savevault::testing;
 
 namespace {
 

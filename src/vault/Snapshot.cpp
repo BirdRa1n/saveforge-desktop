@@ -1,8 +1,8 @@
-#include "saveforge/vault/Snapshot.h"
+#include "savevault/vault/Snapshot.h"
 
-#include "saveforge/core/JsonReader.h"
-#include "saveforge/core/Uuid.h"
-#include "saveforge/profiles/PathRules.h"
+#include "savevault/core/JsonReader.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/profiles/PathRules.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -10,7 +10,7 @@
 
 #include <limits>
 
-namespace saveforge::vault {
+namespace savevault::vault {
 
 namespace {
 
@@ -423,4 +423,4 @@ bool isValidSlotName(const QString &name)
     return name.size() <= 100 && slotPattern().match(name).hasMatch();
 }
 
-} // namespace saveforge::vault
+} // namespace savevault::vault

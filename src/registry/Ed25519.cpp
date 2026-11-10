@@ -1,10 +1,10 @@
-#include "saveforge/registry/Ed25519.h"
+#include "savevault/registry/Ed25519.h"
 
 #include <QCryptographicHash>
 
 #include <monocypher-ed25519.h>
 
-namespace saveforge::registry {
+namespace savevault::registry {
 
 bool verifyEd25519(QByteArrayView publicKey, QByteArrayView message, QByteArrayView signature)
 {
@@ -23,4 +23,4 @@ QString keyIdOf(QByteArrayView publicKey)
     return QString::fromLatin1(QCryptographicHash::hash(publicKey, QCryptographicHash::Sha256).toHex().left(16));
 }
 
-} // namespace saveforge::registry
+} // namespace savevault::registry

@@ -1,7 +1,7 @@
 // Launcher detectors against fixture trees that mimic each launcher's layout.
 // Every OS is simulated through DetectionEnvironment, so all tests run on any host.
 
-#include "saveforge/detection/Launchers.h"
+#include "savevault/detection/Launchers.h"
 
 #include <QDir>
 #include <QFile>
@@ -11,9 +11,9 @@
 #include <QTemporaryDir>
 #include <QTest>
 
-using namespace saveforge;
-using namespace saveforge::detection;
-using saveforge::platform::Os;
+using namespace savevault;
+using namespace savevault::detection;
+using savevault::platform::Os;
 
 namespace {
 

@@ -1,6 +1,6 @@
 # ADR 0004 (desktop) — Saves com nome e backups automáticos
 
-**Status:** Aceita · **Data:** 2026-11-10 · **Implementa:** a tarefa D2.2 do roadmap e o campo `slot` da spec do vault (`saveforge-specs` 469fd40).
+**Status:** Aceita · **Data:** 2026-11-10 · **Implementa:** a tarefa D2.2 do roadmap e o campo `slot` da spec do vault (`savevault-specs` 469fd40).
 
 ## Contexto
 Usuários querem manter progressos separados de um mesmo jogo, como outro personagem ou uma partida de teste, e alternar entre eles. O histórico de backups já guarda cada estado, mas não diz a que progresso cada backup pertence. Além disso, um app de backup só protege de verdade quando o usuário não precisa lembrar de clicar.

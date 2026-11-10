@@ -1,6 +1,6 @@
-#include "saveforge/profiles/ProfileParser.h"
+#include "savevault/profiles/ProfileParser.h"
 
-#include "saveforge/core/JsonReader.h"
+#include "savevault/core/JsonReader.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -8,7 +8,7 @@
 
 #include <limits>
 
-namespace saveforge::profiles {
+namespace savevault::profiles {
 
 namespace {
 
@@ -258,8 +258,12 @@ void readProvenance(Reader &r, const QJsonValue &value, Provenance &out)
     QJsonObject o;
     if (!r.object(value, ptr, o) || !r.keys(o, ptr, {"source", "license", "basedOn", "contributors"}, {"source", "license"}))
         return;
+    // "saveforge" is how profiles published before the rename name their source.
     r.enumeration(o.value(QLatin1String("source")), child(ptr, QStringLiteral("source")), out.source,
-                  {QStringLiteral("saveforge"), QStringLiteral("ludusavi"), QStringLiteral("local")});
+                  {QStringLiteral("savevault"), QStringLiteral("saveforge"), QStringLiteral("ludusavi"),
+                   QStringLiteral("local")});
+    if (out.source == u"saveforge")
+        out.source = QStringLiteral("savevault");
     r.string(o.value(QLatin1String("license")), child(ptr, QStringLiteral("license")), out.license, 1, 64);
     if (o.contains(QLatin1String("basedOn"))) {
         const QString basedOnPtr = child(ptr, QStringLiteral("basedOn"));
@@ -369,7 +373,7 @@ Result<Profile> parseProfile(const QJsonObject &json, const PathRules &rules)
 
     if (!supportedMechanisms().contains(profile.mechanism.type)) {
         return Error{ErrorCode::Unsupported,
-                     QStringLiteral("mechanism '%1' requires a newer SaveForge version").arg(profile.mechanism.type),
+                     QStringLiteral("mechanism '%1' requires a newer SaveVault version").arg(profile.mechanism.type),
                      QStringLiteral("/mechanism/type")};
     }
 
@@ -391,4 +395,4 @@ Result<Profile> parseProfile(const QByteArray &json, const PathRules &rules)
     return parseProfile(doc.object(), rules);
 }
 
-} // namespace saveforge::profiles
+} // namespace savevault::profiles

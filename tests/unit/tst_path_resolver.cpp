@@ -1,4 +1,4 @@
-#include "saveforge/profiles/PathResolver.h"
+#include "savevault/profiles/PathResolver.h"
 
 #include <QDir>
 #include <QFile>
@@ -6,9 +6,9 @@
 #include <QTemporaryDir>
 #include <QTest>
 
-using namespace saveforge;
-using namespace saveforge::profiles;
-using saveforge::platform::Os;
+using namespace savevault;
+using namespace savevault::profiles;
+using savevault::platform::Os;
 
 namespace {
 

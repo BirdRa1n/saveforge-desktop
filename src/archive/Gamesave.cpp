@@ -1,9 +1,9 @@
-#include "saveforge/archive/Gamesave.h"
+#include "savevault/archive/Gamesave.h"
 
-#include "saveforge/core/JsonReader.h"
-#include "saveforge/core/Uuid.h"
-#include "saveforge/platform/FileSync.h"
-#include "saveforge/profiles/ProfileParser.h"
+#include "savevault/core/JsonReader.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/platform/FileSync.h"
+#include "savevault/profiles/ProfileParser.h"
 
 #include <QCryptographicHash>
 #include <QDir>
@@ -18,11 +18,13 @@
 
 #include <cstring>
 
-namespace saveforge::archive {
+namespace savevault::archive {
 
 namespace {
 
-const QByteArray kMimetype("application/vnd.saveforge.gamesave+zip");
+const QByteArray kMimetype("application/vnd.savevault.gamesave+zip");
+// Written before the project was renamed to SaveVault; still read.
+const QByteArray kLegacyMimetype("application/vnd.saveforge.gamesave+zip");
 const QString kMimetypeEntry = QStringLiteral("mimetype");
 const QString kManifestEntry = QStringLiteral("manifest.json");
 const QString kManifestHashEntry = QStringLiteral("manifest.json.sha256");
@@ -152,7 +154,7 @@ QByteArray toJson(const GamesaveManifest &manifest)
             entry.insert(QStringLiteral("localProfile"), *game.localProfile);
         games.append(entry);
     }
-    QJsonObject o{{QStringLiteral("format"), QStringLiteral("saveforge.gamesave")},
+    QJsonObject o{{QStringLiteral("format"), QStringLiteral("savevault.gamesave")},
                   {QStringLiteral("formatVersion"), 1},
                   {QStringLiteral("exportId"), uuidToString(manifest.exportId)},
                   {QStringLiteral("createdAt"), timestamp(manifest.createdAt)},
@@ -183,11 +185,13 @@ Result<GamesaveManifest> parseManifest(const QByteArray &json)
         return r.error();
 
     QString format;
-    r.enumeration(o.value(QLatin1String("format")), QStringLiteral("/format"), format, {QStringLiteral("saveforge.gamesave")});
+    // "saveforge.gamesave" is the marker of files exported before the rename.
+    r.enumeration(o.value(QLatin1String("format")), QStringLiteral("/format"), format,
+                  {QStringLiteral("savevault.gamesave"), QStringLiteral("saveforge.gamesave")});
     qint64 version = 0;
     if (r.integer(o.value(QLatin1String("formatVersion")), QStringLiteral("/formatVersion"), version, 1) && version != 1)
         return Error{ErrorCode::Unsupported,
-                     QStringLiteral("this .gamesave uses format version %1; update SaveForge to open it").arg(version),
+                     QStringLiteral("this .gamesave uses format version %1; update SaveVault to open it").arg(version),
                      QStringLiteral("/formatVersion")};
     readUuid(r, o.value(QLatin1String("exportId")), QStringLiteral("/exportId"), m.exportId);
     QString created;
@@ -462,10 +466,12 @@ Result<GamesaveReader> GamesaveReader::open(const QString &path, const GamesaveL
 
         // Rule 1: mimetype first, stored, exact content.
         if (i == 0) {
-            if (name != kMimetypeEntry || stat.m_method != 0 || stat.m_uncomp_size != static_cast<mz_uint64>(kMimetype.size()))
+            const auto size = static_cast<qint64>(stat.m_uncomp_size);
+            if (name != kMimetypeEntry || stat.m_method != 0
+                || (size != kMimetype.size() && size != kLegacyMimetype.size()))
                 return invalid(QStringLiteral("not a .gamesave file (mimetype entry)"), path);
-            auto mime = impl->extract(0, kMimetype.size());
-            if (!mime.ok() || mime.value() != kMimetype)
+            auto mime = impl->extract(0, size);
+            if (!mime.ok() || (mime.value() != kMimetype && mime.value() != kLegacyMimetype))
                 return invalid(QStringLiteral("not a .gamesave file (mimetype content)"), path);
         }
         // Rule 2: safe, unique names.
@@ -540,4 +546,4 @@ Result<GamesaveReader> GamesaveReader::open(const QString &path, const GamesaveL
     return reader;
 }
 
-} // namespace saveforge::archive
+} // namespace savevault::archive

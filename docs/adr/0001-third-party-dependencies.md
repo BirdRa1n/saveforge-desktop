@@ -1,6 +1,6 @@
 # ADR 0001 (desktop) — Dependências de terceiros: sistema primeiro, FetchContent com hash como fallback
 
-**Status:** Aceita · **Data:** 2026-11-09 · **Ajusta:** ADR 0002 do ecossistema (`saveforge-docs/adr/0002-cpp20-qt6-toolchain.md`), que previa vcpkg.
+**Status:** Aceita · **Data:** 2026-11-09 · **Ajusta:** ADR 0002 do ecossistema (`savevault-docs/adr/0002-cpp20-qt6-toolchain.md`), que previa vcpkg.
 
 ## Contexto
 O vault precisa do zstd, a primeira dependência além do Qt. A ADR 0002 do ecossistema propunha o vcpkg em modo manifest. Na prática:
@@ -9,10 +9,10 @@ O vault precisa do zstd, a primeira dependência além do Qt. A ADR 0002 do ecos
 - distribuições Linux e o Flatpak preferem usar as bibliotecas do sistema.
 
 ## Decisão
-Cada dependência é resolvida em `cmake/SaveForgeDependencies.cmake` com `FetchContent_Declare(... FIND_PACKAGE_ARGS ...)`:
+Cada dependência é resolvida em `cmake/SaveVaultDependencies.cmake` com `FetchContent_Declare(... FIND_PACKAGE_ARGS ...)`:
 1. **Sistema primeiro:** `find_package` encontra a biblioteca instalada no sistema, no SDK do Flatpak, ou num toolchain do vcpkg, se o desenvolvedor usar um.
 2. **Fallback reprodutível:** se não encontrar, o CMake baixa um release **fixo** e confere o **SHA-256** (copiado do checksum publicado pelo próprio projeto) antes de compilar.
-3. Os módulos linkam um alvo `saveforge::<dep>`, que esconde a origem da biblioteca.
+3. Os módulos linkam um alvo `savevault::<dep>`, que esconde a origem da biblioteca.
 
 ## Consequências
 - (+) Funciona igual com MinGW, MSVC, GCC e Clang, sem nenhuma configuração extra.

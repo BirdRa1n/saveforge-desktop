@@ -1,9 +1,9 @@
-qt_add_library(saveforge_detection STATIC
-    include/saveforge/detection/DetectionEnvironment.h
-    include/saveforge/detection/GameMatcher.h
-    include/saveforge/detection/InstallCandidate.h
-    include/saveforge/detection/Launchers.h
-    include/saveforge/detection/Vdf.h
+qt_add_library(savevault_detection STATIC
+    include/savevault/detection/DetectionEnvironment.h
+    include/savevault/detection/GameMatcher.h
+    include/savevault/detection/InstallCandidate.h
+    include/savevault/detection/Launchers.h
+    include/savevault/detection/Vdf.h
     DetectionEnvironment.cpp
     EpicGogDetector.cpp
     GameMatcher.cpp
@@ -13,8 +13,8 @@ qt_add_library(saveforge_detection STATIC
     SteamDetector.cpp
     Vdf.cpp
 )
-add_library(saveforge::detection ALIAS saveforge_detection)
+add_library(savevault::detection ALIAS savevault_detection)
 
-target_include_directories(saveforge_detection PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(saveforge_detection PUBLIC saveforge::core saveforge::platform saveforge::profiles Qt6::Core)
-saveforge_set_warnings(saveforge_detection)
+target_include_directories(savevault_detection PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(savevault_detection PUBLIC savevault::core savevault::platform savevault::profiles Qt6::Core)
+savevault_set_warnings(savevault_detection)

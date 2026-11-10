@@ -1,10 +1,10 @@
-#include "saveforge/services/SaveSlots.h"
+#include "savevault/services/SaveSlots.h"
 
 #include <QHash>
 
 #include <algorithm>
 
-namespace saveforge::services {
+namespace savevault::services {
 
 QList<SaveSlot> saveSlots(const vault::Vault &vault, const QString &gameId)
 {
@@ -25,4 +25,4 @@ QList<SaveSlot> saveSlots(const vault::Vault &vault, const QString &gameId)
     return result;
 }
 
-} // namespace saveforge::services
+} // namespace savevault::services

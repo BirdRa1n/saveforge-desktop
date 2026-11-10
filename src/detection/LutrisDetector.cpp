@@ -1,4 +1,4 @@
-#include "saveforge/detection/Launchers.h"
+#include "savevault/detection/Launchers.h"
 
 #include <QDir>
 #include <QFile>
@@ -6,7 +6,7 @@
 #include <QRegularExpression>
 #include <QTextStream>
 
-namespace saveforge::detection {
+namespace savevault::detection {
 
 namespace {
 
@@ -116,4 +116,4 @@ QList<InstallCandidate> detectLutris(const DetectionEnvironment &env)
     return games;
 }
 
-} // namespace saveforge::detection
+} // namespace savevault::detection

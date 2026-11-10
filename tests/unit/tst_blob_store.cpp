@@ -1,4 +1,4 @@
-#include "saveforge/vault/BlobStore.h"
+#include "savevault/vault/BlobStore.h"
 
 #include <QBuffer>
 #include <QCryptographicHash>
@@ -8,8 +8,8 @@
 #include <QTemporaryDir>
 #include <QTest>
 
-using namespace saveforge;
-using namespace saveforge::vault;
+using namespace savevault;
+using namespace savevault::vault;
 
 namespace {
 

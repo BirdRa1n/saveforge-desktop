@@ -1,7 +1,7 @@
-#include "saveforge/services/Transfer.h"
+#include "savevault/services/Transfer.h"
 
-#include "saveforge/core/Uuid.h"
-#include "saveforge/services/LocalProfiles.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/services/LocalProfiles.h"
 
 #include <QBuffer>
 #include <QDir>
@@ -12,9 +12,9 @@
 
 #include <algorithm>
 
-Q_LOGGING_CATEGORY(lcTransfer, "saveforge.transfer")
+Q_LOGGING_CATEGORY(lcTransfer, "savevault.transfer")
 
-namespace saveforge::services {
+namespace savevault::services {
 
 namespace {
 
@@ -166,4 +166,4 @@ Result<ImportReport> importGamesave(vault::Vault &vault, const archive::Gamesave
     return report;
 }
 
-} // namespace saveforge::services
+} // namespace savevault::services

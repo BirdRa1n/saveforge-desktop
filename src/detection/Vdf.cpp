@@ -1,6 +1,6 @@
-#include "saveforge/detection/Vdf.h"
+#include "savevault/detection/Vdf.h"
 
-namespace saveforge::detection {
+namespace savevault::detection {
 
 namespace {
 
@@ -171,4 +171,4 @@ Result<VdfNode> parseVdf(const QByteArray &text)
     return root;
 }
 
-} // namespace saveforge::detection
+} // namespace savevault::detection

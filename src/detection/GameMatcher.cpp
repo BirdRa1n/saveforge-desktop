@@ -1,11 +1,11 @@
-#include "saveforge/detection/GameMatcher.h"
+#include "savevault/detection/GameMatcher.h"
 
 #include <QFileInfo>
 #include <QSet>
 
 #include <algorithm>
 
-namespace saveforge::detection {
+namespace savevault::detection {
 
 namespace {
 
@@ -130,4 +130,4 @@ DetectionReport detectGames(const QList<profiles::Profile> &profiles, const QLis
     return report;
 }
 
-} // namespace saveforge::detection
+} // namespace savevault::detection

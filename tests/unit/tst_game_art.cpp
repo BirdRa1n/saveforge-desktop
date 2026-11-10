@@ -1,11 +1,11 @@
 #include "ServiceFixture.h"
 
-#include "saveforge/registry/Fetcher.h"
-#include "saveforge/services/GameArt.h"
+#include "savevault/registry/Fetcher.h"
+#include "savevault/services/GameArt.h"
 
-using namespace saveforge;
-using namespace saveforge::services;
-using namespace saveforge::testing;
+using namespace savevault;
+using namespace savevault::services;
+using namespace savevault::testing;
 
 namespace {
 

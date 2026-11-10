@@ -2,18 +2,18 @@
 
 #include "Formatting.h"
 
-#include "saveforge/core/Uuid.h"
-#include "saveforge/core/Version.h"
-#include "saveforge/detection/Launchers.h"
-#include "saveforge/registry/RegistryCache.h"
-#include "saveforge/registry/RegistryUpdater.h"
-#include "saveforge/registry/Fetcher.h"
-#include "saveforge/services/BackupService.h"
-#include "saveforge/services/GameArt.h"
-#include "saveforge/services/LocalProfiles.h"
-#include "saveforge/platform/Processes.h"
-#include "saveforge/services/SaveSlots.h"
-#include "saveforge/services/Transfer.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/core/Version.h"
+#include "savevault/detection/Launchers.h"
+#include "savevault/registry/RegistryCache.h"
+#include "savevault/registry/RegistryUpdater.h"
+#include "savevault/registry/Fetcher.h"
+#include "savevault/services/BackupService.h"
+#include "savevault/services/GameArt.h"
+#include "savevault/services/LocalProfiles.h"
+#include "savevault/platform/Processes.h"
+#include "savevault/services/SaveSlots.h"
+#include "savevault/services/Transfer.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -25,7 +25,7 @@
 #include <QTimer>
 #include <QtConcurrent/QtConcurrentRun>
 
-namespace saveforge::backend {
+namespace savevault::backend {
 
 namespace {
 
@@ -97,8 +97,8 @@ struct BackupAllResult {
 
 services::CloudPolicy toPolicy(const QString &policy)
 {
-    if (policy == u"prefer-saveforge")
-        return services::CloudPolicy::PreferSaveForge;
+    if (policy == u"prefer-savevault")
+        return services::CloudPolicy::PreferSaveVault;
     if (policy == u"prefer-launcher")
         return services::CloudPolicy::PreferLauncher;
     return services::CloudPolicy::Ask;
@@ -544,7 +544,7 @@ void AppController::downloadMissingCovers()
         return;
 
     // Runs beside the other operations: covers never make the app busy.
-    const QString userAgent = QStringLiteral("SaveForge/") + appVersion();
+    const QString userAgent = QStringLiteral("SaveVault/") + appVersion();
     auto *watcher = new QFutureWatcher<QHash<QString, QString>>(this);
     m_coverDownload = watcher;
     connect(watcher, &QFutureWatcherBase::finished, this, [this, watcher] {
@@ -637,7 +637,7 @@ void AppController::runRegistryUpdate(bool quiet)
             registry::RegistryCache cache(cacheDir);
             registry::UpdateOptions options;
             options.appVersion = version;
-            options.userAgent = QStringLiteral("SaveForge/") + version;
+            options.userAgent = QStringLiteral("SaveVault/") + version;
             result.channels = registry::updateFromMirrors(mirrors, cache, anchor.value(), options);
             return result;
         },
@@ -1066,7 +1066,7 @@ QVariantMap AppController::inspectGamesave(const QUrl &file) const
     if (!reader.ok())
         return {{QStringLiteral("ok"), false},
                 {QStringLiteral("error"), reader.error().code == ErrorCode::Unsupported
-                                              ? tr("Este arquivo foi criado por uma versão mais nova do SaveForge. Atualize o app para abri-lo.")
+                                              ? tr("Este arquivo foi criado por uma versão mais nova do SaveVault. Atualize o app para abri-lo.")
                                               : tr("O arquivo não é um .gamesave válido ou está danificado.")}};
     const archive::GamesaveManifest &manifest = reader.value().manifest();
     QVariantList games;
@@ -1231,4 +1231,4 @@ void AppController::setCloudPolicy(const QString &policy)
     emit cloudPolicyChanged();
 }
 
-} // namespace saveforge::backend
+} // namespace savevault::backend

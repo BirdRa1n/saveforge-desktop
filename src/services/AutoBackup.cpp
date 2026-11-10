@@ -1,6 +1,6 @@
-#include "saveforge/services/AutoBackup.h"
+#include "savevault/services/AutoBackup.h"
 
-#include "saveforge/profiles/PathResolver.h"
+#include "savevault/profiles/PathResolver.h"
 
 #include <QFileInfo>
 #include <QHash>
@@ -8,7 +8,7 @@
 
 #include <cstdlib>
 
-namespace saveforge::services {
+namespace savevault::services {
 
 QStringList GameExitTracker::update(const QList<LibraryGame> &games, const QList<platform::ProcessInfo> &processes)
 {
@@ -53,4 +53,4 @@ bool savesChangedSince(const GameTarget &target, const vault::Snapshot *last)
     return false;
 }
 
-} // namespace saveforge::services
+} // namespace savevault::services

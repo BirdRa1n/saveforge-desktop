@@ -1,11 +1,11 @@
-#include "saveforge/detection/DetectionEnvironment.h"
+#include "savevault/detection/DetectionEnvironment.h"
 
-#include "saveforge/platform/UserFolders.h"
+#include "savevault/platform/UserFolders.h"
 
 #include <QDir>
 #include <QSettings>
 
-namespace saveforge::detection {
+namespace savevault::detection {
 
 namespace {
 
@@ -81,4 +81,4 @@ DetectionEnvironment DetectionEnvironment::host()
     return env;
 }
 
-} // namespace saveforge::detection
+} // namespace savevault::detection

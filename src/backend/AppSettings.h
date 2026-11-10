@@ -5,7 +5,7 @@
 #include <QStringList>
 #include <QUuid>
 
-namespace saveforge::backend {
+namespace savevault::backend {
 
 // User settings persisted in <app data>/settings.ini until the local database
 // (roadmap task D1.2) takes over.
@@ -26,7 +26,7 @@ public:
     // snapshots to tell machines apart; never derived from hardware ids.
     [[nodiscard]] QUuid installationId();
 
-    // "ask", "prefer-launcher" or "prefer-saveforge".
+    // "ask", "prefer-launcher" or "prefer-savevault".
     [[nodiscard]] QString cloudPolicy() const;
     void setCloudPolicy(const QString &policy);
 
@@ -85,4 +85,4 @@ private:
     QString m_dataDir;
 };
 
-} // namespace saveforge::backend
+} // namespace savevault::backend

@@ -1,13 +1,13 @@
 #include "ServiceFixture.h"
 
-#include "saveforge/services/AutoBackup.h"
-#include "saveforge/services/BackupService.h"
+#include "savevault/services/AutoBackup.h"
+#include "savevault/services/BackupService.h"
 
 #include <QFile>
 
-using namespace saveforge;
-using namespace saveforge::services;
-using namespace saveforge::testing;
+using namespace savevault;
+using namespace savevault::services;
+using namespace savevault::testing;
 
 class TestAutoBackup : public QObject {
     Q_OBJECT

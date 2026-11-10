@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Regenerates the app icon files from src/app/icons/saveforge.svg.
+"""Regenerates the app icon files from src/app/icons/savevault.svg.
 
 Builds the small Qt renderer in this folder, renders the SVG at every size the
 platforms need, and packs the results:
 
-    src/app/icons/saveforge.ico    Windows executable and installer (16-256 px)
-    src/app/icons/saveforge.icns   macOS bundle (16-1024 px, Retina variants)
-    src/app/icons/saveforge.png    window icon and Linux desktop entry (256 px)
+    src/app/icons/savevault.ico    Windows executable and installer (16-256 px)
+    src/app/icons/savevault.icns   macOS bundle (16-1024 px, Retina variants)
+    src/app/icons/savevault.png    window icon and Linux desktop entry (256 px)
 
 Usage (Qt with the Svg module, CMake and a compiler on PATH):
 
@@ -23,7 +23,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / "src/app/icons/saveforge.svg"
+SOURCE = ROOT / "src/app/icons/savevault.svg"
 OUT = ROOT / "src/app/icons"
 
 ICO_SIZES = [16, 20, 24, 32, 40, 48, 64, 128, 256]
@@ -84,10 +84,10 @@ def main():
         def png(size):
             return (pngs / f"icon-{size}.png").read_bytes()
 
-        write_ico([(s, png(s)) for s in ICO_SIZES], OUT / "saveforge.ico")
-        write_icns([(kind, png(size)) for kind, size in ICNS_TYPES], OUT / "saveforge.icns")
-        shutil.copyfile(pngs / "icon-256.png", OUT / "saveforge.png")
-    print(f"wrote saveforge.ico, saveforge.icns and saveforge.png to {OUT}")
+        write_ico([(s, png(s)) for s in ICO_SIZES], OUT / "savevault.ico")
+        write_icns([(kind, png(size)) for kind, size in ICNS_TYPES], OUT / "savevault.icns")
+        shutil.copyfile(pngs / "icon-256.png", OUT / "savevault.png")
+    print(f"wrote savevault.ico, savevault.icns and savevault.png to {OUT}")
     return 0
 
 

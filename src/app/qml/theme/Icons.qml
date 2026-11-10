@@ -3,7 +3,8 @@ import QtQuick
 
 // Caminhos SVG (grade 24x24, traço) dos ícones da interface.
 QtObject {
-    readonly property string anvil: "M4 15h16l-2 5H6z M8 15V9h8v6 M12 9V4 M9 6l3-2 3 2"
+    // App mark: a vault door with its dial (also in src/app/icons/savevault.svg).
+    readonly property string vault: "M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M12 8a3.5 3.5 0 1 0 0.01 0z M12 8V6.5 M15.5 11.5H17 M12 15v1.5 M8.5 11.5H7 M7 20v1.5 M17 20v1.5"
     readonly property string library: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z"
     readonly property string activity: "M22 12h-4l-3 9L9 3l-3 9H2"
     readonly property string transfer: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3"

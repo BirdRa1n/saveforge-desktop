@@ -1,16 +1,16 @@
-qt_add_library(saveforge_vault STATIC
-    include/saveforge/vault/BlobStore.h
-    include/saveforge/vault/Snapshot.h
-    include/saveforge/vault/Vault.h
+qt_add_library(savevault_vault STATIC
+    include/savevault/vault/BlobStore.h
+    include/savevault/vault/Snapshot.h
+    include/savevault/vault/Vault.h
     BlobStore.cpp
     Snapshot.cpp
     Vault.cpp
 )
-add_library(saveforge::vault ALIAS saveforge_vault)
+add_library(savevault::vault ALIAS savevault_vault)
 
-target_include_directories(saveforge_vault PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(saveforge_vault
-    PUBLIC saveforge::core saveforge::profiles Qt6::Core
-    PRIVATE saveforge::zstd
+target_include_directories(savevault_vault PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(savevault_vault
+    PUBLIC savevault::core savevault::profiles Qt6::Core
+    PRIVATE savevault::zstd
 )
-saveforge_set_warnings(saveforge_vault)
+savevault_set_warnings(savevault_vault)

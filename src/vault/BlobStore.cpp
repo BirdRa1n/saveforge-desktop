@@ -1,7 +1,7 @@
-#include "saveforge/vault/BlobStore.h"
+#include "savevault/vault/BlobStore.h"
 
-#include "saveforge/core/Uuid.h"
-#include "saveforge/platform/FileSync.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/platform/FileSync.h"
 
 #include <QCryptographicHash>
 #include <QDir>
@@ -16,7 +16,7 @@
 #include <memory>
 #include <vector>
 
-namespace saveforge::vault {
+namespace savevault::vault {
 
 namespace {
 
@@ -230,4 +230,4 @@ Result<void> BlobStore::remove(const QString &sha256)
     return {};
 }
 
-} // namespace saveforge::vault
+} // namespace savevault::vault

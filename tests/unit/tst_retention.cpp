@@ -1,14 +1,14 @@
 #include "ServiceFixture.h"
 
-#include "saveforge/core/Uuid.h"
+#include "savevault/core/Uuid.h"
 
 #include <QTimeZone>
-#include "saveforge/services/BackupService.h"
-#include "saveforge/services/Retention.h"
+#include "savevault/services/BackupService.h"
+#include "savevault/services/Retention.h"
 
-using namespace saveforge;
-using namespace saveforge::services;
-using namespace saveforge::testing;
+using namespace savevault;
+using namespace savevault::services;
+using namespace savevault::testing;
 
 namespace {
 

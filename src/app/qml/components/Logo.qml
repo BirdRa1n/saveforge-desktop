@@ -15,14 +15,14 @@ RowLayout {
             anchors.centerIn: parent
             width: 14
             height: 14
-            strokeWidth: 2.4
-            path: Icons.anvil
+            strokeWidth: 2.2
+            path: Icons.vault
             color: Theme.textOnAccent
         }
     }
 
     Text {
-        text: "SaveForge"
+        text: "SaveVault"
         color: Theme.text
         font.family: Theme.fontDisplay
         font.pixelSize: 16

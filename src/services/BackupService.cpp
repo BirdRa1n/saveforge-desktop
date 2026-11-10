@@ -1,4 +1,4 @@
-#include "saveforge/services/BackupService.h"
+#include "savevault/services/BackupService.h"
 
 #include <QFileInfo>
 #include <QLoggingCategory>
@@ -6,9 +6,9 @@
 
 #include <algorithm>
 
-Q_LOGGING_CATEGORY(lcBackup, "saveforge.backup")
+Q_LOGGING_CATEGORY(lcBackup, "savevault.backup")
 
-namespace saveforge::services {
+namespace savevault::services {
 
 BackupService::BackupService(vault::Vault &vault, ServiceEnvironment env)
     : m_vault(vault)
@@ -109,4 +109,4 @@ Result<vault::Snapshot> BackupService::backup(const GameTarget &target, const Ba
     return snapshot;
 }
 
-} // namespace saveforge::services
+} // namespace savevault::services

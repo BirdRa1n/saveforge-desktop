@@ -3,7 +3,7 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Dialogs
 import QtQuick.Layouts
-import SaveForge.Backend
+import SaveVault.Backend
 
 // Vault location, game profiles (registry) and the launcher-cloud policy.
 Item {
@@ -185,7 +185,7 @@ Item {
             Section {
                 title: qsTr("Backups automáticos")
                 Paragraph {
-                    text: qsTr("O SaveForge pode guardar o progresso sozinho. Ele só cria um backup quando os saves mudaram desde o último.")
+                    text: qsTr("O SaveVault pode guardar o progresso sozinho. Ele só cria um backup quando os saves mudaram desde o último.")
                 }
                 ToggleSetting {
                     Layout.fillWidth: true
@@ -276,7 +276,7 @@ Item {
                     }
                 }
                 Paragraph {
-                    text: AppController.maintenanceText + " " + qsTr("O SaveForge confere o vault e libera espaço uma vez por semana.")
+                    text: AppController.maintenanceText + " " + qsTr("O SaveVault confere o vault e libera espaço uma vez por semana.")
                     color: Theme.textSubtle
                 }
                 RowLayout {
@@ -297,7 +297,7 @@ Item {
             Section {
                 title: qsTr("Perfis de jogos")
                 Paragraph {
-                    text: qsTr("Perfis disponíveis: %1. Os perfis dizem ao SaveForge onde cada jogo guarda os saves.")
+                    text: qsTr("Perfis disponíveis: %1. Os perfis dizem ao SaveVault onde cada jogo guarda os saves.")
                           .arg(Format.number(AppController.profileCount))
                 }
                 Rectangle {
@@ -375,7 +375,7 @@ Item {
             Section {
                 title: qsTr("Capas dos jogos")
                 Paragraph {
-                    text: qsTr("O SaveForge usa as capas que a Steam e a GOG já guardam neste computador. Para os jogos sem capa local, ele pode baixar a capa do servidor de imagens da Steam. O pedido informa só o número do jogo na loja.")
+                    text: qsTr("O SaveVault usa as capas que a Steam e a GOG já guardam neste computador. Para os jogos sem capa local, ele pode baixar a capa do servidor de imagens da Steam. O pedido informa só o número do jogo na loja.")
                 }
                 ToggleSetting {
                     Layout.fillWidth: true
@@ -397,7 +397,7 @@ Item {
                         model: [
                             { key: "ask", label: qsTr("Perguntar sempre") },
                             { key: "prefer-launcher", label: qsTr("Priorizar o launcher") },
-                            { key: "prefer-saveforge", label: qsTr("Priorizar o SaveForge") }
+                            { key: "prefer-savevault", label: qsTr("Priorizar o SaveVault") }
                         ]
                         delegate: FilterChip {
                             required property var modelData

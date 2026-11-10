@@ -1,129 +1,129 @@
 find_package(Qt6 REQUIRED COMPONENTS Test)
 
-# saveforge_add_test(<nome> SOURCES ... LIBS ...)
-function(saveforge_add_test name)
+# savevault_add_test(<nome> SOURCES ... LIBS ...)
+function(savevault_add_test name)
     cmake_parse_arguments(ARG "" "" "SOURCES;LIBS" ${ARGN})
     qt_add_executable(${name} ${ARG_SOURCES})
     target_link_libraries(${name} PRIVATE Qt6::Test ${ARG_LIBS})
     target_include_directories(${name} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/support")
     # Conformance tests read vectors and examples straight from the specs submodule.
     target_compile_definitions(${name} PRIVATE
-        SAVEFORGE_SPECS_DIR="${SAVEFORGE_SPECS_DIR}"
-        SAVEFORGE_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
-    saveforge_set_warnings(${name})
+        SAVEVAULT_SPECS_DIR="${SAVEVAULT_SPECS_DIR}"
+        SAVEVAULT_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
+    savevault_set_warnings(${name})
     add_test(NAME ${name} COMMAND ${name})
     # Testes de UI rodam sem display.
     set_tests_properties(${name} PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endfunction()
 
-saveforge_add_test(tst_core_result
+savevault_add_test(tst_core_result
     SOURCES unit/tst_core_result.cpp
-    LIBS saveforge::core)
+    LIBS savevault::core)
 
-saveforge_add_test(tst_platform
+savevault_add_test(tst_platform
     SOURCES unit/tst_platform.cpp
-    LIBS saveforge::platform)
+    LIBS savevault::platform)
 
-saveforge_add_test(tst_path_rules
+savevault_add_test(tst_path_rules
     SOURCES unit/tst_path_rules.cpp
-    LIBS saveforge::profiles)
+    LIBS savevault::profiles)
 
-saveforge_add_test(tst_profile_parser
+savevault_add_test(tst_profile_parser
     SOURCES unit/tst_profile_parser.cpp
-    LIBS saveforge::profiles)
+    LIBS savevault::profiles)
 
-saveforge_add_test(tst_path_resolver
+savevault_add_test(tst_path_resolver
     SOURCES unit/tst_path_resolver.cpp
-    LIBS saveforge::profiles)
+    LIBS savevault::profiles)
 
-saveforge_add_test(tst_snapshot_json
+savevault_add_test(tst_snapshot_json
     SOURCES unit/tst_snapshot_json.cpp
-    LIBS saveforge::vault)
+    LIBS savevault::vault)
 
-saveforge_add_test(tst_blob_store
+savevault_add_test(tst_blob_store
     SOURCES unit/tst_blob_store.cpp
-    LIBS saveforge::vault)
+    LIBS savevault::vault)
 
-saveforge_add_test(tst_vault
+savevault_add_test(tst_vault
     SOURCES unit/tst_vault.cpp
-    LIBS saveforge::vault)
+    LIBS savevault::vault)
 
-saveforge_add_test(tst_vdf
+savevault_add_test(tst_vdf
     SOURCES unit/tst_vdf.cpp
-    LIBS saveforge::detection)
+    LIBS savevault::detection)
 
-saveforge_add_test(tst_launchers
+savevault_add_test(tst_launchers
     SOURCES unit/tst_launchers.cpp
-    LIBS saveforge::detection)
+    LIBS savevault::detection)
 
-saveforge_add_test(tst_game_matcher
+savevault_add_test(tst_game_matcher
     SOURCES unit/tst_game_matcher.cpp
-    LIBS saveforge::detection)
+    LIBS savevault::detection)
 
-saveforge_add_test(tst_backup_service
+savevault_add_test(tst_backup_service
     SOURCES unit/tst_backup_service.cpp
-    LIBS saveforge::services)
+    LIBS savevault::services)
 
-saveforge_add_test(tst_restore_service
+savevault_add_test(tst_restore_service
     SOURCES unit/tst_restore_service.cpp
-    LIBS saveforge::services)
+    LIBS savevault::services)
 
-saveforge_add_test(tst_gamesave
+savevault_add_test(tst_gamesave
     SOURCES unit/tst_gamesave.cpp
-    LIBS saveforge::archive saveforge::miniz)
+    LIBS savevault::archive savevault::miniz)
 
-saveforge_add_test(tst_registry_saves
+savevault_add_test(tst_registry_saves
     SOURCES unit/tst_registry_saves.cpp
-    LIBS saveforge::services)
+    LIBS savevault::services)
 
-saveforge_add_test(tst_retention
+savevault_add_test(tst_retention
     SOURCES unit/tst_retention.cpp
-    LIBS saveforge::services)
+    LIBS savevault::services)
 
-saveforge_add_test(tst_transfer
+savevault_add_test(tst_transfer
     SOURCES unit/tst_transfer.cpp
-    LIBS saveforge::services)
+    LIBS savevault::services)
 
-saveforge_add_test(tst_auto_backup
+savevault_add_test(tst_auto_backup
     SOURCES unit/tst_auto_backup.cpp
-    LIBS saveforge::services)
+    LIBS savevault::services)
 
-saveforge_add_test(tst_save_slots
+savevault_add_test(tst_save_slots
     SOURCES unit/tst_save_slots.cpp
-    LIBS saveforge::services)
+    LIBS savevault::services)
 
-saveforge_add_test(tst_game_art
+savevault_add_test(tst_game_art
     SOURCES unit/tst_game_art.cpp
-    LIBS saveforge::services)
+    LIBS savevault::services)
 
-saveforge_add_test(tst_local_profiles
+savevault_add_test(tst_local_profiles
     SOURCES unit/tst_local_profiles.cpp
-    LIBS saveforge::services)
+    LIBS savevault::services)
 
-saveforge_add_test(tst_ed25519
+savevault_add_test(tst_ed25519
     SOURCES unit/tst_ed25519.cpp
-    LIBS saveforge::registry)
+    LIBS savevault::registry)
 
-saveforge_add_test(tst_registry_channel
+savevault_add_test(tst_registry_channel
     SOURCES unit/tst_registry_channel.cpp
-    LIBS saveforge::registry)
+    LIBS savevault::registry)
 
-saveforge_add_test(tst_registry_cache
+savevault_add_test(tst_registry_cache
     SOURCES unit/tst_registry_cache.cpp
-    LIBS saveforge::registry)
+    LIBS savevault::registry)
 
-saveforge_add_test(tst_registry_updater
+savevault_add_test(tst_registry_updater
     SOURCES unit/tst_registry_updater.cpp support/StaticHttpServer.h
-    LIBS saveforge::registry Qt6::Network)
+    LIBS savevault::registry Qt6::Network)
 
-saveforge_add_test(tst_profile_catalog
+savevault_add_test(tst_profile_catalog
     SOURCES unit/tst_profile_catalog.cpp
-    LIBS saveforge::registry)
+    LIBS savevault::registry)
 
-saveforge_add_test(tst_library
+savevault_add_test(tst_library
     SOURCES unit/tst_library.cpp
-    LIBS saveforge::services)
+    LIBS savevault::services)
 
-saveforge_add_test(tst_ui_smoke
+savevault_add_test(tst_ui_smoke
     SOURCES ui/tst_ui_smoke.cpp
-    LIBS saveforge_uiplugin saveforge_backendplugin Qt6::Gui Qt6::Quick Qt6::QuickControls2)
+    LIBS savevault_uiplugin savevault_backendplugin Qt6::Gui Qt6::Quick Qt6::QuickControls2)

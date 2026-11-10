@@ -1,11 +1,11 @@
 name: Release
 
-# Builds the packages of cmake/SaveForgePackaging.cmake on the three OSes
+# Builds the packages of cmake/SaveVaultPackaging.cmake on the three OSes
 # (on Windows, an installer and a portable zip).
 #   - Manual run (workflow_dispatch): packages are kept as workflow artifacts.
 #   - Tag "v<X.Y.Z>[-suffix]" (e.g. v0.1.0-alpha.1): also publishes a GitHub
 #     pre-release with the packages and their SHA-256 files.
-# Every package embeds the registry distribution built from saveforge-registry,
+# Every package embeds the registry distribution built from savevault-registry,
 # so the app has profiles on first run without a download.
 
 on:
@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: BirdRa1n/saveforge-registry
+          repository: BirdRa1n/savevault-registry
           submodules: true
 
       - uses: actions/setup-node@v4
@@ -120,9 +120,9 @@ jobs:
         shell: bash
         run: >
           cmake --preset release
-          -DSAVEFORGE_BUILD_TESTS=OFF
-          -DSAVEFORGE_PACKAGE_VERSION=${{ steps.version.outputs.version }}
-          -DSAVEFORGE_REGISTRY_BUNDLED_DIR="$GITHUB_WORKSPACE/registry-dist"
+          -DSAVEVAULT_BUILD_TESTS=OFF
+          -DSAVEVAULT_PACKAGE_VERSION=${{ steps.version.outputs.version }}
+          -DSAVEVAULT_REGISTRY_BUNDLED_DIR="$GITHUB_WORKSPACE/registry-dist"
 
       - name: Build
         run: cmake --build --preset release
@@ -145,16 +145,16 @@ jobs:
         shell: bash
         env:
           QT_QPA_PLATFORM: offscreen
-          SAVEFORGE_DATA_DIR: ${{ runner.temp }}/saveforge-data
+          SAVEVAULT_DATA_DIR: ${{ runner.temp }}/savevault-data
         run: |
-          cmake --install out/build/release --prefix "$RUNNER_TEMP/staged" --component SaveForge
+          cmake --install out/build/release --prefix "$RUNNER_TEMP/staged" --component SaveVault
           cd "$RUNNER_TEMP/staged"
           if [[ "$RUNNER_OS" == macOS ]]; then
-            app=SaveForge.app/Contents/MacOS/SaveForge
+            app=SaveVault.app/Contents/MacOS/SaveVault
           else
-            app=bin/SaveForge
-            bin/saveforge-cli --version
-            bin/saveforge-cli registry status
+            app=bin/SaveVault
+            bin/savevault-cli --version
+            bin/savevault-cli registry status
           fi
           # The GUI must still be running after 15 s (no missing-module exit).
           "$app" & pid=$!
@@ -169,33 +169,33 @@ jobs:
         shell: pwsh
         env:
           QT_QPA_PLATFORM: offscreen
-          SAVEFORGE_DATA_DIR: ${{ runner.temp }}\saveforge-installed-data
+          SAVEVAULT_DATA_DIR: ${{ runner.temp }}\savevault-installed-data
         run: |
-          $setup = Get-ChildItem out/build/release/SaveForge-*-setup.exe | Select-Object -First 1
-          $dir = Join-Path $env:RUNNER_TEMP "SaveForge-installed"
+          $setup = Get-ChildItem out/build/release/SaveVault-*-setup.exe | Select-Object -First 1
+          $dir = Join-Path $env:RUNNER_TEMP "SaveVault-installed"
           Start-Process $setup.FullName -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/CURRENTUSER", "/NORESTART", "/DIR=$dir" -Wait
-          & "$dir\bin\saveforge-cli.exe" registry status
+          & "$dir\bin\savevault-cli.exe" registry status
           if ($LASTEXITCODE -ne 0) { throw "the installed CLI failed" }
-          $app = Start-Process "$dir\bin\SaveForge.exe" -PassThru
+          $app = Start-Process "$dir\bin\SaveVault.exe" -PassThru
           Start-Sleep -Seconds 15
           if ($app.HasExited) { throw "the installed app exited with code $($app.ExitCode)" }
           Stop-Process -Id $app.Id
           Start-Process "$dir\unins000.exe" -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
           Start-Sleep -Seconds 5
-          if (Test-Path "$dir\bin\SaveForge.exe") { throw "the uninstaller left the app behind" }
+          if (Test-Path "$dir\bin\SaveVault.exe") { throw "the uninstaller left the app behind" }
 
       - uses: actions/upload-artifact@v4
         with:
           name: package-${{ matrix.name }}
           path: |
-            out/build/release/SaveForge-*-setup.exe
-            out/build/release/SaveForge-*-setup.exe.sha256
-            out/build/release/SaveForge-*.zip
-            out/build/release/SaveForge-*.zip.sha256
-            out/build/release/SaveForge-*.tar.gz
-            out/build/release/SaveForge-*.tar.gz.sha256
-            out/build/release/SaveForge-*.dmg
-            out/build/release/SaveForge-*.dmg.sha256
+            out/build/release/SaveVault-*-setup.exe
+            out/build/release/SaveVault-*-setup.exe.sha256
+            out/build/release/SaveVault-*.zip
+            out/build/release/SaveVault-*.zip.sha256
+            out/build/release/SaveVault-*.tar.gz
+            out/build/release/SaveVault-*.tar.gz.sha256
+            out/build/release/SaveVault-*.dmg
+            out/build/release/SaveVault-*.dmg.sha256
           if-no-files-found: error
 
   publish:
@@ -220,6 +220,6 @@ jobs:
         run: >
           gh release create "$GITHUB_REF_NAME" packages/*
           --prerelease
-          --title "SaveForge ${GITHUB_REF_NAME#v}"
+          --title "SaveVault ${GITHUB_REF_NAME#v}"
           --notes-file docs/release-notes.md
           --generate-notes

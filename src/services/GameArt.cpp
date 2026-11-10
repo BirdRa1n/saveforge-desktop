@@ -1,13 +1,13 @@
-#include "saveforge/services/GameArt.h"
+#include "savevault/services/GameArt.h"
 
-#include "saveforge/core/Uuid.h"
-#include "saveforge/registry/Fetcher.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/registry/Fetcher.h"
 
 #include <QDir>
 #include <QFile>
 #include <QRegularExpression>
 
-namespace saveforge::services {
+namespace savevault::services {
 
 namespace {
 
@@ -135,4 +135,4 @@ Result<QString> SteamArtCache::download(const QString &appId, registry::Fetcher 
     return target;
 }
 
-} // namespace saveforge::services
+} // namespace savevault::services

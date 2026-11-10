@@ -1,7 +1,7 @@
-#include "saveforge/registry/Metadata.h"
+#include "savevault/registry/Metadata.h"
 
-#include "saveforge/core/JsonReader.h"
-#include "saveforge/registry/Ed25519.h"
+#include "savevault/core/JsonReader.h"
+#include "savevault/registry/Ed25519.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -11,7 +11,7 @@
 
 #include <limits>
 
-namespace saveforge::registry {
+namespace savevault::registry {
 
 namespace {
 
@@ -246,4 +246,4 @@ int countValidSignatures(const QByteArray &bytes, const QList<Signature> &signat
     return static_cast<int>(valid.size());
 }
 
-} // namespace saveforge::registry
+} // namespace savevault::registry

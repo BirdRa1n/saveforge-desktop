@@ -1,7 +1,7 @@
 // Conformance test: the C++ path rules must agree with every vector in
-// saveforge-specs/profile/test-vectors/path-rules.json.
+// savevault-specs/profile/test-vectors/path-rules.json.
 
-#include "saveforge/profiles/PathRules.h"
+#include "savevault/profiles/PathRules.h"
 
 #include <QFile>
 #include <QJsonArray>
@@ -9,14 +9,14 @@
 #include <QJsonObject>
 #include <QTest>
 
-using namespace saveforge::profiles;
-using saveforge::platform::Os;
+using namespace savevault::profiles;
+using savevault::platform::Os;
 
 namespace {
 
 QJsonObject loadVectors()
 {
-    QFile file(QStringLiteral(SAVEFORGE_SPECS_DIR "/profile/test-vectors/path-rules.json"));
+    QFile file(QStringLiteral(SAVEVAULT_SPECS_DIR "/profile/test-vectors/path-rules.json"));
     if (!file.open(QIODevice::ReadOnly))
         qFatal("cannot open path-rules.json; is the specs submodule initialized?");
     return QJsonDocument::fromJson(file.readAll()).object();

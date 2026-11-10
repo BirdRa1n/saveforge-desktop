@@ -1,9 +1,9 @@
-#include "saveforge/detection/Vdf.h"
+#include "savevault/detection/Vdf.h"
 
 #include <QTest>
 
-using namespace saveforge;
-using namespace saveforge::detection;
+using namespace savevault;
+using namespace savevault::detection;
 
 class TestVdf : public QObject {
     Q_OBJECT

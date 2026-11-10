@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import SaveForge.Backend
+import SaveVault.Backend
 
 // One game, shown next to the library list: a banner with its art, the main
 // actions (with their shortcuts), a few numbers, the named saves and the

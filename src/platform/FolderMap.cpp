@@ -1,10 +1,10 @@
-#include "saveforge/platform/FolderMap.h"
+#include "savevault/platform/FolderMap.h"
 
 #include <QDir>
 
 #include <algorithm>
 
-namespace saveforge::platform {
+namespace savevault::platform {
 
 void FolderMap::set(const QString &placeholder, const QString &absoluteDir)
 {
@@ -37,4 +37,4 @@ QStringList FolderMap::placeholders() const
     return names;
 }
 
-} // namespace saveforge::platform
+} // namespace savevault::platform

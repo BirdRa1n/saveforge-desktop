@@ -8,7 +8,7 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cacheVariables": {
-        "SAVEFORGE_BUILD_TESTS": "ON"
+        "SAVEVAULT_BUILD_TESTS": "ON"
       }
     },
     {
@@ -29,7 +29,7 @@
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "SAVEFORGE_WARNINGS_AS_ERRORS": "ON"
+        "SAVEVAULT_WARNINGS_AS_ERRORS": "ON"
       }
     }
   ],

@@ -8,8 +8,8 @@
   "minAppVersion": "0.1.0",
   "bundle": {
     "path": "bundles/test-channel-000042.json.zst",
-    "sha256": "9a8a810c73ed5ab9b158ef0ff1a60abead3e12759f69388bce3b1ba084358c90",
-    "size": 695,
+    "sha256": "05af77b8f43248a0816b4989b1d821e53b286a99cc8c184944c88d50c5bf12eb",
+    "size": 694,
     "uncompressedSize": 2905,
     "profileCount": 3
   },

@@ -1,7 +1,7 @@
-#include "saveforge/vault/Vault.h"
+#include "savevault/vault/Vault.h"
 
-#include "saveforge/core/Uuid.h"
-#include "saveforge/platform/FileSync.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/platform/FileSync.h"
 
 #include <QBuffer>
 #include <QDir>
@@ -15,9 +15,9 @@
 #include <algorithm>
 #include <memory>
 
-Q_LOGGING_CATEGORY(lcVault, "saveforge.vault")
+Q_LOGGING_CATEGORY(lcVault, "savevault.vault")
 
-namespace saveforge::vault {
+namespace savevault::vault {
 
 namespace {
 
@@ -121,7 +121,7 @@ Result<Vault> Vault::open(const QString &directory)
 
     const QDir existing(dir);
     if (existing.exists() && !existing.isEmpty(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden))
-        return Error{ErrorCode::InvalidArgument, QStringLiteral("directory is not empty and is not a SaveForge vault"), dir};
+        return Error{ErrorCode::InvalidArgument, QStringLiteral("directory is not empty and is not a SaveVault vault"), dir};
 
     for (const char *sub : {"blobs/sha256", "snapshots", "tmp", "locks"}) {
         if (!QDir().mkpath(dir + u'/' + QLatin1String(sub)))
@@ -480,4 +480,4 @@ Result<void> Vault::removeSnapshot(const QString &gameId, const QUuid &snapshotI
     return {};
 }
 
-} // namespace saveforge::vault
+} // namespace savevault::vault

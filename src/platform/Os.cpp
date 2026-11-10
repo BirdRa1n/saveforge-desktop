@@ -1,6 +1,6 @@
-#include "saveforge/platform/Os.h"
+#include "savevault/platform/Os.h"
 
-namespace saveforge::platform {
+namespace savevault::platform {
 
 QString osName(Os os)
 {
@@ -23,4 +23,4 @@ std::optional<Os> osFromName(QStringView name)
     return std::nullopt;
 }
 
-} // namespace saveforge::platform
+} // namespace savevault::platform

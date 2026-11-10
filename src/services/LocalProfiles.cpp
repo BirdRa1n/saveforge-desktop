@@ -1,8 +1,8 @@
-#include "saveforge/services/LocalProfiles.h"
+#include "savevault/services/LocalProfiles.h"
 
-#include "saveforge/core/Uuid.h"
-#include "saveforge/platform/FileSync.h"
-#include "saveforge/profiles/ProfileParser.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/platform/FileSync.h"
+#include "savevault/profiles/ProfileParser.h"
 
 #include <QDir>
 #include <QFile>
@@ -11,7 +11,7 @@
 #include <QJsonObject>
 #include <QRegularExpression>
 
-namespace saveforge::services {
+namespace savevault::services {
 
 namespace {
 
@@ -217,4 +217,4 @@ Result<void> LocalProfileStore::write(const QString &profileId, const QByteArray
     return {};
 }
 
-} // namespace saveforge::services
+} // namespace savevault::services

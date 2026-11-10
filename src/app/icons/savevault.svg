@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- SaveVault app icon (Console x Studio): the vault door of Icons.vault in
+       the default cyan accent on a blue-grey tile.
+       Source of the .ico/.icns/.png files next to it; see tools/icons/README.md. -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1B2029"/>
+      <stop offset="1" stop-color="#0F1218"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#22D3EE" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#22D3EE" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="40" y="40" width="944" height="944" rx="212" fill="url(#tile)"/>
+  <rect x="40" y="40" width="944" height="944" rx="212" fill="url(#glow)"/>
+  <rect x="44" y="44" width="936" height="936" rx="208" fill="none" stroke="#2A3140" stroke-width="8"/>
+  <!-- 24-unit glyph grid scaled to 768 px and centred. -->
+  <g transform="translate(128 112) scale(32)" stroke="#22D3EE" stroke-width="2"
+     stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#22D3EE" fill-opacity="0.12"/>
+    <circle cx="12" cy="11.5" r="3.5"/>
+    <path d="M12 8V6.5 M15.5 11.5H17 M12 15v1.5 M8.5 11.5H7 M7 20v1.5 M17 20v1.5"/>
+  </g>
+</svg>

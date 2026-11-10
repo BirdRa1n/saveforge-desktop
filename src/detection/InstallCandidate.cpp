@@ -1,11 +1,11 @@
-#include "saveforge/detection/InstallCandidate.h"
+#include "savevault/detection/InstallCandidate.h"
 
-#include "saveforge/platform/UserFolders.h"
+#include "savevault/platform/UserFolders.h"
 
 #include <QDir>
 #include <QFileInfo>
 
-namespace saveforge::detection {
+namespace savevault::detection {
 
 namespace {
 
@@ -106,4 +106,4 @@ profiles::ResolveContext hostResolveContext(const DetectionEnvironment &env, con
     return context;
 }
 
-} // namespace saveforge::detection
+} // namespace savevault::detection

@@ -1,7 +1,7 @@
 // Channel verification against signed fixtures (tests/data/registry, generated
-// by generate.mjs with the public test keys of saveforge-specs).
+// by generate.mjs with the public test keys of savevault-specs).
 
-#include "saveforge/registry/Channel.h"
+#include "savevault/registry/Channel.h"
 
 #include <QDir>
 #include <QDirIterator>
@@ -9,12 +9,12 @@
 #include <QTemporaryDir>
 #include <QTest>
 
-using namespace saveforge;
-using namespace saveforge::registry;
+using namespace savevault;
+using namespace savevault::registry;
 
 namespace {
 
-const QString kFixtures = QStringLiteral(SAVEFORGE_TEST_DATA_DIR "/registry");
+const QString kFixtures = QStringLiteral(SAVEVAULT_TEST_DATA_DIR "/registry");
 
 QByteArray read(const QString &path)
 {
@@ -79,7 +79,7 @@ private slots:
         QCOMPARE(c.rejectedProfiles.size(), 2); // unsafe path + revoked
         QVERIFY(c.rejectedProfiles.join(u'\n').contains(QStringLiteral("unsafe-game")));
         QVERIFY(c.rejectedProfiles.join(u'\n').contains(QStringLiteral("revoked-game: revoked")));
-        QCOMPARE(c.notices.first().attribution, QStringLiteral("SaveForge test fixture"));
+        QCOMPARE(c.notices.first().attribution, QStringLiteral("SaveVault test fixture"));
     }
 
     void followsRootRotation()

@@ -1,10 +1,10 @@
-#include "saveforge/registry/ProfileCatalog.h"
+#include "savevault/registry/ProfileCatalog.h"
 
 #include <QSet>
 
 #include <algorithm>
 
-namespace saveforge::registry {
+namespace savevault::registry {
 
 namespace {
 
@@ -87,4 +87,4 @@ std::optional<CatalogEntry> ProfileCatalog::find(const QString &profileId) const
     return std::nullopt;
 }
 
-} // namespace saveforge::registry
+} // namespace savevault::registry

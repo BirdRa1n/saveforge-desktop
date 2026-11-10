@@ -1,7 +1,7 @@
-#include "saveforge/registry/RegistryCache.h"
+#include "savevault/registry/RegistryCache.h"
 
-#include "saveforge/core/Uuid.h"
-#include "saveforge/platform/FileSync.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/platform/FileSync.h"
 
 #include <QDir>
 #include <QDirIterator>
@@ -12,9 +12,9 @@
 
 #include <algorithm>
 
-Q_LOGGING_CATEGORY(lcRegistry, "saveforge.registry")
+Q_LOGGING_CATEGORY(lcRegistry, "savevault.registry")
 
-namespace saveforge::registry {
+namespace savevault::registry {
 
 namespace {
 
@@ -45,7 +45,7 @@ bool copyDurably(const QString &from, const QString &to)
 
 Result<RootMetadata> builtinTrustAnchor()
 {
-    QFile file(QStringLiteral(":/saveforge/registry/trust-anchor.json"));
+    QFile file(QStringLiteral(":/savevault/registry/trust-anchor.json"));
     if (!file.open(QIODevice::ReadOnly))
         return Error{ErrorCode::NotFound, QStringLiteral("no registry trust anchor in this build"), {}};
     return parseRoot(file.readAll());
@@ -53,7 +53,7 @@ Result<RootMetadata> builtinTrustAnchor()
 
 bool builtinTrustAnchorIsForTesting()
 {
-#if defined(SAVEFORGE_REGISTRY_TEST_ANCHOR)
+#if defined(SAVEVAULT_REGISTRY_TEST_ANCHOR)
     return true;
 #else
     return false;
@@ -196,4 +196,4 @@ Result<VerifiedChannel> RegistryCache::loadChannel(const QString &channel, const
                       : Error{ErrorCode::NotFound, QStringLiteral("channel is not in the cache"), channel};
 }
 
-} // namespace saveforge::registry
+} // namespace savevault::registry

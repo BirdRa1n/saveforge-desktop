@@ -1,10 +1,10 @@
-#include "saveforge/core/Uuid.h"
+#include "savevault/core/Uuid.h"
 
 #include <QRandomGenerator>
 
 #include <array>
 
-namespace saveforge {
+namespace savevault {
 
 QUuid createUuidV7(const QDateTime &now)
 {
@@ -32,4 +32,4 @@ QString uuidToString(const QUuid &uuid)
     return uuid.toString(QUuid::WithoutBraces).toLower();
 }
 
-} // namespace saveforge
+} // namespace savevault

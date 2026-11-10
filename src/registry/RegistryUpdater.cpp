@@ -1,7 +1,7 @@
-#include "saveforge/registry/RegistryUpdater.h"
+#include "savevault/registry/RegistryUpdater.h"
 
-#include "saveforge/core/Uuid.h"
-#include "saveforge/registry/Fetcher.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/registry/Fetcher.h"
 
 #include <QDir>
 #include <QFile>
@@ -11,7 +11,7 @@
 
 Q_DECLARE_LOGGING_CATEGORY(lcRegistry)
 
-namespace saveforge::registry {
+namespace savevault::registry {
 
 namespace {
 
@@ -175,8 +175,8 @@ QStringList defaultChannels()
 
 QStringList builtinMirrors()
 {
-#if defined(SAVEFORGE_REGISTRY_MIRRORS)
-    QStringList mirrors = QStringLiteral(SAVEFORGE_REGISTRY_MIRRORS).split(u';', Qt::SkipEmptyParts);
+#if defined(SAVEVAULT_REGISTRY_MIRRORS)
+    QStringList mirrors = QStringLiteral(SAVEVAULT_REGISTRY_MIRRORS).split(u';', Qt::SkipEmptyParts);
     for (QString &mirror : mirrors)
         mirror = mirror.trimmed();
     mirrors.removeAll(QString());
@@ -188,7 +188,7 @@ QStringList builtinMirrors()
 
 QString bundledDistribution()
 {
-    const QString dir = QStringLiteral(":/saveforge/registry/bundled");
+    const QString dir = QStringLiteral(":/savevault/registry/bundled");
     return QFile::exists(dir + QStringLiteral("/root.json")) ? dir : QString();
 }
 
@@ -274,4 +274,4 @@ QList<ChannelUpdate> importDistribution(const QString &distributionDir, Registry
     return results;
 }
 
-} // namespace saveforge::registry
+} // namespace savevault::registry

@@ -11,8 +11,8 @@
 #include <QUrl>
 #include <QtQml/QQmlExtensionPlugin>
 
-Q_IMPORT_QML_PLUGIN(SaveForge_UiPlugin)
-Q_IMPORT_QML_PLUGIN(SaveForge_BackendPlugin)
+Q_IMPORT_QML_PLUGIN(SaveVault_UiPlugin)
+Q_IMPORT_QML_PLUGIN(SaveVault_BackendPlugin)
 
 // Garante que a janela principal carrega sem nenhum aviso de QML
 // (tipos ausentes, bindings quebrados, propriedades inexistentes).
@@ -26,11 +26,11 @@ private slots:
     void initTestCase()
     {
         // Settings, vault and registry cache go to a throwaway directory, unless a
-        // screenshot run points SAVEFORGE_DATA_DIR at prepared data on purpose.
+        // screenshot run points SAVEVAULT_DATA_DIR at prepared data on purpose.
         QVERIFY(m_data.isValid());
-        m_preparedData = !qEnvironmentVariableIsEmpty("SAVEFORGE_SCREENSHOT_DIR") && !qEnvironmentVariableIsEmpty("SAVEFORGE_DATA_DIR");
+        m_preparedData = !qEnvironmentVariableIsEmpty("SAVEVAULT_SCREENSHOT_DIR") && !qEnvironmentVariableIsEmpty("SAVEVAULT_DATA_DIR");
         if (!m_preparedData) {
-            qputenv("SAVEFORGE_DATA_DIR", m_data.path().toUtf8());
+            qputenv("SAVEVAULT_DATA_DIR", m_data.path().toUtf8());
             // The test must not download profiles from the network.
             QFile settings(m_data.path() + QStringLiteral("/settings.ini"));
             QVERIFY(settings.open(QIODevice::WriteOnly));
@@ -44,12 +44,12 @@ private slots:
     void mainWindowLoads()
     {
         QQmlApplicationEngine engine;
-        engine.loadFromModule("SaveForge.Ui", "Main");
+        engine.loadFromModule("SaveVault.Ui", "Main");
         QCOMPARE(engine.rootObjects().size(), 1);
 
         auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().constFirst());
         QVERIFY(window);
-        QCOMPARE(window->title(), QStringLiteral("SaveForge"));
+        QCOMPARE(window->title(), QStringLiteral("SaveVault"));
 
         QObject *sidebar = window->findChild<QObject *>(QStringLiteral("sidebar"));
         QVERIFY(sidebar);
@@ -65,8 +65,8 @@ private slots:
         QObject *library = window->findChild<QObject *>(QStringLiteral("libraryPage"));
         QVERIFY(library);
 
-        // Opcional: SAVEFORGE_SCREENSHOT_DIR=<dir> salva uma captura de cada página.
-        const QString shotDir = qEnvironmentVariable("SAVEFORGE_SCREENSHOT_DIR");
+        // Opcional: SAVEVAULT_SCREENSHOT_DIR=<dir> salva uma captura de cada página.
+        const QString shotDir = qEnvironmentVariable("SAVEVAULT_SCREENSHOT_DIR");
         QVERIFY(QTest::qWaitForWindowExposed(window));
 
         // Navegar por todas as páginas não deve gerar avisos.
@@ -78,7 +78,7 @@ private slots:
         }
 
         // The first scan runs in the background; wait for it to finish.
-        auto *controller = engine.singletonInstance<QObject *>("SaveForge.Backend", "AppController");
+        auto *controller = engine.singletonInstance<QObject *>("SaveVault.Backend", "AppController");
         QVERIFY(controller);
         QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
         QVERIFY(controller->property("vaultReady").toBool());
@@ -89,11 +89,11 @@ private slots:
         }
         if (!shotDir.isEmpty()) {
             // Screenshot runs: the library after the scan, and one game page
-            // (SAVEFORGE_SCREENSHOT_GAME, backed up first so it has history).
+            // (SAVEVAULT_SCREENSHOT_GAME, backed up first so it has history).
             sidebar->setProperty("currentIndex", 0);
             QTest::qWait(200);
             QVERIFY(window->grabWindow().save(shotDir + QStringLiteral("/library-scanned.png")));
-            const QString game = qEnvironmentVariable("SAVEFORGE_SCREENSHOT_GAME");
+            const QString game = qEnvironmentVariable("SAVEVAULT_SCREENSHOT_GAME");
             if (!game.isEmpty()) {
                 QMetaObject::invokeMethod(controller, "backupGame", Q_ARG(QString, game));
                 QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
@@ -199,7 +199,7 @@ private slots:
             QMetaObject::invokeMethod(dialog, "close");
             QMetaObject::invokeMethod(controller, "restore", Q_ARG(QString, gameId),
                                       Q_ARG(QString, slotA.value(QStringLiteral("snapshotId")).toString()),
-                                      Q_ARG(QString, QStringLiteral("prefer-saveforge")));
+                                      Q_ARG(QString, QStringLiteral("prefer-savevault")));
             QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
             QFile restored(saves + QStringLiteral("/slot.sav"));
             QVERIFY(restored.open(QIODevice::ReadOnly));

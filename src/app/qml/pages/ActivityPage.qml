@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import SaveForge.Backend
+import SaveVault.Backend
 
 // What happened in this session: scans, backups, restores, imports.
 Item {

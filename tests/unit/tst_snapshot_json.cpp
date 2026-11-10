@@ -1,18 +1,18 @@
 // Conformance test: snapshot and vault documents against the examples in
-// saveforge-specs/vault/examples, plus serialization round-trips.
+// savevault-specs/vault/examples, plus serialization round-trips.
 
-#include "saveforge/vault/Snapshot.h"
+#include "savevault/vault/Snapshot.h"
 
 #include <QDir>
 #include <QFile>
 #include <QTest>
 
-using namespace saveforge;
-using namespace saveforge::vault;
+using namespace savevault;
+using namespace savevault::vault;
 
 namespace {
 
-const QString kExamples = QStringLiteral(SAVEFORGE_SPECS_DIR "/vault/examples");
+const QString kExamples = QStringLiteral(SAVEVAULT_SPECS_DIR "/vault/examples");
 
 QByteArray readFile(const QString &path)
 {

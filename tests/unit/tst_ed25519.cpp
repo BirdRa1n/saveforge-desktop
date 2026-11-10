@@ -1,7 +1,7 @@
 // Conformance test: Ed25519 verification against
-// saveforge-specs/registry/test-vectors/signing.json.
+// savevault-specs/registry/test-vectors/signing.json.
 
-#include "saveforge/registry/Ed25519.h"
+#include "savevault/registry/Ed25519.h"
 
 #include <QFile>
 #include <QJsonArray>
@@ -9,13 +9,13 @@
 #include <QJsonObject>
 #include <QTest>
 
-using namespace saveforge::registry;
+using namespace savevault::registry;
 
 namespace {
 
 QJsonObject vectors()
 {
-    QFile file(QStringLiteral(SAVEFORGE_SPECS_DIR "/registry/test-vectors/signing.json"));
+    QFile file(QStringLiteral(SAVEVAULT_SPECS_DIR "/registry/test-vectors/signing.json"));
     if (!file.open(QIODevice::ReadOnly))
         qFatal("cannot open signing.json; is the specs submodule initialized?");
     return QJsonDocument::fromJson(file.readAll()).object();

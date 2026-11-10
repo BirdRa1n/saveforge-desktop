@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 
-// Drop-down list of choices in the Forja style. `model` is a list of
+// Drop-down list of choices in the app style. `model` is a list of
 // {text, value}; choosing one emits triggered(value).
 Popup {
     id: root

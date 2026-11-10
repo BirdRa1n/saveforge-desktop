@@ -1,4 +1,4 @@
-#include "saveforge/registry/RegistryCache.h"
+#include "savevault/registry/RegistryCache.h"
 
 #include <QDir>
 #include <QDirIterator>
@@ -6,12 +6,12 @@
 #include <QTemporaryDir>
 #include <QTest>
 
-using namespace saveforge;
-using namespace saveforge::registry;
+using namespace savevault;
+using namespace savevault::registry;
 
 namespace {
 
-const QString kBasic = QStringLiteral(SAVEFORGE_TEST_DATA_DIR "/registry/basic");
+const QString kBasic = QStringLiteral(SAVEVAULT_TEST_DATA_DIR "/registry/basic");
 const QString kChannel = QStringLiteral("test-channel");
 const QString kVersion = QStringLiteral("0.1.0");
 

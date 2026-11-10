@@ -3,14 +3,14 @@
 #include "CliSupport.h"
 #include "Commands.h"
 
-#include "saveforge/registry/RegistryCache.h"
-#include "saveforge/registry/RegistryUpdater.h"
+#include "savevault/registry/RegistryCache.h"
+#include "savevault/registry/RegistryUpdater.h"
 
 #include <QCommandLineParser>
 #include <QDir>
 #include <QElapsedTimer>
 
-namespace saveforge::cli {
+namespace savevault::cli {
 
 namespace {
 
@@ -103,7 +103,7 @@ int runUpdate(const QStringList &arguments, QTextStream &out, QTextStream &err)
     if (const QStringList channels = parser.values(channelOption); !channels.isEmpty())
         options.channels = channels;
     options.appVersion = appVersion();
-    options.userAgent = QStringLiteral("SaveForge-CLI/") + appVersion();
+    options.userAgent = QStringLiteral("SaveVault-CLI/") + appVersion();
 
     registry::RegistryCache cache(registryCacheDirectory());
     int failures = 0;
@@ -161,10 +161,10 @@ int runRegistry(const QStringList &arguments, QTextStream &out, QTextStream &err
         return runImport(rest, out, err);
     if (sub == u"status")
         return runStatus(out, err);
-    err << "Usage: saveforge-cli registry update [--mirror <url>]... [--channel <name>]...\n"
-           "       saveforge-cli registry import <distribution-dir> [--channel <name>]\n"
-           "       saveforge-cli registry status\n";
+    err << "Usage: savevault-cli registry update [--mirror <url>]... [--channel <name>]...\n"
+           "       savevault-cli registry import <distribution-dir> [--channel <name>]\n"
+           "       savevault-cli registry status\n";
     return 2;
 }
 
-} // namespace saveforge::cli
+} // namespace savevault::cli

@@ -33,7 +33,7 @@ Thumbs.db
 *.res
 *.rc
 # Hand-written Windows resources (the app icon), unlike the generated ones above.
-!src/app/saveforge.rc
+!src/app/savevault.rc
 /.qmake.cache
 /.qmake.stash
 **/.qmlls.ini

@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import SaveForge.Backend
+import SaveVault.Backend
 
 ApplicationWindow {
     id: window
@@ -23,7 +23,7 @@ ApplicationWindow {
     minimumWidth: 960
     minimumHeight: 600
     visible: true
-    title: "SaveForge"
+    title: "SaveVault"
     color: Theme.window
     flags: integratedTitleBar ? Qt.Window | Qt.ExpandedClientAreaHint | Qt.NoTitleBarBackgroundHint : Qt.Window
 

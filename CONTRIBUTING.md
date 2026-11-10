@@ -1,4 +1,4 @@
-# Contribuindo com o SaveForge Desktop
+# Contribuindo com o SaveVault Desktop
 
 Obrigado por querer contribuir! Este guia vale para pessoas e para agentes de IA. Leia antes de abrir um pull request.
 
@@ -15,9 +15,9 @@ Obrigado por querer contribuir! Este guia vale para pessoas e para agentes de IA
 
 ## Antes de começar
 
-- **Arquitetura e decisões:** a arquitetura do ecossistema está em `saveforge-docs/planejamento/PLANEJAMENTO-TECNICO.md`, e as decisões estruturais estão nas ADRs, em `saveforge-docs/adr/`. Mudanças que contrariam uma ADR começam com uma nova ADR, não com código.
-- **Visual:** a interface segue a direção **Console × Studio** (`saveforge-docs/design/CONSOLE-STUDIO.md`, ADR 0006): tema claro/escuro, acento escolhido pelo usuário e barra de título integrada no Windows e no macOS.
-- **Formatos de arquivo:** formatos compartilhados (perfis de jogos, `.gamesave`, Registry) são definidos em `saveforge-specs`. Não invente formatos dentro deste repositório.
+- **Arquitetura e decisões:** a arquitetura do ecossistema está em `savevault-docs/planejamento/PLANEJAMENTO-TECNICO.md`, e as decisões estruturais estão nas ADRs, em `savevault-docs/adr/`. Mudanças que contrariam uma ADR começam com uma nova ADR, não com código.
+- **Visual:** a interface segue a direção **Console × Studio** (`savevault-docs/design/CONSOLE-STUDIO.md`, ADR 0006): tema claro/escuro, acento escolhido pelo usuário e barra de título integrada no Windows e no macOS.
+- **Formatos de arquivo:** formatos compartilhados (perfis de jogos, `.gamesave`, Registry) são definidos em `savevault-specs`. Não invente formatos dentro deste repositório.
 
 ## Ambiente de desenvolvimento
 
@@ -60,12 +60,12 @@ src/
   detection/   Detectores de launchers, associação de instalações a perfis, varredura save-first.
   registry/    Registry: verificação (Ed25519, cadeia de root, rollback), download dos mirrors, cache e catálogo.
   services/    Casos de uso que combinam os módulos: biblioteca, perfis locais, backup e restauração.
-  backend/     Módulo QML SaveForge.Backend: AppController (singleton), modelos e configurações.
-  app/         Executável GUI + módulo QML SaveForge.Ui
+  backend/     Módulo QML SaveVault.Backend: AppController (singleton), modelos e configurações.
+  app/         Executável GUI + módulo QML SaveVault.Ui
     qml/theme/       Tokens visuais (Theme) e ícones (Icons) — singletons
     qml/components/  Componentes reutilizáveis, sem lógica de negócio
     qml/pages/       Telas completas, compostas a partir dos componentes
-  cli/         saveforge-cli (sem GUI)
+  cli/         savevault-cli (sem GUI)
 tests/
   unit/        Testes de unidade (Qt Test), um arquivo por módulo/assunto
   support/     Fixtures compartilhados (headers incluídos pelos testes)
@@ -73,11 +73,11 @@ tests/
   ui/          Testes da interface QML
 cmake/         Módulos CMake auxiliares (avisos, dependências de terceiros, empacotamento)
 docs/adr/      Decisões arquiteturais locais deste repositório
-external/specs Submódulo saveforge-specs (não edite aqui; mude no repositório de specs)
+external/specs Submódulo savevault-specs (não edite aqui; mude no repositório de specs)
 .github/       Workflows de CI
 ```
 
-**Specs como fonte única.** Dados definidos pelas specs (catálogo de placeholders, lista de locais sensíveis) são embutidos a partir de `external/specs` como recursos Qt, e os testes de conformidade leem os exemplos e vetores de lá. Uma mudança de comportamento definida pela spec começa no `saveforge-specs`. Depois, atualize o submódulo aqui (`git -C external/specs pull`) em um commit próprio.
+**Specs como fonte única.** Dados definidos pelas specs (catálogo de placeholders, lista de locais sensíveis) são embutidos a partir de `external/specs` como recursos Qt, e os testes de conformidade leem os exemplos e vetores de lá. Uma mudança de comportamento definida pela spec começa no `savevault-specs`. Depois, atualize o submódulo aqui (`git -C external/specs pull`) em um commit próprio.
 
 **Regra de dependência entre módulos.** As setas indicam "depende de" e só existem nessa direção:
 
@@ -87,7 +87,7 @@ app, cli → services → detection, vault, archive, registry, db → profiles �
 
 Na prática, o `registry` verifica e entrega perfis, e quem escolhe qual perfil usar para cada jogo é o catálogo (`ProfileCatalog`).
 
-- Cada módulo é uma biblioteca estática (`saveforge::<módulo>`), com cabeçalhos públicos em `src/<módulo>/include/saveforge/<módulo>/`.
+- Cada módulo é uma biblioteca estática (`savevault::<módulo>`), com cabeçalhos públicos em `src/<módulo>/include/savevault/<módulo>/`.
 - Nada abaixo de `app` pode depender de QtGui ou QtQuick.
 - Um módulo novo entra com seu `CMakeLists.txt`, os testes correspondentes e uma linha em `src/CMakeLists.txt`.
 
@@ -95,7 +95,7 @@ Na prática, o `registry` verifica e entrega perfis, e quem escolhe qual perfil 
 
 ### C++
 - C++20, sem extensões de compilador.
-- Namespace `saveforge` (e `saveforge::<módulo>` quando fizer sentido).
+- Namespace `savevault` (e `savevault::<módulo>` quando fizer sentido).
 - Nomes:
   - `PascalCase` para tipos;
   - `camelCase` para funções e variáveis;
@@ -107,11 +107,11 @@ Na prática, o `registry` verifica e entrega perfis, e quem escolhe qual perfil 
 - Os cabeçalhos usam `#pragma once`.
 - Código que lê o sistema (pastas, registro do Windows, SO) recebe essas informações por parâmetro, como no `DetectionEnvironment`. Assim os testes podem simular qualquer SO com diretórios temporários.
 - Em arquivos processados pelo moc (classes com `Q_OBJECT`, incluindo testes), evite raw string literals que contenham aspas e `//`: o moc deixa de reconhecer a classe e o link falha com `undefined reference to vtable`.
-- Para validar documentos definidos pelas specs, use `saveforge::JsonReader` (`core`). Ele rejeita propriedades desconhecidas e informa o JSON pointer do erro.
+- Para validar documentos definidos pelas specs, use `savevault::JsonReader` (`core`). Ele rejeita propriedades desconhecidas e informa o JSON pointer do erro.
 - Escritas que precisam sobreviver a quedas seguem o padrão do vault: grave num arquivo temporário, faça `fsync` (`platform::syncFile`) e renomeie.
 - Operações que alteram saves do usuário seguem o padrão da restauração: primeiro um plano sem efeitos colaterais, depois a execução com ponto de desfazer e rollback em caso de falha.
-- Tudo o que vai para os pacotes é instalado no componente `SaveForge` (`install(... COMPONENT SaveForge)`). Regras sem componente não entram nos pacotes.
-- Dependências de terceiros entram em `cmake/SaveForgeDependencies.cmake`: primeiro `find_package`, com fallback para download fixado e verificado por SHA-256. Cada dependência nova precisa de justificativa (ADR ou descrição no PR).
+- Tudo o que vai para os pacotes é instalado no componente `SaveVault` (`install(... COMPONENT SaveVault)`). Regras sem componente não entram nos pacotes.
+- Dependências de terceiros entram em `cmake/SaveVaultDependencies.cmake`: primeiro `find_package`, com fallback para download fixado e verificado por SHA-256. Cada dependência nova precisa de justificativa (ADR ou descrição no PR).
 - Comentários explicam **por quê**, não o quê.
 
 ### QML
@@ -125,7 +125,7 @@ Na prática, o `registry` verifica e entrega perfis, e quem escolhe qual perfil 
   - foco visível;
   - `Accessible.name` em controles sem texto.
 - Textos visíveis passam por `qsTr()`. A interface é escrita em pt-BR.
-- **SaveForge.Ui é só apresentação.** Páginas leem e chamam o `AppController` (módulo SaveForge.Backend); componentes em `qml/components/` não conhecem o backend.
+- **SaveVault.Ui é só apresentação.** Páginas leem e chamam o `AppController` (módulo SaveVault.Backend); componentes em `qml/components/` não conhecem o backend.
 - Quantidades usam `Format.count(n, "jogo", "jogos")` no QML e `countText()` no C++ (número em pt-BR e plural correto). Não use textos como "jogo(s)".
 - Operações demoradas nunca rodam na thread da interface: use o padrão `run()` do `AppController` (worker + resultado na thread da UI).
 
@@ -136,9 +136,9 @@ Na prática, o `registry` verifica e entrega perfis, e quem escolhe qual perfil 
 ## Testes
 
 - Toda mudança de comportamento vem com teste.
-- Testes de unidade usam Qt Test e são registrados com `saveforge_add_test()` em `tests/CMakeLists.txt`.
+- Testes de unidade usam Qt Test e são registrados com `savevault_add_test()` em `tests/CMakeLists.txt`.
 - O teste `tst_ui_smoke` falha diante de **qualquer** aviso de QML. Componentes novos devem aparecer em alguma página ou ser exercitados pelo teste.
-- Para revisar o visual, rode o teste com `SAVEFORGE_SCREENSHOT_DIR=<pasta>`. Ele salva uma captura de cada página.
+- Para revisar o visual, rode o teste com `SAVEVAULT_SCREENSHOT_DIR=<pasta>`. Ele salva uma captura de cada página.
 
 ## Commits
 
@@ -167,4 +167,4 @@ Usamos [Conventional Commits](https://www.conventionalcommits.org/), **em inglê
 
 - Uma API pública nova (cabeçalho em `include/`) recebe um comentário de cabeçalho explicando a responsabilidade do tipo ou da função.
 - Mudanças de comportamento visível atualizam o `README.md`.
-- Decisões arquiteturais viram ADR, em `saveforge-docs/adr/` quando afetam mais de um repositório, ou em `docs/adr/` quando são locais.
+- Decisões arquiteturais viram ADR, em `savevault-docs/adr/` quando afetam mais de um repositório, ou em `docs/adr/` quando são locais.

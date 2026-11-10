@@ -1,27 +1,27 @@
 #include "Commands.h"
-#include "saveforge/core/Version.h"
+#include "savevault/core/Version.h"
 
 #include <QCoreApplication>
 #include <QTextStream>
 
 #include <cstdio>
 
-// saveforge-cli: command-line interface for scripts and end-to-end tests.
+// savevault-cli: command-line interface for scripts and end-to-end tests.
 //
-//   saveforge-cli --version
-//   saveforge-cli detect [--profiles <dir>] [--no-save-scan]
-//   saveforge-cli registry update | registry import <dir> | registry status
-//   saveforge-cli profiles list | add --name <name> --folder <dir> | import <file> | remove <id>
-//   saveforge-cli backup --vault <dir> (--game <id> | --profile <file>) [--label <text>]
-//   saveforge-cli snapshots --vault <dir> [--game <id>]
-//   saveforge-cli restore --vault <dir> (--game <id> | --profile <file>) --snapshot <id> [--cloud <policy>] [--yes]
-//   saveforge-cli export --vault <dir> --output <file> [--game <id>]... [--all-history] [--incremental]
-//   saveforge-cli import --vault <dir> <file.gamesave>
+//   savevault-cli --version
+//   savevault-cli detect [--profiles <dir>] [--no-save-scan]
+//   savevault-cli registry update | registry import <dir> | registry status
+//   savevault-cli profiles list | add --name <name> --folder <dir> | import <file> | remove <id>
+//   savevault-cli backup --vault <dir> (--game <id> | --profile <file>) [--label <text>]
+//   savevault-cli snapshots --vault <dir> [--game <id>]
+//   savevault-cli restore --vault <dir> (--game <id> | --profile <file>) --snapshot <id> [--cloud <policy>] [--yes]
+//   savevault-cli export --vault <dir> --output <file> [--game <id>]... [--all-history] [--incremental]
+//   savevault-cli import --vault <dir> <file.gamesave>
 namespace {
 
 void printUsage(QTextStream &out)
 {
-    out << "Usage: saveforge-cli <command> [options]\n\n"
+    out << "Usage: savevault-cli <command> [options]\n\n"
            "Commands:\n"
            "  detect     List installed games and match them to profiles (read-only)\n"
            "  registry   Download or import signed profiles, or show the cache status\n"
@@ -41,10 +41,10 @@ void printUsage(QTextStream &out)
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
-    QCoreApplication::setOrganizationName(QStringLiteral("SaveForge"));
-    QCoreApplication::setApplicationName(QStringLiteral("saveforge-cli"));
-    QCoreApplication::setApplicationVersion(QString::fromUtf8(saveforge::kVersion.data(),
-                                                              static_cast<qsizetype>(saveforge::kVersion.size())));
+    QCoreApplication::setOrganizationName(QStringLiteral("SaveVault"));
+    QCoreApplication::setApplicationName(QStringLiteral("savevault-cli"));
+    QCoreApplication::setApplicationVersion(QString::fromUtf8(savevault::kVersion.data(),
+                                                              static_cast<qsizetype>(savevault::kVersion.size())));
 
     QTextStream out(stdout);
     QTextStream err(stderr);
@@ -63,21 +63,21 @@ int main(int argc, char *argv[])
     const QString command = args.at(1);
     const QStringList commandArgs = QStringList{args.at(0)} + args.mid(2);
     if (command == u"detect")
-        return saveforge::cli::runDetect(commandArgs, out, err);
+        return savevault::cli::runDetect(commandArgs, out, err);
     if (command == u"backup")
-        return saveforge::cli::runBackup(commandArgs, out, err);
+        return savevault::cli::runBackup(commandArgs, out, err);
     if (command == u"snapshots")
-        return saveforge::cli::runSnapshots(commandArgs, out, err);
+        return savevault::cli::runSnapshots(commandArgs, out, err);
     if (command == u"restore")
-        return saveforge::cli::runRestore(commandArgs, out, err);
+        return savevault::cli::runRestore(commandArgs, out, err);
     if (command == u"export")
-        return saveforge::cli::runGamesaveExport(commandArgs, out, err);
+        return savevault::cli::runGamesaveExport(commandArgs, out, err);
     if (command == u"import")
-        return saveforge::cli::runGamesaveImport(commandArgs, out, err);
+        return savevault::cli::runGamesaveImport(commandArgs, out, err);
     if (command == u"profiles")
-        return saveforge::cli::runProfiles(commandArgs, out, err);
+        return savevault::cli::runProfiles(commandArgs, out, err);
     if (command == u"registry")
-        return saveforge::cli::runRegistry(commandArgs, out, err);
+        return savevault::cli::runRegistry(commandArgs, out, err);
 
     err << "unknown command: " << command << "\n\n";
     printUsage(err);

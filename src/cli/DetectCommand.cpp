@@ -1,16 +1,16 @@
 #include "CliSupport.h"
 #include "Commands.h"
 
-#include "saveforge/detection/GameMatcher.h"
-#include "saveforge/detection/Launchers.h"
-#include "saveforge/profiles/ProfileParser.h"
+#include "savevault/detection/GameMatcher.h"
+#include "savevault/detection/Launchers.h"
+#include "savevault/profiles/ProfileParser.h"
 
 #include <QCommandLineParser>
 #include <QDir>
 #include <QElapsedTimer>
 #include <QFile>
 
-namespace saveforge::cli {
+namespace savevault::cli {
 
 namespace {
 
@@ -99,7 +99,7 @@ int runDetect(const QStringList &arguments, QTextStream &out, QTextStream &err)
     }
     out << Qt::endl << profiles.size() << " profile(s) loaded in " << timer.restart() << " ms." << Qt::endl;
     if (profiles.isEmpty()) {
-        out << "No profiles: import a registry distribution with 'saveforge-cli registry import <dir>'." << Qt::endl;
+        out << "No profiles: import a registry distribution with 'savevault-cli registry import <dir>'." << Qt::endl;
         return 0;
     }
 
@@ -116,4 +116,4 @@ int runDetect(const QStringList &arguments, QTextStream &out, QTextStream &err)
     return 0;
 }
 
-} // namespace saveforge::cli
+} // namespace savevault::cli

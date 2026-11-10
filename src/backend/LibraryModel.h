@@ -1,13 +1,13 @@
 #pragma once
 
-#include "saveforge/services/GameArt.h"
-#include "saveforge/services/Library.h"
+#include "savevault/services/GameArt.h"
+#include "savevault/services/Library.h"
 
 #include <QAbstractListModel>
 #include <QSortFilterProxyModel>
 #include <QtQml/qqmlregistration.h>
 
-namespace saveforge::backend {
+namespace savevault::backend {
 
 // Games of the library, one row per game (see services::scanLibrary).
 class LibraryModel : public QAbstractListModel {
@@ -88,4 +88,4 @@ private:
     QString m_store;
 };
 
-} // namespace saveforge::backend
+} // namespace savevault::backend

@@ -1,6 +1,6 @@
-#include "saveforge/core/Error.h"
+#include "savevault/core/Error.h"
 
-namespace saveforge {
+namespace savevault {
 
 QString errorCodeName(ErrorCode code)
 {
@@ -28,4 +28,4 @@ QString Error::toString() const
     return out;
 }
 
-} // namespace saveforge
+} // namespace savevault

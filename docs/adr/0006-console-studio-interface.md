@@ -8,7 +8,7 @@ A interface Forja usava a moldura padrão do sistema, um fundo marrom-escuro fix
 - um fundo mais neutro;
 - mais personalização de cor, já que o público é de jogadores.
 
-Das seis propostas comparadas, a escolhida foi a mistura das propostas Console e Studio (`saveforge-docs/design/CONSOLE-STUDIO.md`).
+Das seis propostas comparadas, a escolhida foi a mistura das propostas Console e Studio (`savevault-docs/design/CONSOLE-STUDIO.md`).
 
 ## Decisão
 - **Barra de título integrada:**

@@ -1,5 +1,5 @@
-#include "saveforge/detection/Launchers.h"
-#include "saveforge/detection/Vdf.h"
+#include "savevault/detection/Launchers.h"
+#include "savevault/detection/Vdf.h"
 
 #include <QDir>
 #include <QFile>
@@ -7,7 +7,7 @@
 #include <QRegularExpression>
 #include <QSet>
 
-namespace saveforge::detection {
+namespace savevault::detection {
 
 namespace {
 
@@ -167,4 +167,4 @@ QList<InstallCandidate> detectSteam(const DetectionEnvironment &env)
     return games;
 }
 
-} // namespace saveforge::detection
+} // namespace savevault::detection

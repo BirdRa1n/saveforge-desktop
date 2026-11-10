@@ -1,7 +1,7 @@
-#include "saveforge/platform/AppPaths.h"
-#include "saveforge/platform/Os.h"
-#include "saveforge/platform/Processes.h"
-#include "saveforge/platform/UserFolders.h"
+#include "savevault/platform/AppPaths.h"
+#include "savevault/platform/Os.h"
+#include "savevault/platform/Processes.h"
+#include "savevault/platform/UserFolders.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -10,7 +10,7 @@
 
 #include <algorithm>
 
-using namespace saveforge::platform;
+using namespace savevault::platform;
 
 class TestPlatform : public QObject {
     Q_OBJECT
@@ -83,15 +83,15 @@ private slots:
 
     void appDataDirectoryIsSharedAndOverridable()
     {
-        qunsetenv("SAVEFORGE_DATA_DIR");
+        qunsetenv("SAVEVAULT_DATA_DIR");
         const QString dir = appDataDirectory();
         QVERIFY(QDir::isAbsolutePath(dir));
-        QVERIFY(dir.endsWith(QLatin1String("/SaveForge")));
+        QVERIFY(dir.endsWith(QLatin1String("/SaveVault")));
         QCoreApplication::setApplicationName(QStringLiteral("something-else"));
         QCOMPARE(appDataDirectory(), dir);
-        qputenv("SAVEFORGE_DATA_DIR", QDir::toNativeSeparators(QStringLiteral("/sandbox/data/")).toUtf8());
+        qputenv("SAVEVAULT_DATA_DIR", QDir::toNativeSeparators(QStringLiteral("/sandbox/data/")).toUtf8());
         QCOMPARE(appDataDirectory(), QStringLiteral("/sandbox/data"));
-        qunsetenv("SAVEFORGE_DATA_DIR");
+        qunsetenv("SAVEVAULT_DATA_DIR");
     }
 
     void winePrefixMapsInsideDriveC()

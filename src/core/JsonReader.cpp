@@ -1,8 +1,8 @@
-#include "saveforge/core/JsonReader.h"
+#include "savevault/core/JsonReader.h"
 
 #include <cmath>
 
-namespace saveforge {
+namespace savevault {
 
 QString JsonReader::child(const QString &pointer, const QString &key)
 {
@@ -152,4 +152,4 @@ bool JsonReader::integerList(const QJsonValue &value, const QString &pointer, QL
     return true;
 }
 
-} // namespace saveforge
+} // namespace savevault

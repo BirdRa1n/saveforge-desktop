@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import SaveForge.Backend
+import SaveVault.Backend
 
 // Library: the dense list of detected games on the left (store filter and the
 // search from the title bar) and the selected game on the right
@@ -222,7 +222,7 @@ Item {
                              : AppController.library.count === 0 ? qsTr("Nenhum jogo encontrado ainda")
                              : qsTr("Nenhum jogo corresponde ao filtro")
                         description: AppController.profileCount === 0
-                                     ? qsTr("O SaveForge precisa dos perfis de jogos para saber onde ficam os saves. Procure ou importe perfis em Configurações, ou adicione um jogo à mão.")
+                                     ? qsTr("O SaveVault precisa dos perfis de jogos para saber onde ficam os saves. Procure ou importe perfis em Configurações, ou adicione um jogo à mão.")
                                      : AppController.library.count === 0
                                        ? qsTr("Nenhum jogo instalado ou save conhecido foi encontrado nesta máquina. Escaneie de novo depois de instalar ou jogar algo, ou adicione um jogo à mão.")
                                        : qsTr("Tente outro termo de busca ou outra loja.")

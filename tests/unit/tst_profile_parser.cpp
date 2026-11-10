@@ -1,7 +1,7 @@
-// Conformance test: every example in saveforge-specs/profile/examples/profile.v1
+// Conformance test: every example in savevault-specs/profile/examples/profile.v1
 // must be accepted (valid/) or rejected (invalid/) exactly as the schema says.
 
-#include "saveforge/profiles/ProfileParser.h"
+#include "savevault/profiles/ProfileParser.h"
 
 #include <QDir>
 #include <QFile>
@@ -9,12 +9,12 @@
 #include <QJsonDocument>
 #include <QTest>
 
-using namespace saveforge;
-using namespace saveforge::profiles;
+using namespace savevault;
+using namespace savevault::profiles;
 
 namespace {
 
-const QString kExamples = QStringLiteral(SAVEFORGE_SPECS_DIR "/profile/examples/profile.v1");
+const QString kExamples = QStringLiteral(SAVEVAULT_SPECS_DIR "/profile/examples/profile.v1");
 
 QByteArray readFile(const QString &path)
 {
@@ -77,6 +77,18 @@ private slots:
         QCOMPARE(p.mechanism.type, QStringLiteral("standard"));
         QCOMPARE(p.minAppVersion, QStringLiteral("0.1.0"));
         QCOMPARE(p.provenance.license, QStringLiteral("CC-BY-SA-4.0"));
+    }
+
+    // Profiles published before the rename name their source "saveforge".
+    void acceptsTheFormerSourceName()
+    {
+        QJsonObject json = example(QStringLiteral("hollow-knight.json"));
+        QJsonObject provenance = json.value(QStringLiteral("provenance")).toObject();
+        provenance.insert(QStringLiteral("source"), QStringLiteral("saveforge"));
+        json.insert(QStringLiteral("provenance"), provenance);
+        const auto result = parseProfile(json);
+        QVERIFY2(result.ok(), qPrintable(result.ok() ? QString() : result.error().message));
+        QCOMPARE(result.value().provenance.source, QStringLiteral("savevault"));
     }
 
     void unknownMechanismIsUnsupported()

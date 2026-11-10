@@ -9,13 +9,13 @@
 class QMenu;
 class QQuickWindow;
 
-namespace saveforge::backend {
+namespace savevault::backend {
 class AppController;
 }
 
-namespace saveforge::app {
+namespace savevault::app {
 
-// System tray icon that keeps SaveForge reachable while its window is hidden,
+// System tray icon that keeps SaveVault reachable while its window is hidden,
 // so automatic backups keep running. Offers opening the window, backing up
 // every game and quitting, and shows a notification when an automatic backup
 // finishes while the window is hidden.
@@ -42,4 +42,4 @@ private:
     bool m_hiddenNoticeShown = false;
 };
 
-} // namespace saveforge::app
+} // namespace savevault::app

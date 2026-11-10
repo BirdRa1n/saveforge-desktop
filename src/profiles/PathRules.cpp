@@ -1,4 +1,4 @@
-#include "saveforge/profiles/PathRules.h"
+#include "savevault/profiles/PathRules.h"
 
 #include <QFile>
 #include <QJsonArray>
@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-namespace saveforge::profiles {
+namespace savevault::profiles {
 
 namespace {
 
@@ -145,7 +145,7 @@ Result<PathRules> PathRules::create(const PlaceholderCatalog &catalog, const QBy
 const PathRules &PathRules::builtin()
 {
     static const PathRules rules = [] {
-        QFile file(QStringLiteral(":/saveforge/specs/profile/path-denylist.json"));
+        QFile file(QStringLiteral(":/savevault/specs/profile/path-denylist.json"));
         const bool opened = file.open(QIODevice::ReadOnly);
         Q_ASSERT_X(opened, "PathRules", "embedded path-denylist.json missing");
         auto result = create(PlaceholderCatalog::builtin(), opened ? file.readAll() : QByteArray());
@@ -256,4 +256,4 @@ bool PathRules::isSensitive(const QStringList &segments) const
                        [&](const QStringList &sequence) { return matchesSequence(prepared, sequence); });
 }
 
-} // namespace saveforge::profiles
+} // namespace savevault::profiles

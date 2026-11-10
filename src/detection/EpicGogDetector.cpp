@@ -1,4 +1,4 @@
-#include "saveforge/detection/Launchers.h"
+#include "savevault/detection/Launchers.h"
 
 #include <QDir>
 #include <QFile>
@@ -7,7 +7,7 @@
 #include <QJsonObject>
 #include <QSet>
 
-namespace saveforge::detection {
+namespace savevault::detection {
 
 namespace {
 
@@ -103,4 +103,4 @@ QList<InstallCandidate> detectGog(const DetectionEnvironment &env)
     return games;
 }
 
-} // namespace saveforge::detection
+} // namespace savevault::detection

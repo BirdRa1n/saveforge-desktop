@@ -1,7 +1,7 @@
 #include "StaticHttpServer.h"
 
-#include "saveforge/registry/Fetcher.h"
-#include "saveforge/registry/RegistryUpdater.h"
+#include "savevault/registry/Fetcher.h"
+#include "savevault/registry/RegistryUpdater.h"
 
 #include <QDirIterator>
 #include <QFile>
@@ -9,12 +9,12 @@
 #include <QTemporaryDir>
 #include <QTest>
 
-using namespace saveforge;
-using namespace saveforge::registry;
+using namespace savevault;
+using namespace savevault::registry;
 
 namespace {
 
-const QString kFixtures = QStringLiteral(SAVEFORGE_TEST_DATA_DIR "/registry");
+const QString kFixtures = QStringLiteral(SAVEVAULT_TEST_DATA_DIR "/registry");
 const QString kBasic = kFixtures + QStringLiteral("/basic");
 const QString kChannel = QStringLiteral("test-channel");
 const QString kBundle = QStringLiteral("channels/test-channel/bundles/test-channel-000042.json.zst");
@@ -24,7 +24,7 @@ UpdateOptions options(const QStringList &channels = {kChannel})
     UpdateOptions o;
     o.channels = channels;
     o.appVersion = QStringLiteral("0.1.0");
-    o.userAgent = QStringLiteral("SaveForge-test");
+    o.userAgent = QStringLiteral("SaveVault-test");
     return o;
 }
 
@@ -223,7 +223,7 @@ private slots:
     {
         QVERIFY(bundledDistribution().isEmpty());
         // Development builds trust the test keys and follow the matching published distribution.
-        QCOMPARE(builtinMirrors(), QStringList{QStringLiteral("https://birdra1n.github.io/saveforge-registry/v1/")});
+        QCOMPARE(builtinMirrors(), QStringList{QStringLiteral("https://birdra1n.github.io/savevault-registry/v1/")});
         QVERIFY(makeFetcher(builtinMirrors().first(), {}).ok());
         QCOMPARE(defaultChannels(), (QStringList{QStringLiteral("official"), QStringLiteral("upstream-ludusavi")}));
     }

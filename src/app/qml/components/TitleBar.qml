@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import SaveForge.Backend
+import SaveVault.Backend
 
 // Top bar of the window, right under the system caption area: the app mark,
 // the search ("command bar", focused with Ctrl+K) and background progress.

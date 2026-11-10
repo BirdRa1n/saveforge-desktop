@@ -1,15 +1,15 @@
 #include "ServiceFixture.h"
 
-#include "saveforge/core/Uuid.h"
-#include "saveforge/platform/RegistryStore.h"
-#include "saveforge/services/BackupService.h"
-#include "saveforge/services/RestoreService.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/platform/RegistryStore.h"
+#include "savevault/services/BackupService.h"
+#include "savevault/services/RestoreService.h"
 
 #include <QJsonArray>
 
-using namespace saveforge;
-using namespace saveforge::services;
-using namespace saveforge::testing;
+using namespace savevault;
+using namespace savevault::services;
+using namespace savevault::testing;
 
 namespace {
 
@@ -130,12 +130,12 @@ private slots:
 #else
         auto store = platform::hostRegistryStore();
         QVERIFY(store->available());
-        const QString root = QStringLiteral("HKCU/Software/SaveForgeTests/") + uuidToString(createUuidV7());
+        const QString root = QStringLiteral("HKCU/Software/SaveVaultTests/") + uuidToString(createUuidV7());
         QVERIFY(store->writeValues(keyWith(root, QStringLiteral("world 3"))).ok());
         QVERIFY(store->writeValues(keyWith(root + QStringLiteral("/Sub"), QStringLiteral("sub"))).ok());
         const auto tree = store->readTree(root);
         QVERIFY(tree.ok());
-        (void)store->removeTree(QStringLiteral("HKCU/Software/SaveForgeTests"));
+        (void)store->removeTree(QStringLiteral("HKCU/Software/SaveVaultTests"));
         QCOMPARE(tree.value().size(), 2);
         QCOMPARE(valueOf(tree.value(), QStringLiteral("Level")), QStringLiteral("world 3"));
         QCOMPARE(valueOf(tree.value(), QStringLiteral("Coins")), QStringLiteral("4294967295"));

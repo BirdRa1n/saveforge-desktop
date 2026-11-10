@@ -1,15 +1,15 @@
-#include "saveforge/services/Library.h"
+#include "savevault/services/Library.h"
 
-#include "saveforge/registry/RegistryCache.h"
-#include "saveforge/registry/RegistryUpdater.h"
-#include "saveforge/services/LocalProfiles.h"
+#include "savevault/registry/RegistryCache.h"
+#include "savevault/registry/RegistryUpdater.h"
+#include "savevault/services/LocalProfiles.h"
 
 #include <QHash>
 #include <QSet>
 
 #include <algorithm>
 
-namespace saveforge::services {
+namespace savevault::services {
 
 CatalogLoad loadCatalogFromCache(const QString &registryCacheDir, const QString &appVersion,
                                  const QString &localProfilesDir)
@@ -129,4 +129,4 @@ LibraryScan scanLibrary(const registry::ProfileCatalog &catalog, const QList<det
     return scan;
 }
 
-} // namespace saveforge::services
+} // namespace savevault::services

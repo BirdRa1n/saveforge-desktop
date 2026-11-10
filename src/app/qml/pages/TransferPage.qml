@@ -3,7 +3,7 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Dialogs
 import QtQuick.Layouts
-import SaveForge.Backend
+import SaveVault.Backend
 
 // Moving backups between computers as .gamesave files: export the chosen
 // games, or import a file (which adds backups and never restores).
@@ -48,8 +48,8 @@ Item {
         title: qsTr("Salvar exportação")
         fileMode: FileDialog.SaveFile
         defaultSuffix: "gamesave"
-        nameFilters: [qsTr("Saves do SaveForge (*.gamesave)")]
-        currentFile: "SaveForge-" + new Date().toISOString().slice(0, 10) + ".gamesave"
+        nameFilters: [qsTr("Saves do SaveVault (*.gamesave)")]
+        currentFile: "SaveVault-" + new Date().toISOString().slice(0, 10) + ".gamesave"
         onAccepted: AppController.exportGames(root.games.filter(g => root.selected[g.id]).map(g => g.id), selectedFile,
                                               historyOption.checked, incrementalOption.checked && root.previous.exists,
                                               foldersOption.checked)
@@ -59,7 +59,7 @@ Item {
         id: importDialog
         title: qsTr("Escolher arquivo .gamesave")
         fileMode: FileDialog.OpenFile
-        nameFilters: [qsTr("Saves do SaveForge (*.gamesave)")]
+        nameFilters: [qsTr("Saves do SaveVault (*.gamesave)")]
         onAccepted: {
             root.importFile = selectedFile
             root.preview = AppController.inspectGamesave(selectedFile)

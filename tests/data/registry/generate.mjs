@@ -3,7 +3,7 @@
 //   node tests/data/registry/generate.mjs
 //
 // Requires Node.js 22.15+ (built-in zstd). Signs with the PUBLIC test keys of
-// saveforge-specs (registry/test-vectors/signing.json); never trust them.
+// savevault-specs (registry/test-vectors/signing.json); never trust them.
 // Output is deterministic, so regenerating without changes produces no diff.
 //
 //   basic/    root v1 (root-1, online-1), channel "test-channel" with 3 profiles:
@@ -76,7 +76,7 @@ function writeDistribution(dir, { rotated }) {
   const sequence = 42;
   const bundle = Buffer.from(JSON.stringify({
     schemaVersion: 1, type: "bundle", channel: "test-channel", sequence, generatedAt: "2026-11-09T00:00:00Z",
-    notices: [{ license: "CC-BY-SA-4.0", attribution: "SaveForge test fixture" }], profiles,
+    notices: [{ license: "CC-BY-SA-4.0", attribution: "SaveVault test fixture" }], profiles,
   }) + "\n");
   const compressed = zstdCompressSync(bundle, { params: { [constants.ZSTD_c_compressionLevel]: 3 } });
   const bundlePath = "bundles/test-channel-000042.json.zst";

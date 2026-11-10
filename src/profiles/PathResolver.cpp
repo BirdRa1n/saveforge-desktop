@@ -1,4 +1,4 @@
-#include "saveforge/profiles/PathResolver.h"
+#include "savevault/profiles/PathResolver.h"
 
 #include <QDateTime>
 #include <QDir>
@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-namespace saveforge::profiles {
+namespace savevault::profiles {
 
 namespace {
 
@@ -380,4 +380,4 @@ QList<ResolvedFile> PathResolver::resolve(const Profile &profile, const ResolveC
     return result;
 }
 
-} // namespace saveforge::profiles
+} // namespace savevault::profiles

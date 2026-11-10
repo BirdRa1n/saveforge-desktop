@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import SaveForge.Backend
+import SaveVault.Backend
 
 // Names the progress on disk as a new save slot ("salvar como"): backs up the
 // current files into the slot and makes it the active one.

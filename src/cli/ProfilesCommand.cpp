@@ -3,12 +3,12 @@
 #include "CliSupport.h"
 #include "Commands.h"
 
-#include "saveforge/detection/DetectionEnvironment.h"
-#include "saveforge/services/LocalProfiles.h"
+#include "savevault/detection/DetectionEnvironment.h"
+#include "savevault/services/LocalProfiles.h"
 
 #include <QCommandLineParser>
 
-namespace saveforge::cli {
+namespace savevault::cli {
 
 namespace {
 
@@ -63,7 +63,7 @@ int runAdd(const QStringList &arguments, QTextStream &out, QTextStream &err)
 int runImport(const QStringList &arguments, QTextStream &out, QTextStream &err)
 {
     if (arguments.size() != 2) {
-        err << "Usage: saveforge-cli profiles import <profile.json>" << Qt::endl;
+        err << "Usage: savevault-cli profiles import <profile.json>" << Qt::endl;
         return 2;
     }
     services::LocalProfileStore store(localProfilesDirectory());
@@ -77,7 +77,7 @@ int runImport(const QStringList &arguments, QTextStream &out, QTextStream &err)
 int runRemove(const QStringList &arguments, QTextStream &out, QTextStream &err)
 {
     if (arguments.size() != 2) {
-        err << "Usage: saveforge-cli profiles remove <id>" << Qt::endl;
+        err << "Usage: savevault-cli profiles remove <id>" << Qt::endl;
         return 2;
     }
     services::LocalProfileStore store(localProfilesDirectory());
@@ -101,11 +101,11 @@ int runProfiles(const QStringList &arguments, QTextStream &out, QTextStream &err
         return runImport(rest, out, err);
     if (sub == u"remove")
         return runRemove(rest, out, err);
-    err << "Usage: saveforge-cli profiles list\n"
-           "       saveforge-cli profiles add --name <name> --folder <dir>...\n"
-           "       saveforge-cli profiles import <profile.json>\n"
-           "       saveforge-cli profiles remove <id>\n";
+    err << "Usage: savevault-cli profiles list\n"
+           "       savevault-cli profiles add --name <name> --folder <dir>...\n"
+           "       savevault-cli profiles import <profile.json>\n"
+           "       savevault-cli profiles remove <id>\n";
     return 2;
 }
 
-} // namespace saveforge::cli
+} // namespace savevault::cli

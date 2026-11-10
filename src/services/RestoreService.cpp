@@ -1,8 +1,8 @@
-#include "saveforge/services/RestoreService.h"
+#include "savevault/services/RestoreService.h"
 
-#include "saveforge/core/Uuid.h"
-#include "saveforge/platform/FileSync.h"
-#include "saveforge/services/BackupService.h"
+#include "savevault/core/Uuid.h"
+#include "savevault/platform/FileSync.h"
+#include "savevault/services/BackupService.h"
 
 #include <QCryptographicHash>
 #include <QDir>
@@ -16,9 +16,9 @@
 #include <algorithm>
 #include <QTimeZone>
 
-Q_LOGGING_CATEGORY(lcRestore, "saveforge.restore")
+Q_LOGGING_CATEGORY(lcRestore, "savevault.restore")
 
-namespace saveforge::services {
+namespace savevault::services {
 
 namespace {
 
@@ -49,7 +49,7 @@ struct StagedFile {
 
 QString sibling(const QString &target, const QString &id, const char *suffix)
 {
-    return target + QStringLiteral(".saveforge-") + id + QLatin1String(suffix);
+    return target + QStringLiteral(".savevault-") + id + QLatin1String(suffix);
 }
 
 } // namespace
@@ -187,7 +187,7 @@ Result<RestoreReport> RestoreService::execute(const GameTarget &target, const Re
                      target.profile.id};
     if (plan.launcherCloudConflict && policy == CloudPolicy::Ask)
         return Error{ErrorCode::InvalidArgument,
-                     QStringLiteral("choose whether the launcher's cloud or SaveForge has priority"), target.profile.id};
+                     QStringLiteral("choose whether the launcher's cloud or SaveVault has priority"), target.profile.id};
 
     RestoreReport report;
     report.unchanged = plan.count(FileAction::Unchanged);
@@ -289,4 +289,4 @@ Result<RestoreReport> RestoreService::execute(const GameTarget &target, const Re
     return report;
 }
 
-} // namespace saveforge::services
+} // namespace savevault::services
