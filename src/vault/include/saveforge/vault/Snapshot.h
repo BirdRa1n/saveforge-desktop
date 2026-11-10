@@ -57,6 +57,7 @@ struct Snapshot {
     SnapshotKind kind = SnapshotKind::Manual;
     std::optional<SnapshotTrigger> trigger;
     QString label;
+    QString slot;                          // save slot the files belong to; empty: unnamed progress
     bool pinned = false;
     QUuid machineId;
     QString appVersion;
@@ -85,5 +86,9 @@ struct VaultDescriptor {
 // Directory name of a game inside snapshots/: "local:<uuid>" becomes
 // "local_<uuid>" because ':' is not valid in Windows file names.
 [[nodiscard]] QString gameDirectoryName(const QString &gameId);
+
+// Whether `name` can name a save slot (1-100 characters, no control
+// characters, no leading or trailing whitespace; vault/SPEC.md section 3).
+[[nodiscard]] bool isValidSlotName(const QString &name);
 
 } // namespace saveforge::vault

@@ -44,6 +44,14 @@ const QRegularExpression &gameIdPattern()
     return re;
 }
 
+// vault/SPEC.md `slot`: no control characters, no leading or trailing whitespace.
+const QRegularExpression &slotPattern()
+{
+    static const QRegularExpression re(QStringLiteral("^[^\\s\\x00-\\x1F](?:[^\\x00-\\x1F]*[^\\s\\x00-\\x1F])?$"),
+                                       QRegularExpression::UseUnicodePropertiesOption);
+    return re;
+}
+
 const QRegularExpression &semverPattern()
 {
     static const QRegularExpression re(
@@ -229,6 +237,8 @@ QByteArray toJson(const Snapshot &s)
         o.insert(QStringLiteral("trigger"), kTriggers.at(static_cast<qsizetype>(*s.trigger)));
     if (!s.label.isEmpty())
         o.insert(QStringLiteral("label"), s.label);
+    if (!s.slot.isEmpty())
+        o.insert(QStringLiteral("slot"), s.slot);
     if (s.pinned)
         o.insert(QStringLiteral("pinned"), true);
     o.insert(QStringLiteral("machineId"), uuidToString(s.machineId));
@@ -290,7 +300,7 @@ Result<Snapshot> parseSnapshot(const QJsonObject &json)
     Snapshot s;
     r.keys(json, QString(),
            {"schemaVersion", "type", "snapshotId", "parentId", "gameId", "createdAt", "kind", "trigger", "label",
-            "pinned", "machineId", "appVersion", "profile", "consistency", "files", "registry"},
+            "slot", "pinned", "machineId", "appVersion", "profile", "consistency", "files", "registry"},
            {"schemaVersion", "type", "snapshotId", "gameId", "createdAt", "kind", "machineId", "appVersion",
             "profile", "consistency", "files"});
     if (r.failed())
@@ -323,6 +333,8 @@ Result<Snapshot> parseSnapshot(const QJsonObject &json)
     }
     if (json.contains(QLatin1String("label")))
         r.string(json.value(QLatin1String("label")), QStringLiteral("/label"), s.label, 1, 200);
+    if (json.contains(QLatin1String("slot")))
+        r.string(json.value(QLatin1String("slot")), QStringLiteral("/slot"), s.slot, 1, 100, &slotPattern());
     if (json.contains(QLatin1String("pinned")))
         r.boolean(json.value(QLatin1String("pinned")), QStringLiteral("/pinned"), s.pinned);
     readUuid(r, json.value(QLatin1String("machineId")), QStringLiteral("/machineId"), s.machineId);
@@ -404,6 +416,11 @@ Result<VaultDescriptor> parseVaultDescriptor(const QByteArray &json)
     if (r.failed())
         return r.error();
     return d;
+}
+
+bool isValidSlotName(const QString &name)
+{
+    return name.size() <= 100 && slotPattern().match(name).hasMatch();
 }
 
 } // namespace saveforge::vault

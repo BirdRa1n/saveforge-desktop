@@ -53,6 +53,18 @@ private slots:
         QVERIFY2(!parseSnapshot(readFile(file)).ok(), "invalid example was accepted");
     }
 
+    void slotNamesFollowTheSpec()
+    {
+        QVERIFY(vault::isValidSlotName(QStringLiteral("Segundo personagem")));
+        QVERIFY(vault::isValidSlotName(QStringLiteral("Run 2 (hardcore)")));
+        QVERIFY(vault::isValidSlotName(QStringLiteral("x")));
+        QVERIFY(!vault::isValidSlotName(QString()));
+        QVERIFY(!vault::isValidSlotName(QStringLiteral(" leading")));
+        QVERIFY(!vault::isValidSlotName(QStringLiteral("trailing ")));
+        QVERIFY(!vault::isValidSlotName(QStringLiteral("tab\tinside")));
+        QVERIFY(!vault::isValidSlotName(QString(101, u'x')));
+    }
+
     void acceptsValidVaultDescriptors_data() { addRows(QStringLiteral("vault.v1"), QStringLiteral("valid")); }
     void acceptsValidVaultDescriptors()
     {

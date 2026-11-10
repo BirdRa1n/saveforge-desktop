@@ -151,6 +151,7 @@ Result<Snapshot> Vault::createSnapshot(const SnapshotRequest &request, const Fil
     snapshot.kind = request.kind;
     snapshot.trigger = request.trigger;
     snapshot.label = request.label;
+    snapshot.slot = request.slot;
     snapshot.machineId = request.machineId;
     snapshot.appVersion = request.appVersion;
     snapshot.profile = request.profile;

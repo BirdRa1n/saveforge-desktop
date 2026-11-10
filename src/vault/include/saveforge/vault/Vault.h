@@ -27,6 +27,7 @@ struct SnapshotRequest {
     SnapshotKind kind = SnapshotKind::Manual;
     std::optional<SnapshotTrigger> trigger;
     QString label;
+    QString slot;                          // save slot whose files are captured (see isValidSlotName)
     QUuid machineId;
     QString appVersion;
     ProfileRef profile;
