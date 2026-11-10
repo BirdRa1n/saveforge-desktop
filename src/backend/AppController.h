@@ -81,7 +81,7 @@ public:
     Q_INVOKABLE void backupAll();
 
     // {name, store, reason, installDir, launcherCloud, snapshotCount, coverColor, profileSource,
-    //  local, cover, iconOnly, hero, logo}
+    //  local, cover, iconOnly, hero, logo, saveFolders: [{url, path}]}
     Q_INVOKABLE QVariantMap gameInfo(const QString &gameId) const;
     // Newest first: [{id, date, relative, kind, kindText, files, label, inconsistent}]
     Q_INVOKABLE QVariantList snapshots(const QString &gameId) const;

@@ -447,6 +447,14 @@ QVariantMap AppController::gameInfo(const QString &gameId) const
         return {};
     const services::GameArt art = m_library.art(gameId);
     const auto fileUrl = [](const QString &path) { return path.isEmpty() ? QUrl() : QUrl::fromLocalFile(path); };
+    // [{url, path}] with the path in the OS's notation, for display.
+    const auto folderList = [](const QStringList &folders) {
+        QVariantList list;
+        for (const QString &folder : folders)
+            list.append(QVariantMap{{QStringLiteral("url"), QUrl::fromLocalFile(folder)},
+                                    {QStringLiteral("path"), QDir::toNativeSeparators(folder)}});
+        return list;
+    };
     return {{QStringLiteral("name"), game->target.profile.name},
             {QStringLiteral("store"), storeLabel(*game)},
             {QStringLiteral("reason"), game->install || game->saveFilesFound > 0
@@ -461,7 +469,8 @@ QVariantMap AppController::gameInfo(const QString &gameId) const
             {QStringLiteral("cover"), fileUrl(art.header.isEmpty() ? art.icon : art.header)},
             {QStringLiteral("iconOnly"), art.header.isEmpty() && !art.icon.isEmpty()},
             {QStringLiteral("hero"), fileUrl(art.hero)},
-            {QStringLiteral("logo"), fileUrl(art.logo)}};
+            {QStringLiteral("logo"), fileUrl(art.logo)},
+            {QStringLiteral("saveFolders"), folderList(services::saveFolders(game->target))}};
 }
 
 QVariantList AppController::snapshots(const QString &gameId) const

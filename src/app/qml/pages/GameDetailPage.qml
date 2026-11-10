@@ -160,6 +160,28 @@ Item {
             }
 
             SecondaryButton {
+                id: openFolder
+                readonly property var folders: root.info.saveFolders || []
+                visible: folders.length > 0
+                iconPath: Icons.folder
+                text: folders.length > 1 ? qsTr("Pastas dos saves") : qsTr("Abrir pasta dos saves")
+                Accessible.description: qsTr("Abre no gerenciador de arquivos a pasta onde o jogo guarda os saves.")
+                onClicked: {
+                    if (folders.length === 1)
+                        Qt.openUrlExternally(folders[0].url)
+                    else
+                        folderMenu.open()
+                }
+
+                ActionMenu {
+                    id: folderMenu
+                    y: openFolder.height + Theme.space1
+                    model: openFolder.folders.map(folder => ({ text: folder.path, value: folder.url }))
+                    onTriggered: value => Qt.openUrlExternally(value)
+                }
+            }
+
+            SecondaryButton {
                 visible: root.info.local === true
                 text: qsTr("Remover jogo")
                 Accessible.description: qsTr("Remove o jogo adicionado à mão. Os backups continuam no vault.")
