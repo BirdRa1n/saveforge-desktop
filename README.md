@@ -2,7 +2,7 @@
 
 Aplicativo desktop open source para encontrar, fazer backup e restaurar saves de jogos de PC. Funciona com Steam, Epic, GOG e instalações manuais, **totalmente offline**.
 
-> **Estado:** em desenvolvimento inicial (0.1.0). O núcleo da Fase 1 do [roadmap](../saveforge-docs/planejamento/PLANEJAMENTO-TECNICO.md#18-roadmap-com-dependências) já funciona, pela interface e pela linha de comando:
+> **Estado:** em desenvolvimento (0.2.0, alpha). As Fases 1 e 2 do [roadmap](../saveforge-docs/planejamento/PLANEJAMENTO-TECNICO.md#18-roadmap-com-dependências) já funcionam, quase completas, pela interface e pela linha de comando:
 > - perfis de jogos vindos do Registry assinado (22 mil jogos via Ludusavi): baixados dos mirrors, embutidos no build ou importados de uma pasta, sempre verificados e guardados em cache para uso offline;
 > - detecção de jogos (Steam, Epic, GOG, Heroic e Lutris, com prefixos Wine/Proton, além da busca por saves de jogos não instalados);
 > - backup no vault local (deduplicação, compressão, verificação de integridade);
