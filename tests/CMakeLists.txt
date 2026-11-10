@@ -68,6 +68,10 @@ saveforge_add_test(tst_restore_service
     SOURCES unit/tst_restore_service.cpp
     LIBS saveforge::services)
 
+saveforge_add_test(tst_auto_backup
+    SOURCES unit/tst_auto_backup.cpp
+    LIBS saveforge::services)
+
 saveforge_add_test(tst_save_slots
     SOURCES unit/tst_save_slots.cpp
     LIBS saveforge::services)
