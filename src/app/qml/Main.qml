@@ -23,6 +23,70 @@ ApplicationWindow {
     Connections {
         target: AppController
         function onNotify(text, kind) { toast.show(text, kind) }
+        function onLargeBackupFound(gameId, name, size, expected) {
+            largeBackupDialog.gameId = gameId
+            largeBackupDialog.text = qsTr("Os saves de %1 têm %2, mais do que o perfil do jogo espera (%3). Isso pode indicar arquivos que não são saves. Fazer o backup mesmo assim?")
+                                     .arg(name).arg(size).arg(expected)
+            largeBackupDialog.open()
+        }
+    }
+
+    // Confirms a backup larger than the game's profile expects (backup.maxBytes).
+    Popup {
+        id: largeBackupDialog
+        objectName: "largeBackupDialog"
+        property string gameId
+        property string text
+        modal: true
+        focus: true
+        width: 480
+        anchors.centerIn: Overlay.overlay
+        padding: Theme.space6
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        background: Rectangle {
+            radius: Theme.radiusCard
+            color: Theme.surface
+            border.color: Theme.borderStrong
+        }
+        Overlay.modal: Rectangle { color: Qt.rgba(0, 0, 0, 0.55) }
+
+        contentItem: ColumnLayout {
+            spacing: Theme.space4
+            Text {
+                Layout.fillWidth: true
+                text: qsTr("Backup maior que o esperado")
+                color: Theme.text
+                font.family: Theme.fontDisplay
+                font.pixelSize: Theme.textSectionTitle
+                font.weight: Font.Bold
+                Accessible.role: Accessible.Heading
+            }
+            Text {
+                Layout.fillWidth: true
+                text: largeBackupDialog.text
+                color: Theme.textMuted
+                font.family: Theme.fontBody
+                font.pixelSize: Theme.textBody
+                wrapMode: Text.Wrap
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.topMargin: Theme.space2
+                spacing: Theme.space3
+                Item { Layout.fillWidth: true }
+                SecondaryButton {
+                    text: qsTr("Cancelar")
+                    onClicked: largeBackupDialog.close()
+                }
+                PrimaryButton {
+                    text: qsTr("Fazer backup")
+                    onClicked: {
+                        largeBackupDialog.close()
+                        AppController.backupGameAnyway(largeBackupDialog.gameId)
+                    }
+                }
+            }
+        }
     }
 
     // With a tray icon and the user's consent, closing only hides the window

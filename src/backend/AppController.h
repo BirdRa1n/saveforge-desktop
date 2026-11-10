@@ -106,6 +106,9 @@ public:
     // Re-reads the registry cache and scans the machine.
     Q_INVOKABLE void refresh();
     Q_INVOKABLE void backupGame(const QString &gameId);
+    // Backs up a game whose saves exceed what its profile expects, after the
+    // user confirmed (see largeBackupFound).
+    Q_INVOKABLE void backupGameAnyway(const QString &gameId);
     // Backs up every game whose saves exist on this machine.
     Q_INVOKABLE void backupAll();
 
@@ -183,6 +186,9 @@ signals:
     void autoBackupChanged();
     void retentionChanged();
     void trayAvailableChanged();
+    // A manual backup stopped because the saves are larger than the profile
+    // expects; the interface asks before calling backupGameAnyway().
+    void largeBackupFound(const QString &gameId, const QString &name, const QString &size, const QString &expected);
     // An automatic backup finished; for notifications while the window is hidden.
     void automaticBackupDone(const QString &text);
     // The active save slot of a game changed.
@@ -208,7 +214,7 @@ private:
     // Backs up the queued games whose saves changed (kind "auto").
     void runAutomaticBackups();
     // Starts a backup of one game into `slot`; `done` runs on success.
-    void runBackup(const QString &gameId, const QString &slot, std::function<void()> done = {});
+    void runBackup(const QString &gameId, const QString &slot, std::function<void()> done = {}, bool allowLarge = false);
     [[nodiscard]] services::ServiceEnvironment serviceEnvironment();
     [[nodiscard]] QString appVersion() const;
 

@@ -672,7 +672,12 @@ void AppController::backupGame(const QString &gameId)
     runBackup(gameId, m_settings.activeSlot(gameId));
 }
 
-void AppController::runBackup(const QString &gameId, const QString &slot, std::function<void()> done)
+void AppController::backupGameAnyway(const QString &gameId)
+{
+    runBackup(gameId, m_settings.activeSlot(gameId), {}, true);
+}
+
+void AppController::runBackup(const QString &gameId, const QString &slot, std::function<void()> done, bool allowLarge)
 {
     const services::LibraryGame *game = m_library.game(gameId);
     if (!game || !m_vault) {
@@ -685,9 +690,10 @@ void AppController::runBackup(const QString &gameId, const QString &slot, std::f
     const services::ServiceEnvironment env = serviceEnvironment();
     run<Result<vault::Snapshot>>(
         tr("Fazendo backup de %1…").arg(copy.target.profile.name),
-        [vaultPtr, env, copy, slot, policy = retentionPolicy()] {
+        [vaultPtr, env, copy, slot, allowLarge, policy = retentionPolicy()] {
             services::BackupOptions options;
             options.slot = slot;
+            options.allowLargerThanExpected = allowLarge;
             auto snapshot = services::BackupService(*vaultPtr, env).backup(copy.target, options);
             // Old backups go right away; their space is freed by the weekly clean-up.
             if (snapshot.ok())
@@ -695,6 +701,13 @@ void AppController::runBackup(const QString &gameId, const QString &slot, std::f
             return snapshot;
         },
         [this, copy, done](Result<vault::Snapshot> snapshot) mutable {
+            if (!snapshot.ok() && snapshot.error().code == ErrorCode::TooLarge) {
+                const QLocale locale(QLocale::Portuguese, QLocale::Brazil);
+                emit largeBackupFound(copy.id(), copy.target.profile.name,
+                                      locale.formattedDataSize(snapshot.error().context.toLongLong()),
+                                      locale.formattedDataSize(copy.target.profile.backup.maxBytes.value_or(0)));
+                return;
+            }
             if (!snapshot.ok()) {
                 log(tr("Backup de %1 falhou: %2").arg(copy.target.profile.name, snapshot.error().message),
                     QStringLiteral("error"));
