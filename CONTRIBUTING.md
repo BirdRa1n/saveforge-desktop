@@ -56,6 +56,7 @@ src/
   platform/    Pastas do usuário por SO e dentro de prefixos Wine/Proton.
   profiles/    Perfis de jogos: parser, regras de segurança de caminhos, resolução de arquivos.
   vault/       Vault local: blobs, snapshots, verificação e coleta de lixo.
+  archive/     Arquivos .gamesave (ZIP via miniz): leitura verificada e escrita.
   detection/   Detectores de launchers, associação de instalações a perfis, varredura save-first.
   registry/    Registry: verificação (Ed25519, cadeia de root, rollback), download dos mirrors, cache e catálogo.
   services/    Casos de uso que combinam os módulos: biblioteca, perfis locais, backup e restauração.

@@ -8,9 +8,10 @@ Aplicativo desktop open source para encontrar, fazer backup e restaurar saves de
 > - backup no vault local (deduplicação, compressão, verificação de integridade);
 > - restauração segura (plano prévio, ponto de desfazer, troca atômica, política de cloud do launcher);
 > - jogos adicionados à mão e perfis locais, que têm prioridade sobre o Registry;
-> - saves com nome, entre os quais se alterna sem perder o progresso de nenhum, e backups automáticos (ao fechar o jogo ou periódicos), com o app na bandeja do sistema.
+> - saves com nome, entre os quais se alterna sem perder o progresso de nenhum, e backups automáticos (ao fechar o jogo ou periódicos), com o app na bandeja do sistema;
+> - exportação e importação de arquivos `.gamesave` (completa ou incremental) para levar saves a outro computador.
 >
-> Ainda faltam as chaves de produção do Registry, o registro do Windows, a retenção de backups e a exportação `.gamesave`.
+> Ainda faltam as chaves de produção do Registry, o registro do Windows e a retenção de backups.
 
 ## Stack
 
@@ -26,6 +27,7 @@ src/
   platform/  pastas do usuário por SO e dentro de prefixos Wine/Proton
   profiles/  perfis de jogos: parser v1, regras de segurança de caminhos, resolução de arquivos
   vault/     vault local: blobs por conteúdo (SHA-256 + zstd), snapshots, verificação e coleta de lixo
+  archive/   arquivos .gamesave: leitura com todas as verificações da spec e escrita verificada
   detection/ detecção de jogos instalados (Steam, Epic, GOG, Heroic) e associação a perfis
   registry/  Registry: verificação Ed25519, download dos mirrors, cache local dos canais e catálogo de perfis
   services/  casos de uso: biblioteca, perfis locais e jogos manuais, backup e restauração (checagem de jogo aberto, plano, desfazer)
@@ -107,6 +109,8 @@ cd out/build/release && cpack
 
 | Comando | O que faz |
 |---|---|
+| `export --vault <pasta> --output <arquivo> [--game <id>] [--all-history] [--incremental]` | Grava os backups num arquivo `.gamesave`. Sem `--game`, exporta todos os jogos. |
+| `import --vault <pasta> <arquivo.gamesave>` | Adiciona ao vault os backups de um `.gamesave`, depois de verificar o arquivo inteiro. Não restaura nada. |
 | `profiles add --name <nome> --folder <pasta>` | Adiciona à mão um jogo que o Registry não conhece, a partir das pastas de saves. `--folder` pode se repetir. |
 | `profiles list` / `profiles import <arquivo.json>` / `profiles remove <id>` | Lista, importa ou remove perfis locais. Os backups de um jogo removido continuam no vault. |
 | `registry update [--mirror <url>]` | Baixa os canais dos mirrors (os do build ou os de `--mirror`), verifica e guarda no cache. Não baixa de novo o que já está em cache. |
@@ -136,6 +140,8 @@ Em builds de desenvolvimento, que confiam nas chaves de teste, o mirror padrão 
 **Saves com nome.** Na página de um jogo, "Salvar como novo save" dá um nome ao progresso atual, por exemplo outro personagem. "Continuar este save" troca para outro save, depois de mostrar o plano de restauração. O progresso do save que fica para trás é guardado nele, e os backups seguintes vão para o save em uso. O botão "Abrir pasta dos saves" abre a pasta do jogo no gerenciador de arquivos. Veja a [ADR 0004](docs/adr/0004-save-slots-and-automatic-backups.md).
 
 **Backups automáticos.** O app faz backup quando um jogo fecha e, se você quiser, a cada 1, 6 ou 24 horas, mas só quando os saves mudaram. Fechar a janela deixa o app na bandeja do sistema para os backups continuarem; isso pode ser desligado em Configurações.
+
+**Importar e exportar.** A página "Importar / Exportar" grava os backups dos jogos escolhidos num arquivo `.gamesave`, que é um ZIP comum (formato em `saveforge-specs/gamesave`). Dá para levar só o backup mais recente ou todo o histórico, e para fazer uma exportação incremental, que leva só o que mudou desde a anterior. Importar adiciona os backups ao histórico depois de verificar o arquivo inteiro e nunca sobrescreve saves: a restauração continua sendo feita na página de cada jogo. O caminho das pastas do usuário só entra no arquivo se você pedir. Veja a [ADR 0005](docs/adr/0005-miniz-for-gamesave-archives.md).
 
 **Capas dos jogos.** O app usa as imagens que os launchers já guardam no computador: a capa, o banner e o logo do cache da Steam (`appcache/librarycache`) e o ícone que a GOG instala junto do jogo. Jogos com ID da Steam que não têm capa local, como os não instalados, podem ter a capa baixada do CDN de imagens da Steam. O pedido só informa o ID do jogo, e o download pode ser desligado em Configurações. As capas baixadas ficam em `<dados do app>/covers`.
 
