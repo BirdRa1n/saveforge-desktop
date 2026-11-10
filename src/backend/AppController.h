@@ -126,7 +126,8 @@ public:
     Q_INVOKABLE QString saveAsSlot(const QString &gameId, const QString &name);
 
     // Computes a restore plan and keeps it for restore():
-    // {ok, error, create, overwrite, unchanged, skip, newer, extra, cloudConflict, gameRunning, files: [{target, action}]}
+    // {ok, error, create, overwrite, unchanged, skip, newer, extra, cloudConflict, gameRunning, slot, activeSlot,
+    //  files: [{target, name, action, reason, newer, backupSize, currentSize}]}
     Q_INVOKABLE QVariantMap planRestore(const QString &gameId, const QString &snapshotId);
     // Executes the last plan. policy: "prefer-saveforge", "prefer-launcher" or "ask".
     Q_INVOKABLE void restore(const QString &gameId, const QString &snapshotId, const QString &policy);

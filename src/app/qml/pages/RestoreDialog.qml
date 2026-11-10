@@ -39,6 +39,7 @@ Popup {
     }
 
     function preparePlan(entry) {
+        filesToggle.expanded = false
         snapshot = entry
         plan = AppController.planRestore(gameId, entry.id)
         cloudChoice = AppController.cloudPolicy === "prefer-saveforge" ? "saveforge"
@@ -79,7 +80,7 @@ Popup {
             Layout.fillWidth: true
             visible: root.plan.ok !== true
             text: root.plan.error || ""
-            color: "#F87171"
+            color: Theme.dangerFg
             font.family: Theme.fontBody
             font.pixelSize: Theme.textBody
             wrapMode: Text.Wrap
@@ -117,6 +118,74 @@ Popup {
                 font.family: Theme.fontBody
                 font.pixelSize: Theme.textBody
                 wrapMode: Text.Wrap
+            }
+
+            // File by file: what happens to each one, with backup and current sizes.
+            Text {
+                id: filesToggle
+                objectName: "filesToggle"
+                property bool expanded: false
+                visible: (root.plan.files || []).length > 0
+                text: (expanded ? "▾  " : "▸  ") + qsTr("Ver arquivos")
+                color: Theme.accentSoft
+                font.family: Theme.fontBody
+                font.pixelSize: Theme.textBody
+                font.weight: Font.DemiBold
+                Accessible.role: Accessible.Button
+                Accessible.name: expanded ? qsTr("Esconder arquivos") : qsTr("Ver arquivos")
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: filesToggle.expanded = !filesToggle.expanded
+                }
+            }
+
+            ListView {
+                id: fileList
+                Layout.fillWidth: true
+                Layout.preferredHeight: Math.min(contentHeight, 220)
+                visible: filesToggle.expanded && filesToggle.visible
+                clip: true
+                spacing: 2
+                model: filesToggle.expanded ? root.plan.files : []
+                boundsBehavior: Flickable.StopAtBounds
+                ScrollBar.vertical: ScrollBar {}
+
+                delegate: RowLayout {
+                    id: fileRow
+                    required property var modelData
+                    width: fileList.width
+                    spacing: Theme.space2
+
+                    StatusBadge {
+                        text: fileRow.modelData.action === "overwrite" ? qsTr("Substituir")
+                            : fileRow.modelData.action === "create" ? qsTr("Criar")
+                            : fileRow.modelData.action === "unchanged" ? qsTr("Igual")
+                            : qsTr("Pular")
+                        kind: fileRow.modelData.action === "overwrite" && fileRow.modelData.newer ? StatusBadge.Warning
+                            : StatusBadge.Neutral
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: fileRow.modelData.name
+                        color: Theme.text
+                        font.family: Theme.fontBody
+                        font.pixelSize: Theme.textMeta
+                        elide: Text.ElideMiddle
+                        ToolTip.visible: fileHover.hovered
+                        ToolTip.text: fileRow.modelData.target + (fileRow.modelData.reason ? "\n" + fileRow.modelData.reason : "")
+                        HoverHandler { id: fileHover }
+                    }
+                    Text {
+                        text: fileRow.modelData.action === "overwrite"
+                              ? fileRow.modelData.currentSize + " → " + fileRow.modelData.backupSize
+                                + (fileRow.modelData.newer ? "  " + qsTr("(o atual é mais novo)") : "")
+                              : fileRow.modelData.backupSize
+                        color: fileRow.modelData.newer ? Theme.warningFg : Theme.textSubtle
+                        font.family: Theme.fontBody
+                        font.pixelSize: Theme.textMeta
+                    }
+                }
             }
         }
 

@@ -187,6 +187,10 @@ private slots:
             auto *dialog = window->findChild<QObject *>(QStringLiteral("restoreDialog"));
             QVERIFY(dialog);
             QMetaObject::invokeMethod(dialog, "openForSlot", Q_ARG(QVariant, slotA));
+            // The file-by-file view of the plan renders without warnings.
+            auto *filesToggle = dialog->findChild<QObject *>(QStringLiteral("filesToggle"));
+            QVERIFY(filesToggle);
+            filesToggle->setProperty("expanded", true);
             QCoreApplication::processEvents();
             if (!shotDir.isEmpty())
                 QVERIFY(window->grabWindow().save(shotDir + QStringLiteral("/switch-slot.png")));

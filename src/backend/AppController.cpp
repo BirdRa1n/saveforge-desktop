@@ -17,6 +17,7 @@
 
 #include <QCoreApplication>
 #include <QDir>
+#include <QFileInfo>
 #include <QLocale>
 #include <QJsonDocument>
 #include <QTime>
@@ -866,10 +867,16 @@ QVariantMap AppController::planRestore(const QString &gameId, const QString &sna
 
     QVariantList files;
     for (const services::PlannedFile &file : plan.value().files) {
+        const QFileInfo current(file.target);
+        const QLocale locale(QLocale::Portuguese, QLocale::Brazil);
         files.append(QVariantMap{{QStringLiteral("target"), file.target.isEmpty() ? file.source.path : file.target},
+                                 // Shortest readable form: the file and its folder.
+                                 {QStringLiteral("name"), file.source.path.section(u'/', -2)},
                                  {QStringLiteral("action"), actionName(file.action)},
                                  {QStringLiteral("reason"), file.skipReason},
-                                 {QStringLiteral("newer"), file.currentIsNewer}});
+                                 {QStringLiteral("newer"), file.currentIsNewer},
+                                 {QStringLiteral("backupSize"), locale.formattedDataSize(file.source.size)},
+                                 {QStringLiteral("currentSize"), current.exists() ? locale.formattedDataSize(current.size()) : QString()}});
     }
     const services::RestorePlan &p = plan.value();
     QVariantMap result{{QStringLiteral("ok"), true},
