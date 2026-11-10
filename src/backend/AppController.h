@@ -86,6 +86,16 @@ public:
     // Newest first: [{id, date, relative, kind, kindText, files, label, inconsistent}]
     Q_INVOKABLE QVariantList snapshots(const QString &gameId) const;
 
+    // Save slots of a game, most recently updated first:
+    // [{name, active, snapshotId, date, relative, kindText, snapshots}]
+    Q_INVOKABLE QVariantList saveSlots(const QString &gameId) const;
+    // The slot whose files are on disk, or "" for the unnamed progress.
+    Q_INVOKABLE QString activeSlot(const QString &gameId) const;
+    // Backs up the current files as a new save slot named `name` and makes it
+    // the active one ("save as"). Returns an error message, or "" when the
+    // backup started.
+    Q_INVOKABLE QString saveAsSlot(const QString &gameId, const QString &name);
+
     // Computes a restore plan and keeps it for restore():
     // {ok, error, create, overwrite, unchanged, skip, newer, extra, cloudConflict, gameRunning, files: [{target, action}]}
     Q_INVOKABLE QVariantMap planRestore(const QString &gameId, const QString &snapshotId);
@@ -115,6 +125,8 @@ signals:
     void activityChanged();
     void registryChanged();
     void coversChanged();
+    // The active save slot of a game changed.
+    void slotsChanged(const QString &gameId);
     // A message the interface may show transiently. kind: "success", "warning", "error", "info".
     void notify(const QString &text, const QString &kind);
 
@@ -130,6 +142,8 @@ private:
     // Downloads, in the background, the Steam covers the library still lacks
     // (when the user allows it), then updates the library's art.
     void downloadMissingCovers();
+    // Starts a backup of one game into `slot`; `done` runs on success.
+    void runBackup(const QString &gameId, const QString &slot, std::function<void()> done = {});
     [[nodiscard]] services::ServiceEnvironment serviceEnvironment();
     [[nodiscard]] QString appVersion() const;
 

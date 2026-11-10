@@ -11,12 +11,30 @@ Item {
     property string gameId
     property var info: ({})
     property var history: []
+    property var slotList: []
+    property string activeSlot: ""
 
     signal back()
 
     function reload() {
         info = gameId.length > 0 ? AppController.gameInfo(gameId) : ({})
         history = gameId.length > 0 ? AppController.snapshots(gameId) : []
+        slotList = gameId.length > 0 ? AppController.saveSlots(gameId) : []
+        activeSlot = gameId.length > 0 ? AppController.activeSlot(gameId) : ""
+    }
+
+    Connections {
+        target: AppController
+        function onSlotsChanged(changedId) {
+            if (changedId === root.gameId)
+                root.reload()
+        }
+    }
+
+    SaveSlotDialog {
+        id: saveSlotDialog
+        objectName: "saveSlotDialog"
+        gameId: root.gameId
     }
 
     function initials(value) {
@@ -143,10 +161,12 @@ Item {
                     Accessible.role: Accessible.Heading
                 }
                 Text {
+                    Layout.fillWidth: true
                     text: (root.info.store || "") + "  ·  " + (root.info.reason || "")
                     color: Theme.textMuted
                     font.family: Theme.fontBody
                     font.pixelSize: Theme.textBody
+                    elide: Text.ElideRight
                 }
                 Text {
                     Layout.fillWidth: true
@@ -157,38 +177,44 @@ Item {
                     font.pixelSize: Theme.textMeta
                     elide: Text.ElideMiddle
                 }
-            }
+                // Secondary actions sit under the title so the header never
+                // grows wider than the page.
+                RowLayout {
+                    Layout.topMargin: Theme.space2
+                    spacing: Theme.space2
 
-            SecondaryButton {
-                id: openFolder
-                readonly property var folders: root.info.saveFolders || []
-                visible: folders.length > 0
-                iconPath: Icons.folder
-                text: folders.length > 1 ? qsTr("Pastas dos saves") : qsTr("Abrir pasta dos saves")
-                Accessible.description: qsTr("Abre no gerenciador de arquivos a pasta onde o jogo guarda os saves.")
-                onClicked: {
-                    if (folders.length === 1)
-                        Qt.openUrlExternally(folders[0].url)
-                    else
-                        folderMenu.open()
-                }
+                    SecondaryButton {
+                        id: openFolder
+                        readonly property var folders: root.info.saveFolders || []
+                        visible: folders.length > 0
+                        iconPath: Icons.folder
+                        text: folders.length > 1 ? qsTr("Pastas dos saves") : qsTr("Abrir pasta dos saves")
+                        Accessible.description: qsTr("Abre no gerenciador de arquivos a pasta onde o jogo guarda os saves.")
+                        onClicked: {
+                            if (folders.length === 1)
+                                Qt.openUrlExternally(folders[0].url)
+                            else
+                                folderMenu.open()
+                        }
 
-                ActionMenu {
-                    id: folderMenu
-                    y: openFolder.height + Theme.space1
-                    model: openFolder.folders.map(folder => ({ text: folder.path, value: folder.url }))
-                    onTriggered: value => Qt.openUrlExternally(value)
-                }
-            }
+                        ActionMenu {
+                            id: folderMenu
+                            y: openFolder.height + Theme.space1
+                            model: openFolder.folders.map(folder => ({ text: folder.path, value: folder.url }))
+                            onTriggered: value => Qt.openUrlExternally(value)
+                        }
+                    }
 
-            SecondaryButton {
-                visible: root.info.local === true
-                text: qsTr("Remover jogo")
-                Accessible.description: qsTr("Remove o jogo adicionado à mão. Os backups continuam no vault.")
-                enabled: !AppController.busy
-                onClicked: {
-                    AppController.removeLocalGame(root.gameId)
-                    root.back()
+                    SecondaryButton {
+                        visible: root.info.local === true
+                        text: qsTr("Remover jogo")
+                        Accessible.description: qsTr("Remove o jogo adicionado à mão. Os backups continuam no vault.")
+                        enabled: !AppController.busy
+                        onClicked: {
+                            AppController.removeLocalGame(root.gameId)
+                            root.back()
+                        }
+                    }
                 }
             }
 
@@ -219,6 +245,106 @@ Item {
                     font.family: Theme.fontBody
                     font.pixelSize: Theme.textBody
                     wrapMode: Text.Wrap
+                }
+            }
+        }
+
+        // Save slots: named lines of progress the user switches between.
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: Theme.space3
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.space3
+
+                Text {
+                    Layout.fillWidth: true
+                    text: qsTr("Saves")
+                    color: Theme.text
+                    font.family: Theme.fontDisplay
+                    font.pixelSize: Theme.textSectionTitle
+                    font.weight: Font.Bold
+                    Accessible.role: Accessible.Heading
+                }
+                SecondaryButton {
+                    text: qsTr("Salvar como novo save…")
+                    enabled: !AppController.busy && AppController.vaultReady
+                    onClicked: saveSlotDialog.openEmpty()
+                }
+            }
+
+            Text {
+                Layout.fillWidth: true
+                text: root.slotList.length === 0
+                      ? qsTr("Dê um nome ao progresso atual para manter saves separados, como outro personagem ou uma partida de teste. Você troca entre eles quando quiser, e cada um continua de onde parou.")
+                      : root.activeSlot.length > 0
+                        ? qsTr("Em uso: “%1”. Os backups deste jogo atualizam o save em uso.").arg(root.activeSlot)
+                        : qsTr("O progresso atual não tem nome. Para poder voltar a ele depois de trocar de save, salve-o como um novo save.")
+                color: Theme.textMuted
+                font.family: Theme.fontBody
+                font.pixelSize: Theme.textBody
+                wrapMode: Text.Wrap
+            }
+
+            Flow {
+                Layout.fillWidth: true
+                visible: root.slotList.length > 0
+                spacing: Theme.space3
+
+                Repeater {
+                    model: root.slotList
+                    delegate: Rectangle {
+                        id: slotCard
+                        required property var modelData
+                        width: 260
+                        // Same height with or without the button, so cards line up.
+                        implicitHeight: Math.max(slotColumn.implicitHeight + 2 * Theme.space4, 136)
+                        radius: Theme.radiusCard
+                        color: Theme.card
+                        border.width: modelData.active ? 2 : 1
+                        border.color: modelData.active ? Theme.accent : Theme.border
+
+                        ColumnLayout {
+                            id: slotColumn
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.margins: Theme.space4
+                            spacing: Theme.space2
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: slotCard.modelData.name
+                                    color: Theme.text
+                                    font.family: Theme.fontBody
+                                    font.pixelSize: 15
+                                    font.weight: Font.DemiBold
+                                    elide: Text.ElideRight
+                                }
+                                StatusBadge {
+                                    visible: slotCard.modelData.active
+                                    text: qsTr("Em uso")
+                                    kind: StatusBadge.Success
+                                }
+                            }
+                            Text {
+                                text: qsTr("Atualizado %1").arg(slotCard.modelData.relative)
+                                color: Theme.textSubtle
+                                font.family: Theme.fontBody
+                                font.pixelSize: Theme.textMeta
+                            }
+                            SecondaryButton {
+                                Layout.topMargin: Theme.space1
+                                visible: !slotCard.modelData.active
+                                text: qsTr("Continuar este save")
+                                enabled: !AppController.busy
+                                onClicked: restoreDialog.openForSlot(slotCard.modelData)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -282,6 +408,11 @@ Item {
                         visible: row.modelData.inconsistent
                         text: qsTr("Arquivos mudaram durante a cópia")
                         kind: StatusBadge.Warning
+                    }
+                    StatusBadge {
+                        visible: (row.modelData.slot || "").length > 0
+                        text: row.modelData.slot || ""
+                        kind: StatusBadge.Neutral
                     }
                     StatusBadge {
                         text: row.modelData.kindText

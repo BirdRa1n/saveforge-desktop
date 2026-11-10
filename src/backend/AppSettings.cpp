@@ -34,6 +34,21 @@ QString AppSettings::localProfilesDirectory() const
     return m_dataDir + QStringLiteral("/profiles");
 }
 
+QString AppSettings::activeSlot(const QString &gameId) const
+{
+    const QSettings settings(file(), QSettings::IniFormat);
+    return settings.value(QStringLiteral("activeSlots/") + gameId).toString();
+}
+
+void AppSettings::setActiveSlot(const QString &gameId, const QString &slot)
+{
+    QSettings settings(file(), QSettings::IniFormat);
+    if (slot.isEmpty())
+        settings.remove(QStringLiteral("activeSlots/") + gameId);
+    else
+        settings.setValue(QStringLiteral("activeSlots/") + gameId, slot);
+}
+
 QString AppSettings::coverCacheDirectory() const
 {
     return m_dataDir + QStringLiteral("/covers");

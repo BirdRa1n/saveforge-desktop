@@ -11,6 +11,7 @@
 #include "saveforge/services/BackupService.h"
 #include "saveforge/services/GameArt.h"
 #include "saveforge/services/LocalProfiles.h"
+#include "saveforge/services/SaveSlots.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -373,6 +374,11 @@ void AppController::runRegistryUpdate(bool quiet)
 
 void AppController::backupGame(const QString &gameId)
 {
+    runBackup(gameId, m_settings.activeSlot(gameId));
+}
+
+void AppController::runBackup(const QString &gameId, const QString &slot, std::function<void()> done)
+{
     const services::LibraryGame *game = m_library.game(gameId);
     if (!game || !m_vault) {
         log(m_vault ? tr("Jogo não encontrado.") : tr("O vault não está disponível: %1").arg(m_vaultError),
@@ -384,8 +390,12 @@ void AppController::backupGame(const QString &gameId)
     const services::ServiceEnvironment env = serviceEnvironment();
     run<Result<vault::Snapshot>>(
         tr("Fazendo backup de %1…").arg(copy.target.profile.name),
-        [vaultPtr, env, copy] { return services::BackupService(*vaultPtr, env).backup(copy.target); },
-        [this, copy](Result<vault::Snapshot> snapshot) mutable {
+        [vaultPtr, env, copy, slot] {
+            services::BackupOptions options;
+            options.slot = slot;
+            return services::BackupService(*vaultPtr, env).backup(copy.target, options);
+        },
+        [this, copy, done](Result<vault::Snapshot> snapshot) mutable {
             if (!snapshot.ok()) {
                 log(tr("Backup de %1 falhou: %2").arg(copy.target.profile.name, snapshot.error().message),
                     QStringLiteral("error"));
@@ -401,6 +411,8 @@ void AppController::backupGame(const QString &gameId)
                                    .arg(copy.target.profile.name,
                                         countText(snapshot.value().files.size(), tr("arquivo"), tr("arquivos"))),
                 inconsistent ? QStringLiteral("warning") : QStringLiteral("success"));
+            if (done)
+                done();
         });
 }
 
@@ -411,15 +423,20 @@ void AppController::backupAll()
         return;
     }
     const QList<services::LibraryGame> games = m_library.games();
+    QHash<QString, QString> activeSlots;
+    for (const services::LibraryGame &game : games)
+        activeSlots.insert(game.id(), m_settings.activeSlot(game.id()));
     vault::Vault *vaultPtr = &*m_vault;
     const services::ServiceEnvironment env = serviceEnvironment();
     run<BackupAllResult>(
         tr("Fazendo backup de todos os jogos…"),
-        [vaultPtr, env, games] {
+        [vaultPtr, env, games, activeSlots] {
             BackupAllResult result;
             services::BackupService service(*vaultPtr, env);
             for (services::LibraryGame game : games) {
-                auto snapshot = service.backup(game.target);
+                services::BackupOptions options;
+                options.slot = activeSlots.value(game.id());
+                auto snapshot = service.backup(game.target, options);
                 if (snapshot.ok()) {
                     game.lastSnapshot = snapshot.value();
                     ++game.snapshotCount;
@@ -488,9 +505,53 @@ QVariantList AppController::snapshots(const QString &gameId) const
             {QStringLiteral("kindText"), snapshotKindLabel(it->kind)},
             {QStringLiteral("files"), static_cast<int>(it->files.size())},
             {QStringLiteral("label"), it->label},
+            {QStringLiteral("slot"), it->slot},
             {QStringLiteral("inconsistent"), it->consistency == vault::Consistency::Inconsistent}});
     }
     return list;
+}
+
+QVariantList AppController::saveSlots(const QString &gameId) const
+{
+    QVariantList list;
+    if (!m_vault)
+        return list;
+    const QString active = m_settings.activeSlot(gameId);
+    for (const services::SaveSlot &slot : services::saveSlots(*m_vault, gameId)) {
+        list.append(QVariantMap{
+            {QStringLiteral("name"), slot.name},
+            {QStringLiteral("active"), slot.name == active},
+            {QStringLiteral("snapshotId"), uuidToString(slot.head.snapshotId)},
+            {QStringLiteral("date"), slot.head.createdAt.toLocalTime().toString(QStringLiteral("dd/MM/yyyy HH:mm"))},
+            {QStringLiteral("relative"), relativeTime(slot.head.createdAt)},
+            {QStringLiteral("snapshots"), static_cast<int>(slot.snapshots)}});
+    }
+    return list;
+}
+
+QString AppController::activeSlot(const QString &gameId) const
+{
+    return m_settings.activeSlot(gameId);
+}
+
+QString AppController::saveAsSlot(const QString &gameId, const QString &name)
+{
+    const QString slot = name.simplified();
+    if (!vault::isValidSlotName(slot))
+        return tr("Use um nome de 1 a 100 caracteres.");
+    if (!m_vault)
+        return tr("O vault não está disponível: %1").arg(m_vaultError);
+    for (const services::SaveSlot &existing : services::saveSlots(*m_vault, gameId)) {
+        if (existing.name == slot)
+            return tr("Já existe um save com esse nome.");
+    }
+    if (busy())
+        return tr("Aguarde a operação atual terminar.");
+    runBackup(gameId, slot, [this, gameId, slot] {
+        m_settings.setActiveSlot(gameId, slot);
+        emit slotsChanged(gameId);
+    });
+    return {};
 }
 
 QVariantMap AppController::planRestore(const QString &gameId, const QString &snapshotId)
@@ -522,6 +583,8 @@ QVariantMap AppController::planRestore(const QString &gameId, const QString &sna
                        {QStringLiteral("cloudConflict"), p.launcherCloudConflict},
                        {QStringLiteral("gameRunning"), p.gameRunning},
                        {QStringLiteral("hasChanges"), p.hasChanges()},
+                       {QStringLiteral("slot"), p.snapshot.slot},
+                       {QStringLiteral("activeSlot"), m_settings.activeSlot(gameId)},
                        {QStringLiteral("files"), files}};
     m_plan = std::move(plan).value();
     m_planGameId = gameId;
@@ -542,12 +605,14 @@ void AppController::restore(const QString &gameId, const QString &snapshotId, co
     vault::Vault *vaultPtr = &*m_vault;
     const services::ServiceEnvironment env = serviceEnvironment();
     const services::CloudPolicy cloud = toPolicy(policy);
+    const QString currentSlot = m_settings.activeSlot(gameId);
+    const QString restoredSlot = plan.snapshot.slot;
     run<Result<services::RestoreReport>>(
         tr("Restaurando %1…").arg(copy.target.profile.name),
-        [vaultPtr, env, copy, plan, cloud] {
-            return services::RestoreService(*vaultPtr, env).execute(copy.target, plan, cloud);
+        [vaultPtr, env, copy, plan, cloud, currentSlot] {
+            return services::RestoreService(*vaultPtr, env).execute(copy.target, plan, cloud, currentSlot);
         },
-        [this, copy](Result<services::RestoreReport> report) mutable {
+        [this, copy, currentSlot, restoredSlot](Result<services::RestoreReport> report) mutable {
             if (!report.ok()) {
                 log(tr("Restauração de %1 não foi feita: %2").arg(copy.target.profile.name, report.error().message),
                     QStringLiteral("error"));
@@ -555,10 +620,17 @@ void AppController::restore(const QString &gameId, const QString &snapshotId, co
             }
             if (report.value().preRestoreSnapshotId)
                 ++copy.snapshotCount;
+            // The files on disk now belong to the restored snapshot's slot.
+            m_settings.setActiveSlot(copy.id(), restoredSlot);
             m_library.updateGame(copy);
-            log(tr("%1 restaurado (%2). Os arquivos anteriores estão no histórico como \"Antes de restaurar\".")
-                    .arg(copy.target.profile.name, countText(report.value().written, tr("arquivo"), tr("arquivos"))),
-                QStringLiteral("success"));
+            emit slotsChanged(copy.id());
+            if (restoredSlot != currentSlot && !restoredSlot.isEmpty())
+                log(tr("Agora você está no save \u201c%1\u201d de %2.").arg(restoredSlot, copy.target.profile.name),
+                    QStringLiteral("success"));
+            else
+                log(tr("%1 restaurado (%2). Os arquivos anteriores estão no histórico como \"Antes de restaurar\".")
+                        .arg(copy.target.profile.name, countText(report.value().written, tr("arquivo"), tr("arquivos"))),
+                    QStringLiteral("success"));
         });
 }
 

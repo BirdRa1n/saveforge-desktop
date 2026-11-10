@@ -141,6 +141,67 @@ private slots:
             QMetaObject::invokeMethod(controller, "gameInfo", Q_RETURN_ARG(QVariantMap, info),
                                       Q_ARG(QString, QStringLiteral("local-manual-game")));
             QCOMPARE(info.value(QStringLiteral("local")).toBool(), true);
+            QCOMPARE(info.value(QStringLiteral("saveFolders")).toList().size(), 1);
+
+            // Save slots: name the progress, play on as another slot, switch back.
+            const QString gameId = QStringLiteral("local-manual-game");
+            const auto saveAs = [&](const QString &name) {
+                QString failure;
+                QMetaObject::invokeMethod(controller, "saveAsSlot", Q_RETURN_ARG(QString, failure),
+                                          Q_ARG(QString, gameId), Q_ARG(QString, name));
+                QVERIFY2(failure.isEmpty(), qPrintable(failure));
+                QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
+            };
+            const auto writeSave = [&](const QByteArray &content) {
+                QFile file(saves + QStringLiteral("/slot.sav"));
+                QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
+                file.write(content);
+            };
+            saveAs(QStringLiteral("Personagem A"));
+            writeSave("character B");
+            saveAs(QStringLiteral("Personagem B"));
+            QString active;
+            QMetaObject::invokeMethod(controller, "activeSlot", Q_RETURN_ARG(QString, active), Q_ARG(QString, gameId));
+            QCOMPARE(active, QStringLiteral("Personagem B"));
+            QString duplicate;
+            QMetaObject::invokeMethod(controller, "saveAsSlot", Q_RETURN_ARG(QString, duplicate), Q_ARG(QString, gameId),
+                                      Q_ARG(QString, QStringLiteral("Personagem A")));
+            QVERIFY(!duplicate.isEmpty());
+
+            window->setProperty("selectedGameId", gameId);
+            QCoreApplication::processEvents();
+            if (!shotDir.isEmpty())
+                QVERIFY(window->grabWindow().save(shotDir + QStringLiteral("/save-slots.png")));
+
+            QVariantList slotList;
+            QMetaObject::invokeMethod(controller, "saveSlots", Q_RETURN_ARG(QVariantList, slotList), Q_ARG(QString, gameId));
+            QCOMPARE(slotList.size(), 2);
+            QVariantMap slotA;
+            for (const QVariant &entry : std::as_const(slotList)) {
+                if (entry.toMap().value(QStringLiteral("name")).toString() == u"Personagem A")
+                    slotA = entry.toMap();
+            }
+            QVERIFY(!slotA.isEmpty());
+            // The switch dialog shows the plan without warnings.
+            auto *dialog = window->findChild<QObject *>(QStringLiteral("restoreDialog"));
+            QVERIFY(dialog);
+            QMetaObject::invokeMethod(dialog, "openForSlot", Q_ARG(QVariant, slotA));
+            QCoreApplication::processEvents();
+            if (!shotDir.isEmpty())
+                QVERIFY(window->grabWindow().save(shotDir + QStringLiteral("/switch-slot.png")));
+            QVERIFY(dialog->property("canRestore").toBool());
+            QMetaObject::invokeMethod(dialog, "close");
+            QMetaObject::invokeMethod(controller, "restore", Q_ARG(QString, gameId),
+                                      Q_ARG(QString, slotA.value(QStringLiteral("snapshotId")).toString()),
+                                      Q_ARG(QString, QStringLiteral("prefer-saveforge")));
+            QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
+            QFile restored(saves + QStringLiteral("/slot.sav"));
+            QVERIFY(restored.open(QIODevice::ReadOnly));
+            QCOMPARE(restored.readAll(), QByteArray("progress"));
+            QMetaObject::invokeMethod(controller, "activeSlot", Q_RETURN_ARG(QString, active), Q_ARG(QString, gameId));
+            QCOMPARE(active, QStringLiteral("Personagem A"));
+            window->setProperty("selectedGameId", QString());
+
             QMetaObject::invokeMethod(controller, "removeLocalGame", Q_ARG(QString, QStringLiteral("local-manual-game")));
             QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
             QMetaObject::invokeMethod(controller, "gameInfo", Q_RETURN_ARG(QVariantMap, info),

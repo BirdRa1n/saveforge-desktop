@@ -39,6 +39,11 @@ public:
     [[nodiscard]] QDateTime lastRegistryCheck() const;
     void setLastRegistryCheck(const QDateTime &when);
 
+    // Save slot whose files are on disk for a game (vault snapshot `slot`);
+    // empty for the unnamed progress. Local to this machine.
+    [[nodiscard]] QString activeSlot(const QString &gameId) const;
+    void setActiveSlot(const QString &gameId, const QString &slot);
+
     // Covers downloaded for games without local art.
     [[nodiscard]] QString coverCacheDirectory() const;
     // Whether covers missing on this machine may be downloaded from Steam's CDN.

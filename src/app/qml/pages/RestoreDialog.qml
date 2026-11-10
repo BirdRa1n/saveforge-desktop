@@ -6,6 +6,8 @@ import SaveForge.Backend
 
 // Shows what a restore would do and asks for confirmation. Nothing is written
 // before the user confirms; the controller then executes the reviewed plan.
+// Switching to a save slot is the restore of the slot's newest snapshot
+// (openForSlot), with wording about saves instead of backups.
 Popup {
     id: root
 
@@ -14,11 +16,29 @@ Popup {
     property var plan: ({})
     // "saveforge" or "launcher" when the launcher's cloud also syncs the saves.
     property string cloudChoice: ""
+    // Name of the save slot being switched to; empty for a plain restore.
+    property string switchTo: ""
+    readonly property bool switching: switchTo.length > 0
 
-    readonly property bool canRestore: plan.ok === true && plan.hasChanges === true && plan.gameRunning !== true
-                                       && (plan.cloudConflict !== true || cloudChoice === "saveforge")
+    // Switching also works when the files already match: it then only changes
+    // which save is in use.
+    readonly property bool canRestore: plan.ok === true && plan.gameRunning !== true
+                                       && (plan.hasChanges === true || switching)
+                                       && (plan.cloudConflict !== true || cloudChoice === "saveforge"
+                                           || plan.hasChanges !== true)
 
     function openFor(entry) {
+        switchTo = ""
+        preparePlan(entry)
+    }
+
+    // slot: an entry of AppController.saveSlots()
+    function openForSlot(slot) {
+        switchTo = slot.name
+        preparePlan({ id: slot.snapshotId, date: slot.date })
+    }
+
+    function preparePlan(entry) {
         snapshot = entry
         plan = AppController.planRestore(gameId, entry.id)
         cloudChoice = AppController.cloudPolicy === "prefer-saveforge" ? "saveforge"
@@ -45,7 +65,8 @@ Popup {
 
         Text {
             Layout.fillWidth: true
-            text: qsTr("Restaurar backup de %1").arg(root.snapshot.date || "")
+            text: root.switching ? qsTr("Trocar para o save “%1”").arg(root.switchTo)
+                                 : qsTr("Restaurar backup de %1").arg(root.snapshot.date || "")
             color: Theme.text
             font.family: Theme.fontDisplay
             font.pixelSize: Theme.textSectionTitle
@@ -90,7 +111,8 @@ Popup {
             Text {
                 Layout.fillWidth: true
                 visible: root.plan.hasChanges === false
-                text: qsTr("Os arquivos atuais já são iguais a este backup. Não há nada para restaurar.")
+                text: root.switching ? qsTr("Os arquivos atuais já são iguais a este save. Só o save em uso vai mudar.")
+                                     : qsTr("Os arquivos atuais já são iguais a este backup. Não há nada para restaurar.")
                 color: Theme.textMuted
                 font.family: Theme.fontBody
                 font.pixelSize: Theme.textBody
@@ -100,7 +122,8 @@ Popup {
 
         Repeater {
             model: [
-                { show: root.plan.newer === true, text: qsTr("Alguns arquivos atuais são mais novos que este backup. Você pode perder progresso recente.") },
+                { show: root.plan.newer === true && !(root.switching && (root.plan.activeSlot || "").length > 0),
+                  text: qsTr("Alguns arquivos atuais são mais novos que este backup. Você pode perder progresso recente.") },
                 { show: root.plan.gameRunning === true, text: qsTr("O jogo está aberto. Feche-o para restaurar.") }
             ]
             delegate: Rectangle {
@@ -167,7 +190,11 @@ Popup {
         Text {
             Layout.fillWidth: true
             visible: root.plan.hasChanges === true
-            text: qsTr("Antes de restaurar, os arquivos atuais serão guardados no histórico como “Antes de restaurar”, para que você possa desfazer.")
+            text: !root.switching
+                  ? qsTr("Antes de restaurar, os arquivos atuais serão guardados no histórico como “Antes de restaurar”, para que você possa desfazer.")
+                  : (root.plan.activeSlot || "").length > 0
+                    ? qsTr("O progresso atual fica guardado no save “%1”, e você pode voltar a ele quando quiser.").arg(root.plan.activeSlot)
+                    : qsTr("O progresso atual não tem nome: ele fica só no histórico, como “Antes de restaurar”. Para alternar com ele depois, cancele e use “Salvar como novo save” primeiro.")
             color: Theme.textSubtle
             font.family: Theme.fontBody
             font.pixelSize: Theme.textMeta
@@ -184,7 +211,7 @@ Popup {
                 onClicked: root.close()
             }
             PrimaryButton {
-                text: qsTr("Restaurar")
+                text: root.switching ? qsTr("Trocar de save") : qsTr("Restaurar")
                 enabled: root.canRestore && !AppController.busy
                 onClicked: {
                     AppController.restore(root.gameId, root.snapshot.id, "prefer-saveforge")

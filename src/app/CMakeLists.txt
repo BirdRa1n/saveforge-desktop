@@ -35,6 +35,7 @@ qt_add_qml_module(saveforge_ui
         qml/pages/LibraryPage.qml
         qml/pages/PlaceholderPage.qml
         qml/pages/RestoreDialog.qml
+        qml/pages/SaveSlotDialog.qml
         qml/pages/SettingsPage.qml
     RESOURCES
         fonts/inter/Inter-Regular.ttf
