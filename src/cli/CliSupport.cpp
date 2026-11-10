@@ -20,6 +20,11 @@ QString localProfilesDirectory()
     return platform::appDataDirectory() + QStringLiteral("/profiles");
 }
 
+QString exportLogDirectory()
+{
+    return platform::appDataDirectory() + QStringLiteral("/exports");
+}
+
 CatalogLoad loadCatalog()
 {
     return services::loadCatalogFromCache(registryCacheDirectory(), appVersion(), localProfilesDirectory());

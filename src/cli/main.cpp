@@ -15,6 +15,8 @@
 //   saveforge-cli backup --vault <dir> (--game <id> | --profile <file>) [--label <text>]
 //   saveforge-cli snapshots --vault <dir> [--game <id>]
 //   saveforge-cli restore --vault <dir> (--game <id> | --profile <file>) --snapshot <id> [--cloud <policy>] [--yes]
+//   saveforge-cli export --vault <dir> --output <file> [--game <id>]... [--all-history] [--incremental]
+//   saveforge-cli import --vault <dir> <file.gamesave>
 namespace {
 
 void printUsage(QTextStream &out)
@@ -24,9 +26,11 @@ void printUsage(QTextStream &out)
            "  detect     List installed games and match them to profiles (read-only)\n"
            "  registry   Download or import signed profiles, or show the cache status\n"
            "  profiles   Add games by hand and manage local profiles\n"
-           "  backup    Back up a game into a vault\n"
+           "  backup     Back up a game into a vault\n"
            "  snapshots  List the snapshots in a vault\n"
-           "  restore    Plan a restore, and perform it with --yes\n\n"
+           "  restore    Plan a restore, and perform it with --yes\n"
+           "  export     Write backups to a .gamesave file\n"
+           "  import     Add the backups of a .gamesave file to a vault\n\n"
            "Options:\n"
            "  -h, --help     Show this help (use '<command> --help' for command options)\n"
            "  -v, --version  Show the version\n";
@@ -66,6 +70,10 @@ int main(int argc, char *argv[])
         return saveforge::cli::runSnapshots(commandArgs, out, err);
     if (command == u"restore")
         return saveforge::cli::runRestore(commandArgs, out, err);
+    if (command == u"export")
+        return saveforge::cli::runGamesaveExport(commandArgs, out, err);
+    if (command == u"import")
+        return saveforge::cli::runGamesaveImport(commandArgs, out, err);
     if (command == u"profiles")
         return saveforge::cli::runProfiles(commandArgs, out, err);
     if (command == u"registry")

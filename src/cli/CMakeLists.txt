@@ -5,11 +5,12 @@ qt_add_executable(saveforge_cli
     Commands.h
     DetectCommand.cpp
     ProfilesCommand.cpp
+    TransferCommands.cpp
     RegistryCommand.cpp
     VaultCommands.cpp
 )
 set_target_properties(saveforge_cli PROPERTIES OUTPUT_NAME saveforge-cli)
-target_link_libraries(saveforge_cli PRIVATE saveforge::core saveforge::detection saveforge::profiles saveforge::registry saveforge::services Qt6::Core)
+target_link_libraries(saveforge_cli PRIVATE saveforge::core saveforge::detection saveforge::profiles saveforge::registry saveforge::services saveforge::archive Qt6::Core)
 saveforge_set_warnings(saveforge_cli)
 
 # Shipped next to the app on Windows and Linux, where it shares the Qt

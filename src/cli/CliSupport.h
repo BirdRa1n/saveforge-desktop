@@ -17,6 +17,9 @@ namespace saveforge::cli {
 // <app data>/profiles: local profiles and manual games.
 [[nodiscard]] QString localProfilesDirectory();
 
+// <app data>/exports: what earlier exports carried (for incremental exports).
+[[nodiscard]] QString exportLogDirectory();
+
 using CatalogLoad = services::CatalogLoad;
 
 // The profile catalog: local profiles plus the registry cache (see services::loadCatalogFromCache).
