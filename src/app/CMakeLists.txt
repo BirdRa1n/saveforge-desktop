@@ -30,6 +30,7 @@ qt_add_qml_module(saveforge_ui
         qml/components/RoundedImage.qml
         qml/components/ActionMenu.qml
         qml/components/CheckItem.qml
+        qml/components/IconButton.qml
         qml/pages/ActivityPage.qml
         qml/pages/AddGameDialog.qml
         qml/pages/GameDetailPage.qml

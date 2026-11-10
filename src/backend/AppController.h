@@ -5,6 +5,7 @@
 
 #include "saveforge/services/AutoBackup.h"
 #include "saveforge/services/Library.h"
+#include "saveforge/services/Retention.h"
 #include "saveforge/services/RestoreService.h"
 #include "saveforge/vault/Vault.h"
 
@@ -52,6 +53,9 @@ class AppController : public QObject {
     Q_PROPERTY(bool backupOnGameExit READ backupOnGameExit WRITE setBackupOnGameExit NOTIFY autoBackupChanged)
     Q_PROPERTY(int backupIntervalHours READ backupIntervalHours WRITE setBackupIntervalHours NOTIFY autoBackupChanged)
     Q_PROPERTY(bool runInBackground READ runInBackground WRITE setRunInBackground NOTIFY autoBackupChanged)
+    Q_PROPERTY(int retentionKeepLast READ retentionKeepLast WRITE setRetentionKeepLast NOTIFY retentionChanged)
+    Q_PROPERTY(int retentionKeepDays READ retentionKeepDays WRITE setRetentionKeepDays NOTIFY retentionChanged)
+    Q_PROPERTY(QString maintenanceText READ maintenanceText NOTIFY retentionChanged)
     // Set by the executable when it shows a system tray icon.
     Q_PROPERTY(bool trayAvailable READ trayAvailable WRITE setTrayAvailable NOTIFY trayAvailableChanged)
 
@@ -83,6 +87,12 @@ public:
     void setBackupIntervalHours(int hours);
     [[nodiscard]] bool runInBackground() const { return m_settings.runInBackground(); }
     void setRunInBackground(bool enabled);
+    [[nodiscard]] int retentionKeepLast() const { return m_settings.retentionKeepLast(); }
+    void setRetentionKeepLast(int count);
+    [[nodiscard]] int retentionKeepDays() const { return m_settings.retentionKeepDays(); }
+    void setRetentionKeepDays(int days);
+    // "Última verificação: há 3 dias." for the settings page.
+    [[nodiscard]] QString maintenanceText() const;
     [[nodiscard]] bool trayAvailable() const { return m_trayAvailable; }
     void setTrayAvailable(bool available);
 
@@ -143,6 +153,16 @@ public:
     // Opens and checks a .gamesave without importing it:
     // {ok, error, games: [{name, snapshots}], incremental, date, sourceOs, missingBase}
     Q_INVOKABLE QVariantMap inspectGamesave(const QUrl &file) const;
+    // Applies the retention policy to every game and frees the space of
+    // backups no longer needed.
+    Q_INVOKABLE void cleanUpVault();
+    // Checks every file in the vault against its hash (vault spec section 6).
+    Q_INVOKABLE void verifyVault();
+    // Pinned backups are never removed by the retention policy.
+    Q_INVOKABLE void setSnapshotPinned(const QString &gameId, const QString &snapshotId, bool pinned);
+    // Deletes one backup (not pinned ones). Its files' space is freed by the next clean-up.
+    Q_INVOKABLE void deleteSnapshot(const QString &gameId, const QString &snapshotId);
+
     // Adds the backups of a .gamesave to the vault; restores nothing.
     Q_INVOKABLE void importGamesave(const QUrl &file);
 
@@ -160,6 +180,7 @@ signals:
     void registryChanged();
     void coversChanged();
     void autoBackupChanged();
+    void retentionChanged();
     void trayAvailableChanged();
     // An automatic backup finished; for notifications while the window is hidden.
     void automaticBackupDone(const QString &text);
@@ -180,6 +201,9 @@ private:
     // Downloads, in the background, the Steam covers the library still lacks
     // (when the user allows it), then updates the library's art.
     void downloadMissingCovers();
+    // Runs the weekly verification and clean-up when it is due and the app is idle.
+    void maybeRunMaintenance();
+    [[nodiscard]] services::RetentionPolicy retentionPolicy() const;
     // Backs up the queued games whose saves changed (kind "auto").
     void runAutomaticBackups();
     // Starts a backup of one game into `slot`; `done` runs on success.

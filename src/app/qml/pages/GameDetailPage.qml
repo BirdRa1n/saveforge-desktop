@@ -37,6 +37,68 @@ Item {
         gameId: root.gameId
     }
 
+    // Confirms deleting one backup.
+    Popup {
+        id: deleteDialog
+        objectName: "deleteDialog"
+        property var entry: ({})
+        function openFor(snapshot) {
+            entry = snapshot
+            open()
+        }
+        modal: true
+        focus: true
+        width: 480
+        anchors.centerIn: Overlay.overlay
+        padding: Theme.space6
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        background: Rectangle {
+            radius: Theme.radiusCard
+            color: Theme.surface
+            border.color: Theme.borderStrong
+        }
+        Overlay.modal: Rectangle { color: Qt.rgba(0, 0, 0, 0.55) }
+
+        contentItem: ColumnLayout {
+            spacing: Theme.space4
+            Text {
+                Layout.fillWidth: true
+                text: qsTr("Apagar o backup de %1?").arg(deleteDialog.entry.date || "")
+                color: Theme.text
+                font.family: Theme.fontDisplay
+                font.pixelSize: Theme.textSectionTitle
+                font.weight: Font.Bold
+                wrapMode: Text.Wrap
+                Accessible.role: Accessible.Heading
+            }
+            Text {
+                Layout.fillWidth: true
+                text: qsTr("O backup sai do histórico e não pode ser recuperado. Os saves no seu computador não mudam.")
+                color: Theme.textMuted
+                font.family: Theme.fontBody
+                font.pixelSize: Theme.textBody
+                wrapMode: Text.Wrap
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.topMargin: Theme.space2
+                spacing: Theme.space3
+                Item { Layout.fillWidth: true }
+                SecondaryButton {
+                    text: qsTr("Cancelar")
+                    onClicked: deleteDialog.close()
+                }
+                PrimaryButton {
+                    text: qsTr("Apagar")
+                    onClicked: {
+                        AppController.deleteSnapshot(root.gameId, deleteDialog.entry.id)
+                        deleteDialog.close()
+                    }
+                }
+            }
+        }
+    }
+
     function initials(value) {
         return (value || "").split(/\s+/).filter(w => w.length > 0).map(w => w[0]).join("").slice(0, 2).toUpperCase()
     }
@@ -417,6 +479,20 @@ Item {
                     StatusBadge {
                         text: row.modelData.kindText
                         kind: StatusBadge.Neutral
+                    }
+                    IconButton {
+                        iconPath: Icons.pin
+                        checkable: true
+                        checked: row.modelData.pinned === true
+                        text: checked ? qsTr("Desafixar backup") : qsTr("Fixar backup (a limpeza automática nunca o apaga)")
+                        enabled: !AppController.busy
+                        onClicked: AppController.setSnapshotPinned(root.gameId, row.modelData.id, checked)
+                    }
+                    IconButton {
+                        iconPath: Icons.trash
+                        text: qsTr("Apagar backup")
+                        enabled: !AppController.busy && row.modelData.pinned !== true
+                        onClicked: deleteDialog.openFor(row.modelData)
                     }
                     SecondaryButton {
                         text: qsTr("Restaurar…")

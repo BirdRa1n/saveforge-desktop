@@ -99,6 +99,42 @@ void AppSettings::setRunInBackground(bool enabled)
     settings.setValue(QStringLiteral("app/runInBackground"), enabled);
 }
 
+int AppSettings::retentionKeepLast() const
+{
+    const QSettings settings(file(), QSettings::IniFormat);
+    return std::max(0, settings.value(QStringLiteral("retention/keepLast"), 0).toInt());
+}
+
+void AppSettings::setRetentionKeepLast(int count)
+{
+    QSettings settings(file(), QSettings::IniFormat);
+    settings.setValue(QStringLiteral("retention/keepLast"), std::max(0, count));
+}
+
+int AppSettings::retentionKeepDays() const
+{
+    const QSettings settings(file(), QSettings::IniFormat);
+    return std::max(0, settings.value(QStringLiteral("retention/keepDays"), 0).toInt());
+}
+
+void AppSettings::setRetentionKeepDays(int days)
+{
+    QSettings settings(file(), QSettings::IniFormat);
+    settings.setValue(QStringLiteral("retention/keepDays"), std::max(0, days));
+}
+
+QDateTime AppSettings::lastMaintenance() const
+{
+    const QSettings settings(file(), QSettings::IniFormat);
+    return QDateTime::fromString(settings.value(QStringLiteral("maintenance/last")).toString(), Qt::ISODate);
+}
+
+void AppSettings::setLastMaintenance(const QDateTime &when)
+{
+    QSettings settings(file(), QSettings::IniFormat);
+    settings.setValue(QStringLiteral("maintenance/last"), when.toUTC().toString(Qt::ISODate));
+}
+
 QString AppSettings::exportLogDirectory() const
 {
     return m_dataDir + QStringLiteral("/exports");

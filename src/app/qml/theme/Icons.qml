@@ -17,5 +17,7 @@ QtObject {
     readonly property string check: "M20 6L9 17l-5-5"
     readonly property string folder: "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
     readonly property string loader: "M12 3a9 9 0 1 0 9 9"
+    readonly property string pin: "M12 17v5 M9 3h6l-1 6 3 3H7l3-3z"
+    readonly property string trash: "M3 6h18 M8 6V4h8v2 M6 6l1 14h10l1-14 M10 11v6 M14 11v6"
     readonly property string gamepad: "M6 11h4 M8 9v4 M15 12h.01 M18 10h.01 M17.3 5H6.7a4 4 0 0 0-3.96 3.43L2 14.5a2.5 2.5 0 0 0 4.4 1.9L8 14.5h8l1.6 1.9a2.5 2.5 0 0 0 4.4-1.9l-.74-6.07A4 4 0 0 0 17.3 5z"
 }

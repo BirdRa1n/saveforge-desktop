@@ -17,6 +17,7 @@
 
 #include <QCoreApplication>
 #include <QDir>
+#include <QLocale>
 #include <QJsonDocument>
 #include <QTime>
 #include <QTimer>
@@ -60,6 +61,20 @@ struct RegistryUpdateResult {
     QList<registry::ChannelUpdate> channels;
     QString error; // set when no update could be attempted at all
 };
+
+// Applies the retention policy and frees the space of blobs nothing references;
+// with no policy, only frees that space.
+Result<services::RetentionReport> cleanUp(vault::Vault &vault, const services::RetentionPolicy &policy)
+{
+    if (!policy.keepsEverything())
+        return services::applyRetention(vault, policy);
+    auto garbage = vault.collectGarbage();
+    if (!garbage.ok())
+        return garbage.error();
+    services::RetentionReport report;
+    report.freedBytes = garbage.value().freedBytes;
+    return report;
+}
 
 // Automatic checks run at most this often.
 constexpr qint64 kRegistryCheckIntervalSecs = 24 * 60 * 60;
@@ -275,6 +290,139 @@ void AppController::checkAutomaticBackups()
         }
     }
     runAutomaticBackups();
+    maybeRunMaintenance();
+}
+
+services::RetentionPolicy AppController::retentionPolicy() const
+{
+    return {m_settings.retentionKeepLast(), m_settings.retentionKeepDays()};
+}
+
+void AppController::setRetentionKeepLast(int count)
+{
+    if (count == m_settings.retentionKeepLast())
+        return;
+    m_settings.setRetentionKeepLast(count);
+    emit retentionChanged();
+}
+
+void AppController::setRetentionKeepDays(int days)
+{
+    if (days == m_settings.retentionKeepDays())
+        return;
+    m_settings.setRetentionKeepDays(days);
+    emit retentionChanged();
+}
+
+QString AppController::maintenanceText() const
+{
+    const QDateTime last = m_settings.lastMaintenance();
+    return last.isValid() ? tr("Última verificação e limpeza: %1.").arg(relativeTime(last))
+                          : tr("O vault ainda não foi verificado.");
+}
+
+void AppController::maybeRunMaintenance()
+{
+    constexpr qint64 kWeekSecs = 7 * 24 * 3600;
+    const QDateTime last = m_settings.lastMaintenance();
+    if (!m_vault || busy() || !m_autoQueue.isEmpty()
+        || (last.isValid() && last.secsTo(QDateTime::currentDateTimeUtc()) < kWeekSecs))
+        return;
+    verifyVault();
+}
+
+void AppController::verifyVault()
+{
+    if (!m_vault)
+        return;
+    vault::Vault *vaultPtr = &*m_vault;
+    struct Maintenance {
+        Result<vault::VerifyReport> verify = Error{ErrorCode::Unknown, {}, {}};
+        std::optional<Result<services::RetentionReport>> cleanup;
+    };
+    run<Maintenance>(
+        tr("Verificando o vault…"),
+        [vaultPtr, policy = retentionPolicy()] {
+            Maintenance result;
+            result.verify = vaultPtr->verify();
+            // Clean up only a healthy vault: damaged snapshots hide what is referenced.
+            if (result.verify.ok() && result.verify.value().healthy())
+                result.cleanup = cleanUp(*vaultPtr, policy);
+            return result;
+        },
+        [this](Maintenance result) {
+            m_settings.setLastMaintenance(QDateTime::currentDateTimeUtc());
+            emit retentionChanged();
+            if (!result.verify.ok()) {
+                log(tr("Não foi possível verificar o vault: %1").arg(result.verify.error().message), QStringLiteral("error"));
+                return;
+            }
+            const vault::VerifyReport &report = result.verify.value();
+            if (!report.healthy()) {
+                log(tr("O vault tem problemas: %1 com conteúdo danificado, %2 faltando e %3 ilegíveis. "
+                       "Os backups afetados podem não restaurar; faça um novo backup dos jogos.")
+                        .arg(countText(report.corruptedBlobs.size(), tr("arquivo"), tr("arquivos")))
+                        .arg(report.missingBlobs.size())
+                        .arg(report.damagedSnapshotFiles.size()),
+                    QStringLiteral("error"));
+                return;
+            }
+            log(tr("Vault verificado: %1 sem problemas.")
+                    .arg(countText(report.blobsChecked, tr("arquivo"), tr("arquivos"))),
+                QStringLiteral("success"));
+        });
+}
+
+void AppController::cleanUpVault()
+{
+    if (!m_vault)
+        return;
+    vault::Vault *vaultPtr = &*m_vault;
+    run<Result<services::RetentionReport>>(
+        tr("Limpando backups antigos…"),
+        [vaultPtr, policy = retentionPolicy()] { return cleanUp(*vaultPtr, policy); },
+        [this](Result<services::RetentionReport> report) {
+            if (!report.ok()) {
+                log(tr("A limpeza falhou: %1").arg(report.error().message), QStringLiteral("error"));
+                return;
+            }
+            log(tr("%1 removido, %2 liberados.")
+                    .arg(countText(report.value().removedSnapshots, tr("backup antigo"), tr("backups antigos")),
+                         QLocale(QLocale::Portuguese, QLocale::Brazil).formattedDataSize(report.value().freedBytes)),
+                QStringLiteral("success"));
+            refresh();
+        });
+}
+
+void AppController::setSnapshotPinned(const QString &gameId, const QString &snapshotId, bool pinned)
+{
+    if (!m_vault || busy())
+        return;
+    auto updated = m_vault->setPinned(gameId, QUuid::fromString(snapshotId), pinned);
+    if (!updated.ok()) {
+        log(tr("Não foi possível alterar o backup: %1").arg(updated.error().message), QStringLiteral("error"));
+        return;
+    }
+    emit slotsChanged(gameId); // the game page reloads its history
+}
+
+void AppController::deleteSnapshot(const QString &gameId, const QString &snapshotId)
+{
+    if (!m_vault || busy())
+        return;
+    if (auto removed = m_vault->removeSnapshot(gameId, QUuid::fromString(snapshotId)); !removed.ok()) {
+        log(tr("Não foi possível apagar o backup: %1").arg(removed.error().message), QStringLiteral("error"));
+        return;
+    }
+    if (const services::LibraryGame *game = m_library.game(gameId)) {
+        services::LibraryGame copy = *game;
+        const QList<vault::Snapshot> remaining = m_vault->snapshots(gameId);
+        copy.snapshotCount = remaining.size();
+        copy.lastSnapshot = remaining.isEmpty() ? std::nullopt : std::optional<vault::Snapshot>(remaining.last());
+        m_library.updateGame(copy);
+    }
+    log(tr("Backup apagado."), QStringLiteral("info"));
+    emit slotsChanged(gameId);
 }
 
 void AppController::runAutomaticBackups()
@@ -299,7 +447,7 @@ void AppController::runAutomaticBackups()
     const services::ServiceEnvironment env = serviceEnvironment();
     run<AutoBackupResult>(
         tr("Backup automático…"),
-        [vaultPtr, env, jobs] {
+        [vaultPtr, env, jobs, policy = retentionPolicy()] {
             AutoBackupResult result;
             services::BackupService service(*vaultPtr, env);
             for (Job job : jobs) {
@@ -312,8 +460,9 @@ void AppController::runAutomaticBackups()
                 options.slot = job.slot;
                 auto snapshot = service.backup(job.game.target, options);
                 if (snapshot.ok()) {
+                    (void)services::applyRetention(*vaultPtr, policy, {job.game.id()}, QDateTime::currentDateTimeUtc(), false);
                     job.game.lastSnapshot = snapshot.value();
-                    ++job.game.snapshotCount;
+                    job.game.snapshotCount = vaultPtr->snapshots(job.game.id()).size();
                     result.updated.append(job.game);
                     result.names.append(job.game.target.profile.name);
                 } else if (snapshot.error().code != ErrorCode::NotFound
@@ -535,10 +684,14 @@ void AppController::runBackup(const QString &gameId, const QString &slot, std::f
     const services::ServiceEnvironment env = serviceEnvironment();
     run<Result<vault::Snapshot>>(
         tr("Fazendo backup de %1…").arg(copy.target.profile.name),
-        [vaultPtr, env, copy, slot] {
+        [vaultPtr, env, copy, slot, policy = retentionPolicy()] {
             services::BackupOptions options;
             options.slot = slot;
-            return services::BackupService(*vaultPtr, env).backup(copy.target, options);
+            auto snapshot = services::BackupService(*vaultPtr, env).backup(copy.target, options);
+            // Old backups go right away; their space is freed by the weekly clean-up.
+            if (snapshot.ok())
+                (void)services::applyRetention(*vaultPtr, policy, {copy.id()}, QDateTime::currentDateTimeUtc(), false);
+            return snapshot;
         },
         [this, copy, done](Result<vault::Snapshot> snapshot) mutable {
             if (!snapshot.ok()) {
@@ -547,7 +700,7 @@ void AppController::runBackup(const QString &gameId, const QString &slot, std::f
                 return;
             }
             copy.lastSnapshot = snapshot.value();
-            ++copy.snapshotCount;
+            copy.snapshotCount = m_vault ? m_vault->snapshots(copy.id()).size() : copy.snapshotCount + 1;
             m_library.updateGame(copy);
             const bool inconsistent = snapshot.value().consistency == vault::Consistency::Inconsistent;
             log(inconsistent ? tr("Backup de %1 salvo, mas os arquivos mudaram durante a cópia. Feche o jogo e repita.")
@@ -651,6 +804,7 @@ QVariantList AppController::snapshots(const QString &gameId) const
             {QStringLiteral("files"), static_cast<int>(it->files.size())},
             {QStringLiteral("label"), it->label},
             {QStringLiteral("slot"), it->slot},
+            {QStringLiteral("pinned"), it->pinned},
             {QStringLiteral("inconsistent"), it->consistency == vault::Consistency::Inconsistent}});
     }
     return list;

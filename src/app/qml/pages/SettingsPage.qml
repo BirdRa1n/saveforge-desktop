@@ -154,6 +154,76 @@ Item {
             }
 
             Section {
+                title: qsTr("Espaço e manutenção")
+                Paragraph {
+                    text: qsTr("Escolha quantos backups guardar. Backups fixados, o estado atual de cada save com nome e o ponto de desfazer da última restauração nunca são apagados.")
+                }
+                Paragraph {
+                    text: qsTr("Manter de cada jogo:")
+                }
+                RowLayout {
+                    spacing: Theme.space2
+                    ButtonGroup { id: keepLastGroup }
+                    Repeater {
+                        model: [
+                            { count: 0, label: qsTr("Todos os backups") },
+                            { count: 10, label: qsTr("Os 10 mais recentes") },
+                            { count: 30, label: qsTr("Os 30 mais recentes") },
+                            { count: 100, label: qsTr("Os 100 mais recentes") }
+                        ]
+                        delegate: FilterChip {
+                            required property var modelData
+                            text: modelData.label
+                            checked: AppController.retentionKeepLast === modelData.count
+                            ButtonGroup.group: keepLastGroup
+                            onClicked: AppController.retentionKeepLast = modelData.count
+                        }
+                    }
+                }
+                Paragraph {
+                    visible: AppController.retentionKeepLast > 0
+                    text: qsTr("E também tudo o que for mais novo que:")
+                }
+                RowLayout {
+                    visible: AppController.retentionKeepLast > 0
+                    spacing: Theme.space2
+                    ButtonGroup { id: keepDaysGroup }
+                    Repeater {
+                        model: [
+                            { days: 0, label: qsTr("Nada além disso") },
+                            { days: 30, label: qsTr("30 dias") },
+                            { days: 90, label: qsTr("90 dias") },
+                            { days: 365, label: qsTr("1 ano") }
+                        ]
+                        delegate: FilterChip {
+                            required property var modelData
+                            text: modelData.label
+                            checked: AppController.retentionKeepDays === modelData.days
+                            ButtonGroup.group: keepDaysGroup
+                            onClicked: AppController.retentionKeepDays = modelData.days
+                        }
+                    }
+                }
+                Paragraph {
+                    text: AppController.maintenanceText + " " + qsTr("O SaveForge confere o vault e libera espaço uma vez por semana.")
+                    color: Theme.textSubtle
+                }
+                RowLayout {
+                    spacing: Theme.space3
+                    SecondaryButton {
+                        text: qsTr("Limpar agora")
+                        enabled: !AppController.busy && AppController.vaultReady
+                        onClicked: AppController.cleanUpVault()
+                    }
+                    SecondaryButton {
+                        text: qsTr("Verificar o vault")
+                        enabled: !AppController.busy && AppController.vaultReady
+                        onClicked: AppController.verifyVault()
+                    }
+                }
+            }
+
+            Section {
                 title: qsTr("Perfis de jogos")
                 Paragraph {
                     text: qsTr("Perfis disponíveis: %1. Os perfis dizem ao SaveForge onde cada jogo guarda os saves.")

@@ -56,6 +56,15 @@ public:
     [[nodiscard]] bool runInBackground() const;
     void setRunInBackground(bool enabled);
 
+    // Retention: keep the newest N backups and/or the last N days (0 = no limit).
+    [[nodiscard]] int retentionKeepLast() const;
+    void setRetentionKeepLast(int count);
+    [[nodiscard]] int retentionKeepDays() const;
+    void setRetentionKeepDays(int days);
+    // When the vault was last verified and cleaned (weekly maintenance).
+    [[nodiscard]] QDateTime lastMaintenance() const;
+    void setLastMaintenance(const QDateTime &when);
+
     // What earlier .gamesave exports carried (services::ExportLog).
     [[nodiscard]] QString exportLogDirectory() const;
 

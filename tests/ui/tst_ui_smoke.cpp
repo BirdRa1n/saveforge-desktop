@@ -256,6 +256,40 @@ private slots:
                 QVERIFY(window->grabWindow().save(shotDir + QStringLiteral("/transfer.png")));
             sidebar->setProperty("currentIndex", 0);
 
+            // Retention: keep only the newest backup; the pinned one and each
+            // slot's current state survive, and the vault stays healthy.
+            QVariantList before;
+            QMetaObject::invokeMethod(controller, "snapshots", Q_RETURN_ARG(QVariantList, before), Q_ARG(QString, gameId));
+            const QString oldest = before.last().toMap().value(QStringLiteral("id")).toString();
+            QMetaObject::invokeMethod(controller, "setSnapshotPinned", Q_ARG(QString, gameId), Q_ARG(QString, oldest),
+                                      Q_ARG(bool, true));
+            QVERIFY(controller->setProperty("retentionKeepLast", 1));
+            QMetaObject::invokeMethod(controller, "cleanUpVault");
+            QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
+            QVariantList after;
+            QMetaObject::invokeMethod(controller, "snapshots", Q_RETURN_ARG(QVariantList, after), Q_ARG(QString, gameId));
+            QVERIFY(after.size() < before.size());
+            bool pinnedKept = false;
+            for (const QVariant &entry : std::as_const(after))
+                pinnedKept = pinnedKept || entry.toMap().value(QStringLiteral("id")).toString() == oldest;
+            QVERIFY(pinnedKept);
+            QVariantList slotsAfter;
+            QMetaObject::invokeMethod(controller, "saveSlots", Q_RETURN_ARG(QVariantList, slotsAfter), Q_ARG(QString, gameId));
+            QCOMPARE(slotsAfter.size(), 2);
+            QMetaObject::invokeMethod(controller, "verifyVault");
+            QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
+            QVERIFY(controller->property("maintenanceText").toString().startsWith(QStringLiteral("Última")));
+            window->setProperty("selectedGameId", gameId);
+            QCoreApplication::processEvents();
+            if (!shotDir.isEmpty())
+                QVERIFY(window->grabWindow().save(shotDir + QStringLiteral("/history-pinned.png")));
+            window->setProperty("selectedGameId", QString());
+            sidebar->setProperty("currentIndex", 3);
+            QCoreApplication::processEvents();
+            if (!shotDir.isEmpty())
+                QVERIFY(window->grabWindow().save(shotDir + QStringLiteral("/settings-retention.png")));
+            sidebar->setProperty("currentIndex", 0);
+
             QMetaObject::invokeMethod(controller, "removeLocalGame", Q_ARG(QString, QStringLiteral("local-manual-game")));
             QTRY_VERIFY_WITH_TIMEOUT(!controller->property("busy").toBool(), 60000);
             QMetaObject::invokeMethod(controller, "gameInfo", Q_RETURN_ARG(QVariantMap, info),
