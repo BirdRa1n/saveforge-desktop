@@ -404,6 +404,23 @@ Result<GarbageReport> Vault::collectGarbage(const QDateTime &now, std::chrono::s
     return report;
 }
 
+Result<Snapshot> Vault::setPinned(const QString &gameId, const QUuid &snapshotId, bool pinned)
+{
+    WriterLock lock(m_dir);
+    if (auto acquired = lock.acquire(); !acquired.ok())
+        return acquired.error();
+    auto existing = snapshot(gameId, snapshotId);
+    if (!existing.ok())
+        return existing.error();
+    Snapshot updated = std::move(existing).value();
+    if (updated.pinned == pinned)
+        return updated;
+    updated.pinned = pinned;
+    if (auto written = writeDurably(m_blobs.tmpDir(), snapshotPath(gameId, snapshotId), toJson(updated)); !written.ok())
+        return written.error();
+    return updated;
+}
+
 Result<void> Vault::removeSnapshot(const QString &gameId, const QUuid &snapshotId)
 {
     WriterLock lock(m_dir);

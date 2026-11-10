@@ -6,6 +6,7 @@ qt_add_library(saveforge_services STATIC
     include/saveforge/services/Library.h
     include/saveforge/services/LocalProfiles.h
     include/saveforge/services/RestoreService.h
+    include/saveforge/services/Retention.h
     include/saveforge/services/SaveSlots.h
     include/saveforge/services/Transfer.h
     AutoBackup.cpp
@@ -15,6 +16,7 @@ qt_add_library(saveforge_services STATIC
     Library.cpp
     LocalProfiles.cpp
     RestoreService.cpp
+    Retention.cpp
     SaveSlots.cpp
     Transfer.cpp
 )

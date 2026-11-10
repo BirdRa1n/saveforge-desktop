@@ -107,6 +107,11 @@ public:
     [[nodiscard]] QList<Snapshot> snapshots(const QString &gameId) const;
     [[nodiscard]] Result<Snapshot> snapshot(const QString &gameId, const QUuid &snapshotId) const;
 
+    // Pins or unpins a snapshot: pinned snapshots are never removed by
+    // retention. Rewrites the document atomically, the only change the spec
+    // allows besides `label`.
+    [[nodiscard]] Result<Snapshot> setPinned(const QString &gameId, const QUuid &snapshotId, bool pinned);
+
     // Deletes a snapshot document. Pinned snapshots are refused. Blobs are
     // reclaimed later by collectGarbage().
     [[nodiscard]] Result<void> removeSnapshot(const QString &gameId, const QUuid &snapshotId);
