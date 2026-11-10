@@ -17,7 +17,7 @@ Aplicativo desktop open source para encontrar, fazer backup e restaurar saves de
 
 - C++20 e Qt 6.8+ (Qt Quick / QML), com builds oficiais na versão estável mais recente
 - CMake ≥ 3.24 com presets e Ninja
-- Visual: direção **Forja** (`saveforge-docs/design/FORJA.md`)
+- Visual: direção **Console × Studio** (`saveforge-docs/design/CONSOLE-STUDIO.md`): tema claro, escuro ou do sistema, cor de destaque escolhida em Configurações › Aparência, e atalhos `Ctrl+K` (buscar), `Ctrl+B` (backup), `Ctrl+R` (restaurar) e `Ctrl+T` (trocar save)
 
 ## Estrutura
 

@@ -16,7 +16,7 @@ Obrigado por querer contribuir! Este guia vale para pessoas e para agentes de IA
 ## Antes de começar
 
 - **Arquitetura e decisões:** a arquitetura do ecossistema está em `saveforge-docs/planejamento/PLANEJAMENTO-TECNICO.md`, e as decisões estruturais estão nas ADRs, em `saveforge-docs/adr/`. Mudanças que contrariam uma ADR começam com uma nova ADR, não com código.
-- **Visual:** a interface segue a direção **Forja** (`saveforge-docs/design/FORJA.md`).
+- **Visual:** a interface segue a direção **Console × Studio** (`saveforge-docs/design/CONSOLE-STUDIO.md`, ADR 0006): tema claro/escuro, acento escolhido pelo usuário e barra de título integrada no Windows e no macOS.
 - **Formatos de arquivo:** formatos compartilhados (perfis de jogos, `.gamesave`, Registry) são definidos em `saveforge-specs`. Não invente formatos dentro deste repositório.
 
 ## Ambiente de desenvolvimento
