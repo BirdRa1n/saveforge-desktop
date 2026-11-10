@@ -49,7 +49,12 @@ private slots:
 
         auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().constFirst());
         QVERIFY(window);
+        #if defined(Q_OS_MACOS)
+        // macOS would draw the title over the search in the title bar.
+        QVERIFY(window->title().isEmpty());
+#else
         QCOMPARE(window->title(), QStringLiteral("SaveVault"));
+#endif
 
         QObject *sidebar = window->findChild<QObject *>(QStringLiteral("sidebar"));
         QVERIFY(sidebar);

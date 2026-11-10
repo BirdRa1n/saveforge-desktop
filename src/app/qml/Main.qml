@@ -9,9 +9,10 @@ ApplicationWindow {
     // Game selected in the library (shown next to the list); setting it
     // also brings the library forward.
     property string selectedGameId
-    // Windows and macOS let the content extend under the title bar while the
-    // system keeps drawing its own caption buttons (Qt 6.9+). Linux desktops
-    // keep their usual decorations.
+    // Windows and macOS let the content extend into the title bar while the
+    // system keeps drawing its own window buttons (Qt 6.9+), so the app's
+    // title bar holds the logo and the search (see TitleBar.qml and ADR 0006).
+    // Linux desktops keep their usual decorations.
     readonly property bool integratedTitleBar: Qt.platform.os === "windows" || Qt.platform.os === "osx"
     readonly property bool onLibrary: sidebar.currentIndex === 0
     readonly property bool canActOnGame: onLibrary && selectedGameId.length > 0
@@ -23,9 +24,24 @@ ApplicationWindow {
     minimumWidth: 960
     minimumHeight: 600
     visible: true
-    title: "SaveVault"
+    // macOS would draw the title over the search; the Dock and the menu bar
+    // still show the app name from the bundle.
+    title: Qt.platform.os === "osx" ? "" : "SaveVault"
     color: Theme.window
-    flags: integratedTitleBar ? Qt.Window | Qt.ExpandedClientAreaHint | Qt.NoTitleBarBackgroundHint : Qt.Window
+    // On Windows, leaving out Qt.WindowTitleHint stops Qt from drawing its own
+    // icon and title in the caption area; the buttons remain native.
+    flags: !integratedTitleBar ? Qt.Window
+         : Qt.platform.os === "windows"
+           ? Qt.Window | Qt.ExpandedClientAreaHint | Qt.NoTitleBarBackgroundHint | Qt.CustomizeWindowHint
+             | Qt.WindowMinMaxButtonsHint | Qt.WindowCloseButtonHint
+           : Qt.Window | Qt.ExpandedClientAreaHint | Qt.NoTitleBarBackgroundHint
+
+    // ApplicationWindow keeps its content inside the safe area by default;
+    // the title bar fills that area itself.
+    topPadding: 0
+    leftPadding: 0
+    rightPadding: 0
+    bottomPadding: 0
 
     font.family: Theme.fontBody
     font.pixelSize: Theme.textBody
@@ -134,14 +150,10 @@ ApplicationWindow {
     }
 
     // The frame (title bar, rail, hint bar) uses Theme.window; the pages sit
-    // on a raised panel with a rounded corner. Content starts below the
-    // system caption area (the safe area) where the title bar is integrated.
+    // on a raised panel with a rounded corner. The title bar fills the system
+    // caption area, so the content below it starts after the safe area.
     Item {
         anchors.fill: parent
-        anchors.topMargin: parent.SafeArea.margins.top
-        anchors.leftMargin: parent.SafeArea.margins.left
-        anchors.rightMargin: parent.SafeArea.margins.right
-        anchors.bottomMargin: parent.SafeArea.margins.bottom
 
         ColumnLayout {
             anchors.fill: parent
@@ -150,9 +162,12 @@ ApplicationWindow {
             TitleBar {
                 id: titleBar
                 Layout.fillWidth: true
+                Layout.preferredHeight: Math.max(implicitHeight, window.contentItem.SafeArea.margins.top)
                 hostWindow: window
-                // Windows draws the app icon and title in the caption area.
-                showLogo: Qt.platform.os !== "windows" || !window.integratedTitleBar
+                // Native buttons: traffic lights (about 70 px) on macOS,
+                // three 46 px caption buttons on Windows.
+                leftInset: window.integratedTitleBar && Qt.platform.os === "osx" ? 72 : 0
+                rightInset: window.integratedTitleBar && Qt.platform.os === "windows" ? 140 : 0
                 onSearchTextChanged: if (searchText.length > 0) sidebar.currentIndex = 0
                 onSearchSubmitted: libraryPage.focusList()
             }

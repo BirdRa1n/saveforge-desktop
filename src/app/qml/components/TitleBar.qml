@@ -3,17 +3,20 @@ import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import SaveVault.Backend
 
-// Top bar of the window, right under the system caption area: the app mark,
-// the search ("command bar", focused with Ctrl+K) and background progress.
-// Dragging the empty parts moves the window, like a native title bar, and a
-// double click maximizes or restores it.
+// Unified title bar: on Windows and macOS it is drawn in the system caption
+// area, next to the native window buttons, with the app mark, the "command
+// center" search (Ctrl+K) and background progress. Dragging the empty parts
+// moves the window and a double click maximizes or restores it, like a
+// native title bar. On Linux it is an ordinary toolbar under the system frame.
 Item {
     id: root
 
     // The window this bar moves; set by Main.qml.
     required property Window hostWindow
-    // Hides the app mark where the system already draws icon and title (Windows).
-    property bool showLogo: true
+    // Room kept free for the native window buttons (traffic lights on the
+    // left in macOS, minimize/maximize/close on the right in Windows).
+    property real leftInset: 0
+    property real rightInset: 0
     property alias searchText: search.text
 
     // Enter or Down in the search: move to the results.
@@ -24,7 +27,9 @@ Item {
         search.selectAll()
     }
 
-    implicitHeight: 48
+    // Matches the height of the native window buttons, so their glyphs and
+    // the search line up.
+    implicitHeight: 32
 
     TapHandler {
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
@@ -39,9 +44,8 @@ Item {
     }
 
     Logo {
-        visible: root.showLogo
         anchors.left: parent.left
-        anchors.leftMargin: Theme.space5
+        anchors.leftMargin: root.leftInset + Theme.space4
         anchors.verticalCenter: parent.verticalCenter
     }
 
@@ -49,8 +53,8 @@ Item {
         id: search
         objectName: "commandBar"
         anchors.centerIn: parent
-        width: Math.min(480, parent.width - 420)
-        implicitHeight: 34
+        width: Math.min(520, parent.width - 2 * Math.max(root.leftInset, root.rightInset) - 360)
+        implicitHeight: 26
         placeholderText: qsTr("Buscar jogo…")
         Accessible.name: qsTr("Buscar jogo")
         shortcutHint: "Ctrl K"
@@ -64,18 +68,18 @@ Item {
 
     RowLayout {
         anchors.right: parent.right
-        anchors.rightMargin: Theme.space5
+        anchors.rightMargin: root.rightInset + Theme.space4
         anchors.verticalCenter: parent.verticalCenter
         spacing: Theme.space2
         visible: AppController.busy
 
         Spinner {
-            Layout.preferredWidth: 16
-            Layout.preferredHeight: 16
+            Layout.preferredWidth: 14
+            Layout.preferredHeight: 14
             running: parent.visible
         }
         Text {
-            Layout.maximumWidth: 200
+            Layout.maximumWidth: 180
             text: AppController.busyText
             color: Theme.textMuted
             font.family: Theme.fontBody

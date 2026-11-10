@@ -13,8 +13,10 @@ Das seis propostas comparadas, a escolhida foi a mistura das propostas Console e
 ## Decisão
 - **Barra de título integrada:**
   - No Windows e no macOS, a janela usa `Qt::ExpandedClientAreaHint | Qt::NoTitleBarBackgroundHint` (Qt 6.9+).
-  - O conteúdo começa abaixo da área segura (`SafeArea.margins`), e o sistema continua desenhando os botões nativos: minimizar, maximizar e fechar no Windows, os semáforos no macOS. Também ficam como estão as bordas, a sombra, o Snap e o redimensionamento.
-  - A barra de busca fica logo abaixo dessa faixa. As áreas vazias chamam `startSystemMove()`, e o duplo clique maximiza.
+  - A barra de título do app é **unificada**: ocupa a própria faixa do sistema (o "Command Center" do VS Code segue a mesma ideia), com o logo e a busca (`Ctrl+K`) ao lado dos botões nativos. Os botões continuam do sistema: minimizar, maximizar e fechar no Windows, os semáforos no macOS. Também ficam como estão as bordas, a sombra, o Snap e o redimensionamento.
+  - **No Windows:** a janela não usa `Qt::WindowTitleHint` (fica só `CustomizeWindowHint` mais os botões). Assim o Qt não desenha o próprio ícone e título, que saíam com renderização ruim, e os cliques nessa faixa chegam ao app. O `ApplicationWindow` usa padding zero, para o conteúdo não começar abaixo da área segura.
+  - **No macOS:** o título da janela fica vazio, porque o sistema o desenharia sobre a busca. O Dock e a barra de menus continuam mostrando o nome do app.
+  - As áreas vazias da barra chamam `startSystemMove()`, e o duplo clique maximiza.
   - No Linux, a moldura do sistema continua, porque cada desktop decora as janelas de um jeito.
 - **Tema:**
   - `Theme.qml` passa a ter variantes clara e escura.
