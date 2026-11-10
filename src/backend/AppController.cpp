@@ -890,6 +890,8 @@ QVariantMap AppController::planRestore(const QString &gameId, const QString &sna
                        {QStringLiteral("gameRunning"), p.gameRunning},
                        {QStringLiteral("hasChanges"), p.hasChanges()},
                        {QStringLiteral("slot"), p.snapshot.slot},
+                       {QStringLiteral("registry"), static_cast<int>(p.registryKeys.size())},
+                       {QStringLiteral("registrySkipped"), static_cast<int>(p.skippedRegistryKeys)},
                        {QStringLiteral("activeSlot"), m_settings.activeSlot(gameId)},
                        {QStringLiteral("files"), files}};
     m_plan = std::move(plan).value();

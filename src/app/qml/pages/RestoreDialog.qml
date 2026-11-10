@@ -97,7 +97,9 @@ Popup {
                     { n: root.plan.create || 0, one: qsTr("arquivo será criado"), many: qsTr("arquivos serão criados") },
                     { n: root.plan.unchanged || 0, one: qsTr("arquivo já está igual"), many: qsTr("arquivos já estão iguais") },
                     { n: root.plan.skip || 0, one: qsTr("arquivo não pode ser restaurado nesta máquina"), many: qsTr("arquivos não podem ser restaurados nesta máquina") },
-                    { n: root.plan.extra || 0, one: qsTr("arquivo atual não está no backup e será mantido"), many: qsTr("arquivos atuais não estão no backup e serão mantidos") }
+                    { n: root.plan.extra || 0, one: qsTr("arquivo atual não está no backup e será mantido"), many: qsTr("arquivos atuais não estão no backup e serão mantidos") },
+                    { n: root.plan.registry || 0, one: qsTr("chave do registro do Windows será restaurada"), many: qsTr("chaves do registro do Windows serão restauradas") },
+                    { n: root.plan.registrySkipped || 0, one: qsTr("chave do registro do Windows não pode ser restaurada neste sistema"), many: qsTr("chaves do registro do Windows não podem ser restauradas neste sistema") }
                 ]
                 delegate: Text {
                     required property var modelData
