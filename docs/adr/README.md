@@ -11,3 +11,4 @@ Decisões que afetam só este repositório. As decisões que afetam mais de um r
 | [0005](0005-miniz-for-gamesave-archives.md) | miniz para os arquivos `.gamesave` | Aceita |
 | [0006](0006-console-studio-interface.md) | Interface Console × Studio e barra de título integrada | Aceita |
 | [0007](0007-rename-to-savevault.md) | O projeto passa a se chamar SaveVault | Aceita |
+| [0008](0008-memory-and-startup-cost.md) | Consumo de memória e custo de inicialização | Aceita |
