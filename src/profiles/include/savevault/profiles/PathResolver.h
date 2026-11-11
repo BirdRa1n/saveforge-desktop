@@ -10,6 +10,8 @@
 #include <QString>
 #include <QStringList>
 
+#include <memory>
+
 namespace savevault::profiles {
 
 // Where and how a profile is resolved on this machine.
@@ -46,16 +48,40 @@ struct ResolvedFile {
 //   matching `exclude` are dropped.
 // - Mechanism `latest-n` keeps only the n newest matches of each path.
 // The result is sorted by absolute path and contains each file once.
+// Directory listings and folder checks remembered across PathResolver::resolve
+// calls, for one pass over many profiles (the library scan tries every
+// registry profile, and thousands of them point into the same few folders).
+// Each directory is then listed once instead of once per profile.
+//
+// Use one cache for a short, single-threaded pass only: it does not see files
+// created after a directory was listed.
+class ProbeCache {
+public:
+    ProbeCache();
+    ~ProbeCache();
+    ProbeCache(const ProbeCache &) = delete;
+    ProbeCache &operator=(const ProbeCache &) = delete;
+
+    struct Impl;
+    std::unique_ptr<Impl> d;
+};
+
 class PathResolver {
 public:
     explicit PathResolver(const PathRules &rules = PathRules::builtin());
 
     [[nodiscard]] QList<ResolvedFile> resolve(const Profile &profile, const ResolveContext &context) const;
+    // Same, reading the file system through `cache` (see ProbeCache).
+    [[nodiscard]] QList<ResolvedFile> resolve(const Profile &profile, const ResolveContext &context,
+                                              ProbeCache &cache) const;
 
     // Whether a save rule applies to the context (OS and store filters).
     [[nodiscard]] bool ruleApplies(const SaveRule &rule, const QString &path, const ResolveContext &context) const;
 
 private:
+    [[nodiscard]] QList<ResolvedFile> resolveWith(const Profile &profile, const ResolveContext &context,
+                                                  ProbeCache::Impl *cache) const;
+
     const PathRules &m_rules;
 };
 

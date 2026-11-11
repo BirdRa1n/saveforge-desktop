@@ -285,15 +285,16 @@ void checkSemantics(Reader &r, const Profile &profile, const PathRules &rules)
     for (qsizetype i = 0; i < profile.saves.size(); ++i) {
         const SaveRule &rule = profile.saves.at(i);
         for (qsizetype j = 0; j < rule.paths.size(); ++j) {
-            const QString ptr = child(child(child(QStringLiteral("/saves"), i), QStringLiteral("paths")), j);
+            // The JSON pointer is built only for an error message.
+            const auto ptr = [i, j] { return child(child(child(QStringLiteral("/saves"), i), QStringLiteral("paths")), j); };
             const RuleCheck check = rules.checkSavePath(rule.paths.at(j));
             if (!check.valid()) {
-                r.fail(ptr, QStringLiteral("unsafe path (violates %1)").arg(check.violations.join(QLatin1String(", "))));
+                r.fail(ptr(), QStringLiteral("unsafe path (violates %1)").arg(check.violations.join(QLatin1String(", "))));
                 return;
             }
             const auto implied = rules.impliedOs(rule.paths.at(j));
             if (implied && rule.when.os && *implied != *rule.when.os) {
-                r.fail(ptr, QStringLiteral("placeholder implies os '%1' but the rule is for '%2'")
+                r.fail(ptr(), QStringLiteral("placeholder implies os '%1' but the rule is for '%2'")
                                 .arg(platform::osName(*implied), platform::osName(*rule.when.os)));
                 return;
             }

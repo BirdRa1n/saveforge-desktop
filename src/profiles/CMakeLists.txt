@@ -6,6 +6,7 @@ qt_add_library(savevault_profiles STATIC
     include/savevault/profiles/PathResolver.h
     PlaceholderCatalog.cpp
     PathRules.cpp
+    Wildcard.h
     ProfileParser.cpp
     PathResolver.cpp
 )

@@ -137,6 +137,58 @@ private slots:
         QVERIFY(PathResolver().resolve(profile, ctx).isEmpty());
     }
 
+    void globSegmentsMatchLikeTheSpec_data()
+    {
+        QTest::addColumn<QString>("pattern");
+        QTest::addColumn<QString>("name");
+        QTest::addColumn<bool>("matches");
+        QTest::newRow("star any run") << QStringLiteral("save*.dat") << QStringLiteral("save_01.dat") << true;
+        QTest::newRow("star empty run") << QStringLiteral("save*.dat") << QStringLiteral("save.dat") << true;
+        QTest::newRow("star backtracks") << QStringLiteral("*a*b") << QStringLiteral("xaxxab") << true;
+        QTest::newRow("question one char") << QStringLiteral("slot?.sav") << QStringLiteral("slot1.sav") << true;
+        QTest::newRow("question not zero") << QStringLiteral("slot?.sav") << QStringLiteral("slot.sav") << false;
+        QTest::newRow("brackets are literal") << QStringLiteral("[1]*.sav") << QStringLiteral("[1]a.sav") << true;
+        QTest::newRow("brackets not a class") << QStringLiteral("[1]*.sav") << QStringLiteral("1a.sav") << false;
+        QTest::newRow("case folded") << QStringLiteral("SAVE*.DAT") << QStringLiteral("save1.dat") << true;
+        // A character outside the BMP is one character for '?'.
+        QTest::newRow("surrogate pair") << QStringLiteral("a?b") << (QStringLiteral("a") + QString::fromUcs4(U"🎮") + QStringLiteral("b")) << true;
+    }
+
+    void globSegmentsMatchLikeTheSpec()
+    {
+        QFETCH(QString, pattern);
+        QFETCH(QString, name);
+        QFETCH(bool, matches);
+        QTemporaryDir tmp;
+        const ResolveContext ctx = contextFor(tmp.path());
+        touch(tmp.path() + QStringLiteral("/base"), QStringLiteral("saves/") + name);
+        const auto files = PathResolver().resolve(
+            makeProfile({rule(QStringLiteral("progress"), {QStringLiteral("<base>/saves/") + pattern})}), ctx);
+        QCOMPARE(files.size() == 1, matches);
+    }
+
+    // A ProbeCache shared across profiles gives the same files as resolving
+    // each profile on its own.
+    void probeCacheGivesTheSameResult()
+    {
+        QTemporaryDir tmp;
+        const ResolveContext ctx = contextFor(tmp.path());
+        touch(tmp.path() + QStringLiteral("/winDocuments"), QStringLiteral("My Games/Alpha/save1.sav"));
+        touch(tmp.path() + QStringLiteral("/winDocuments"), QStringLiteral("My Games/Beta/Slot/b.dat"));
+        touch(tmp.path() + QStringLiteral("/winAppData"), QStringLiteral("Studio/Gamma/deep/er/c.sav"));
+        const QList<Profile> profiles{
+            makeProfile({rule(QStringLiteral("a"), {QStringLiteral("<winDocuments>/my games/alpha/*.sav")})}),
+            makeProfile({rule(QStringLiteral("b"), {QStringLiteral("<winDocuments>/My Games/Beta")})}),
+            makeProfile({rule(QStringLiteral("c"), {QStringLiteral("<winAppData>/Studio/**/*.sav")})}),
+            makeProfile({rule(QStringLiteral("d"), {QStringLiteral("<winDocuments>/My Games/Missing/*.sav")})}),
+        };
+        const PathResolver resolver;
+        ProbeCache cache;
+        for (const Profile &profile : profiles)
+            QCOMPARE(templatePaths(resolver.resolve(profile, ctx, cache)), templatePaths(resolver.resolve(profile, ctx)));
+        QCOMPARE(resolver.resolve(profiles.at(2), ctx, cache).size(), 1);
+    }
+
     void expandsStoreUserIdPerAccount()
     {
         QTemporaryDir tmp;

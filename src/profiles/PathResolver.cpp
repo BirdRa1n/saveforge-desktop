@@ -1,5 +1,7 @@
 #include "savevault/profiles/PathResolver.h"
 
+#include "Wildcard.h"
+
 #include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
@@ -43,6 +45,38 @@ QFileInfoList listEntries(const QString &dir)
     return entries;
 }
 
+} // namespace
+
+struct ProbeCache::Impl {
+    QHash<QString, QFileInfoList> listings;
+    QHash<QString, bool> directories;
+
+    const QFileInfoList &list(const QString &dir)
+    {
+        auto it = listings.find(dir);
+        if (it == listings.end())
+            it = listings.insert(dir, listEntries(dir));
+        return *it;
+    }
+
+    bool isDir(const QString &path)
+    {
+        auto it = directories.find(path);
+        if (it == directories.end())
+            it = directories.insert(path, QFileInfo(path).isDir());
+        return *it;
+    }
+};
+
+ProbeCache::ProbeCache()
+    : d(std::make_unique<Impl>())
+{
+}
+
+ProbeCache::~ProbeCache() = default;
+
+namespace {
+
 const QRegularExpression &placeholderTokenPattern()
 {
     static const QRegularExpression re(QStringLiteral("<([^<>]+)>"));
@@ -58,19 +92,7 @@ bool segmentMatches(const QString &pattern, const QString &name, Qt::CaseSensiti
 {
     if (!isGlob(pattern))
         return pattern.compare(name, cs) == 0;
-    QString regex = QStringLiteral("^");
-    for (QChar c : pattern) {
-        if (c == u'*')
-            regex += QStringLiteral(".*");
-        else if (c == u'?')
-            regex += u'.';
-        else
-            regex += QRegularExpression::escape(QString(c));
-    }
-    regex += u'$';
-    const auto options = cs == Qt::CaseInsensitive ? QRegularExpression::CaseInsensitiveOption
-                                                   : QRegularExpression::NoPatternOption;
-    return QRegularExpression(regex, options).match(name).hasMatch();
+    return wildcardMatch(pattern, name, cs);
 }
 
 // Glob over whole paths: '**' matches zero or more segments.
@@ -108,22 +130,24 @@ bool isExcluded(const QStringList &exclude, const QList<Step> &steps, Qt::CaseSe
 }
 
 void walk(const QString &dir, const QStringList &pattern, qsizetype index, const QList<Step> &steps,
-          Qt::CaseSensitivity cs, QList<Match> &out)
+          Qt::CaseSensitivity cs, QList<Match> &out, ProbeCache::Impl *cache)
 {
+    const auto entriesOf = [cache](const QString &path) { return cache ? cache->list(path) : listEntries(path); };
     const QString &segment = pattern.at(index);
     const bool last = index == pattern.size() - 1;
 
     if (segment == u"**") {
         if (last) {
             // Trailing "**": every entry below this directory is a match.
-            for (const QFileInfo &entry : listEntries(dir))
+            for (const QFileInfo &entry : entriesOf(dir))
                 out.append({entry, steps + QList<Step>{{entry.fileName(), index}}});
             return;
         }
-        walk(dir, pattern, index + 1, steps, cs, out);  // "**" as zero segments
-        for (const QFileInfo &entry : listEntries(dir)) {
+        walk(dir, pattern, index + 1, steps, cs, out, cache);  // "**" as zero segments
+        for (const QFileInfo &entry : entriesOf(dir)) {
             if (entry.isDir())
-                walk(entry.absoluteFilePath(), pattern, index, steps + QList<Step>{{entry.fileName(), index}}, cs, out);
+                walk(entry.absoluteFilePath(), pattern, index, steps + QList<Step>{{entry.fileName(), index}}, cs, out,
+                     cache);
         }
         return;
     }
@@ -132,7 +156,8 @@ void walk(const QString &dir, const QStringList &pattern, qsizetype index, const
     // Most profile paths point to folders that do not exist on a given machine.
     // A miss is final unless a case-insensitive match is wanted on a
     // case-sensitive file system (e.g. a Proton prefix on Linux).
-    if (!isGlob(segment)) {
+    // With a cache, the cached listing below answers just as fast.
+    if (!cache && !isGlob(segment)) {
         const QFileInfo direct(dir + u'/' + segment);
         const bool hostIsCaseInsensitive = platform::hostOs() != platform::Os::Linux;
         if (!direct.exists() && (cs == Qt::CaseSensitive || hostIsCaseInsensitive))
@@ -144,20 +169,20 @@ void walk(const QString &dir, const QStringList &pattern, qsizetype index, const
             if (last)
                 out.append({direct, next});
             else if (direct.isDir())
-                walk(direct.absoluteFilePath(), pattern, index + 1, next, cs, out);
+                walk(direct.absoluteFilePath(), pattern, index + 1, next, cs, out, cache);
             return;
         }
         // Otherwise list the directory to learn the real on-disk spelling.
     }
 
-    for (const QFileInfo &entry : listEntries(dir)) {
+    for (const QFileInfo &entry : entriesOf(dir)) {
         if (!segmentMatches(segment, entry.fileName(), cs))
             continue;
         const QList<Step> next = steps + QList<Step>{{entry.fileName(), index}};
         if (last)
             out.append({entry, next});
         else if (entry.isDir())
-            walk(entry.absoluteFilePath(), pattern, index + 1, next, cs, out);
+            walk(entry.absoluteFilePath(), pattern, index + 1, next, cs, out, cache);
     }
 }
 
@@ -328,6 +353,17 @@ bool PathResolver::ruleApplies(const SaveRule &rule, const QString &path, const 
 
 QList<ResolvedFile> PathResolver::resolve(const Profile &profile, const ResolveContext &context) const
 {
+    return resolveWith(profile, context, nullptr);
+}
+
+QList<ResolvedFile> PathResolver::resolve(const Profile &profile, const ResolveContext &context, ProbeCache &cache) const
+{
+    return resolveWith(profile, context, cache.d.get());
+}
+
+QList<ResolvedFile> PathResolver::resolveWith(const Profile &profile, const ResolveContext &context,
+                                              ProbeCache::Impl *cache) const
+{
     const Qt::CaseSensitivity cs = context.caseInsensitive ? Qt::CaseInsensitive : Qt::CaseSensitive;
     const bool latestN = profile.mechanism.type == u"latest-n";
 
@@ -340,7 +376,7 @@ QList<ResolvedFile> PathResolver::resolve(const Profile &profile, const ResolveC
             const QStringList segments = path.split(u'/');
             const QString rootToken = segments.first();
             const QString rootDir = context.folders.value(rootToken.mid(1, rootToken.size() - 2));
-            if (rootDir.isEmpty() || !QFileInfo(rootDir).isDir())
+            if (rootDir.isEmpty() || !(cache ? cache->isDir(rootDir) : QFileInfo(rootDir).isDir()))
                 continue;
             const QStringList patternSegments = segments.mid(1);
 
@@ -350,7 +386,7 @@ QList<ResolvedFile> PathResolver::resolve(const Profile &profile, const ResolveC
                     concrete.append(substitute(segment, bindings));
 
                 QList<Match> matches;
-                walk(rootDir, concrete, 0, {}, cs, matches);
+                walk(rootDir, concrete, 0, {}, cs, matches, cache);
                 if (latestN)
                     keepNewest(matches, profile.mechanism.params);
 

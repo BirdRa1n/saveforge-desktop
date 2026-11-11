@@ -1,10 +1,11 @@
 #include "savevault/profiles/PathRules.h"
 
+#include "Wildcard.h"
+
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QRegularExpression>
 
 #include <algorithm>
 
@@ -15,10 +16,36 @@ namespace {
 constexpr qsizetype kMaxPathLength = 512;
 constexpr qsizetype kMaxRegistryKeyLength = 256;
 
-const QRegularExpression &placeholderToken()
+// The checks below scan characters directly instead of running regular
+// expressions: they run for every path of every registry profile (tens of
+// thousands at each scan), where regex matching dominated the cost.
+
+// Visits the placeholder tokens of `text`, the same ones the regular
+// expression <[^<>]*> finds (leftmost, non-overlapping), passing each name
+// without its brackets. Returns true when a '<' or '>' is left outside a token.
+template <typename Visitor>
+bool scanPlaceholders(QStringView text, Visitor &&visit)
 {
-    static const QRegularExpression re(QStringLiteral("<[^<>]*>"));
-    return re;
+    bool stray = false;
+    qsizetype i = 0;
+    while (i < text.size()) {
+        const QChar c = text.at(i);
+        if (c == u'<') {
+            qsizetype k = i + 1;
+            while (k < text.size() && text.at(k) != u'<' && text.at(k) != u'>')
+                ++k;
+            if (k < text.size() && text.at(k) == u'>') {
+                visit(text.mid(i + 1, k - i - 1));
+                i = k + 1;
+                continue;
+            }
+            stray = true;
+        } else if (c == u'>') {
+            stray = true;
+        }
+        ++i;
+    }
+    return stray;
 }
 
 bool isGlob(QStringView segment)
@@ -26,9 +53,48 @@ bool isGlob(QStringView segment)
     return segment.contains(u'*') || segment.contains(u'?');
 }
 
-bool hasPlaceholder(const QString &segment)
+bool hasPlaceholder(QStringView segment)
 {
-    return placeholderToken().match(segment).hasMatch();
+    bool found = false;
+    scanPlaceholders(segment, [&found](QStringView) { found = true; });
+    return found;
+}
+
+// "<name>" covering the whole text (the regex ^<([^<>]+)>$): the name, or empty.
+QStringView wholeToken(QStringView text)
+{
+    if (text.size() < 3 || text.front() != u'<' || text.back() != u'>')
+        return {};
+    const QStringView name = text.mid(1, text.size() - 2);
+    return name.contains(u'<') || name.contains(u'>') ? QStringView() : name;
+}
+
+// %NAME% (the regex %[^%]+%): a Windows environment variable.
+bool hasPercentVariable(QStringView text)
+{
+    qsizetype open = text.indexOf(u'%');
+    while (open >= 0) {
+        const qsizetype close = text.indexOf(u'%', open + 1);
+        if (close < 0)
+            return false;
+        if (close > open + 1)
+            return true;
+        open = close; // "%%": the second '%' may open a variable
+    }
+    return false;
+}
+
+// $NAME or ${NAME} (the regex \$(\{|[A-Za-z_])): a shell variable.
+bool hasDollarVariable(QStringView text)
+{
+    for (qsizetype i = 0; i + 1 < text.size(); ++i) {
+        if (text.at(i) != u'$')
+            continue;
+        const char16_t next = text.at(i + 1).unicode();
+        if (next == u'{' || next == u'_' || (next >= u'A' && next <= u'Z') || (next >= u'a' && next <= u'z'))
+            return true;
+    }
+    return false;
 }
 
 bool hasControlCharOrBackslash(QStringView text)
@@ -36,29 +102,10 @@ bool hasControlCharOrBackslash(QStringView text)
     return std::any_of(text.begin(), text.end(), [](QChar c) { return c == u'\\' || c.unicode() < 0x20; });
 }
 
-// Single-segment glob: '*' = any run within the segment, '?' = one character.
-// '[' and ']' are literal (spec: profile/SPEC.md section 4.1).
-QRegularExpression segmentGlobToRegex(QStringView glob)
-{
-    QString pattern = QStringLiteral("^");
-    for (QChar c : glob) {
-        if (c == u'*')
-            pattern += QStringLiteral("[^/]*");
-        else if (c == u'?')
-            pattern += QStringLiteral("[^/]");
-        else
-            pattern += QRegularExpression::escape(QString(c));
-    }
-    pattern += u'$';
-    return QRegularExpression(pattern, QRegularExpression::CaseInsensitiveOption);
-}
-
-// A path segment prepared once for sensitivity checks: classifying it and
-// compiling its glob is far more expensive than comparing it.
+// A path segment classified once for sensitivity checks.
 struct PreparedSegment {
     enum class Kind { DoubleStar, Placeholder, Glob, Literal } kind = Kind::Literal;
     QString text;
-    QRegularExpression glob;
 };
 
 QList<PreparedSegment> prepare(const QStringList &segments)
@@ -72,10 +119,8 @@ QList<PreparedSegment> prepare(const QStringList &segments)
             p.kind = PreparedSegment::Kind::DoubleStar;
         else if (hasPlaceholder(segment))
             p.kind = PreparedSegment::Kind::Placeholder;
-        else if (isGlob(segment)) {
+        else if (isGlob(segment))
             p.kind = PreparedSegment::Kind::Glob;
-            p.glob = segmentGlobToRegex(segment);
-        }
         prepared.append(std::move(p));
     }
     return prepared;
@@ -86,7 +131,7 @@ bool segmentCanMatch(const PreparedSegment &segment, const QString &target)
     switch (segment.kind) {
     case PreparedSegment::Kind::DoubleStar: return true;
     case PreparedSegment::Kind::Placeholder: return false;
-    case PreparedSegment::Kind::Glob: return segment.glob.match(target).hasMatch();
+    case PreparedSegment::Kind::Glob: return wildcardMatch(segment.text, target, Qt::CaseInsensitive);
     case PreparedSegment::Kind::Literal: return segment.text.compare(target, Qt::CaseInsensitive) == 0;
     }
     return false;
@@ -163,10 +208,8 @@ RuleCheck PathRules::checkSavePath(QStringView pathView) const
     // P1: syntax
     if (path.isEmpty() || path.size() > kMaxPathLength)
         return RuleCheck{{QStringLiteral("P1")}};
-    static const QRegularExpression envPercent(QStringLiteral("%[^%]+%"));
-    static const QRegularExpression envDollar(QStringLiteral("\\$(\\{|[A-Za-z_])"));
     if (hasControlCharOrBackslash(path) || path.endsWith(u'/') || path.contains(QLatin1String("//"))
-        || path.startsWith(u'~') || envPercent.match(path).hasMatch() || envDollar.match(path).hasMatch()) {
+        || path.startsWith(u'~') || hasPercentVariable(path) || hasDollarVariable(path)) {
         addOnce(check.violations, QStringLiteral("P1"));
     }
 
@@ -176,23 +219,19 @@ RuleCheck PathRules::checkSavePath(QStringView pathView) const
 
     // P2: whole first segment is a known root placeholder
     const RootPlaceholder *root = nullptr;
-    static const QRegularExpression rootToken(QStringLiteral("^<([^<>]+)>$"));
-    if (const auto match = rootToken.match(first); match.hasMatch())
-        root = m_catalog.root(match.capturedView(1));
+    if (const QStringView name = wholeToken(first); !name.isEmpty())
+        root = m_catalog.root(name);
     if (!root)
         addOnce(check.violations, QStringLiteral("P2"));
 
     // P3: only known segment placeholders after the root, no stray brackets
     for (const QString &segment : rest) {
-        auto it = placeholderToken().globalMatch(segment);
-        while (it.hasNext()) {
-            const QString token = it.next().captured(0);
-            if (!m_catalog.isSegment(QStringView(token).mid(1, token.size() - 2)))
-                addOnce(check.violations, QStringLiteral("P3"));
-        }
-        QString stripped = segment;
-        stripped.remove(placeholderToken());
-        if (stripped.contains(u'<') || stripped.contains(u'>'))
+        bool unknown = false;
+        const bool stray = scanPlaceholders(segment, [this, &unknown](QStringView name) {
+            if (!m_catalog.isSegment(name))
+                unknown = true;
+        });
+        if (unknown || stray)
             addOnce(check.violations, QStringLiteral("P3"));
     }
 
@@ -241,11 +280,15 @@ RuleCheck PathRules::checkRegistryKey(QStringView keyView) const
 
 std::optional<platform::Os> PathRules::impliedOs(QStringView path) const
 {
-    static const QRegularExpression rootToken(QStringLiteral("^<([^<>]+)>"));
-    const auto match = rootToken.matchView(path);
-    if (!match.hasMatch())
+    // The leading "<name>" token (the regex ^<([^<>]+)>).
+    if (!path.startsWith(u'<'))
         return std::nullopt;
-    const RootPlaceholder *root = m_catalog.root(match.capturedView(1));
+    qsizetype close = 1;
+    while (close < path.size() && path.at(close) != u'<' && path.at(close) != u'>')
+        ++close;
+    if (close >= path.size() || path.at(close) != u'>' || close == 1)
+        return std::nullopt;
+    const RootPlaceholder *root = m_catalog.root(path.mid(1, close - 1));
     return root ? root->os : std::nullopt;
 }
 

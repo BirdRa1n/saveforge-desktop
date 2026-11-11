@@ -114,11 +114,13 @@ DetectionReport detectGames(const QList<profiles::Profile> &profiles, const QLis
 
     const profiles::PathResolver resolver;
     const profiles::ResolveContext context = hostResolveContext(env, storeUserIds);
+    // Thousands of profiles point into the same few folders: list each once.
+    profiles::ProbeCache cache;
     QList<DetectedGame> savesOnly;
     for (const profiles::Profile &profile : profiles) {
         if (detected.contains(profile.id))
             continue;
-        const qsizetype found = resolver.resolve(profile, context).size();
+        const qsizetype found = resolver.resolve(profile, context, cache).size();
         if (found > 0) {
             savesOnly.append(DetectedGame{profile.id, MatchReason::SavesFound, std::nullopt, found});
             detected.insert(profile.id);
