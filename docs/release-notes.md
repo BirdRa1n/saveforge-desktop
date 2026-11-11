@@ -10,6 +10,12 @@
   - **Atalhos:** `Ctrl+K` busca, `Ctrl+B` faz backup, `Ctrl+R` restaura, `Ctrl+T` troca de save e as setas navegam pela lista.
 - **Ícone novo:** uma porta de cofre.
 
+### Melhorias da alpha.3
+
+- **Menos memória:** na bandeja, o app usa cerca de 55 MB em vez de 170 MB. Isso acontece porque a janela é descarregada enquanto fica escondida e volta ao abrir, sem procurar os jogos de novo.
+- **Abertura mais rápida:** a busca por jogos e saves gasta cerca de um terço do processamento de antes, e o pico de memória ao abrir caiu de 300 para 210 MB.
+- **Barra de título:** a busca e o nome do app ficaram mais leves e têm mais espaço em volta.
+
 ### Correções da alpha.2
 
 - **Barra de título:** no Windows e no macOS, o logo e a busca agora ficam na mesma faixa dos botões da janela. O título borrado que aparecia no Windows não existe mais.
