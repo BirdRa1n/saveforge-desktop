@@ -1,6 +1,7 @@
 #include "savevault/registry/Channel.h"
 
 #include "savevault/profiles/ProfileParser.h"
+#include "savevault/registry/JsonSpans.h"
 
 #include <QCryptographicHash>
 #include <QFile>
@@ -149,39 +150,62 @@ Result<VerifiedChannel> loadChannel(const QString &distributionDir, const QStrin
 
     // Bundle: size and hash from the signed index, then bounded decompression.
     const QString bundlePath = channelDir + u'/' + result.index.bundlePath;
-    auto compressed = readFile(bundlePath, result.index.bundleSize);
-    if (!compressed.ok())
-        return compressed.error();
-    if (compressed.value().size() != result.index.bundleSize
-        || QString::fromLatin1(QCryptographicHash::hash(compressed.value(), QCryptographicHash::Sha256).toHex())
-               != result.index.bundleSha256)
-        return untrusted(QStringLiteral("bundle does not match the signed index"), bundlePath);
-    auto bundleBytes = decompress(compressed.value(), result.index.uncompressedSize, bundlePath);
-    if (!bundleBytes.ok())
-        return bundleBytes.error();
+    QByteArray text;
+    {
+        auto compressed = readFile(bundlePath, result.index.bundleSize);
+        if (!compressed.ok())
+            return compressed.error();
+        if (compressed.value().size() != result.index.bundleSize
+            || QString::fromLatin1(QCryptographicHash::hash(compressed.value(), QCryptographicHash::Sha256).toHex())
+                   != result.index.bundleSha256)
+            return untrusted(QStringLiteral("bundle does not match the signed index"), bundlePath);
+        auto bundleBytes = decompress(compressed.value(), result.index.uncompressedSize, bundlePath);
+        if (!bundleBytes.ok())
+            return bundleBytes.error();
+        text = std::move(bundleBytes).value();
+    }
 
-    QJsonParseError parseError{};
-    const QJsonObject bundle = QJsonDocument::fromJson(bundleBytes.value(), &parseError).object();
-    if (parseError.error != QJsonParseError::NoError || bundle.value(QLatin1String("schemaVersion")).toInt() != 1
-        || bundle.value(QLatin1String("type")).toString() != u"bundle"
-        || bundle.value(QLatin1String("channel")).toString() != channel
-        || bundle.value(QLatin1String("sequence")).toInteger() != result.index.sequence)
-        return Error{ErrorCode::Corrupted, QStringLiteral("bundle header does not match the index"), bundlePath};
+    // The bundle is read one value at a time (JsonSpans): a QJsonDocument of
+    // the whole text would cost about eight times its size, over 100 MB for
+    // the Ludusavi channel. Each value is still fully validated by Qt's parser.
+    const JsonSpans spans(text);
+    const auto corrupted = [&bundlePath](const QString &what) {
+        return Error{ErrorCode::Corrupted, what, bundlePath};
+    };
+    const auto bundleRoot = spans.root();
+    const auto members = bundleRoot ? spans.objectMembers(*bundleRoot) : std::nullopt;
+    if (!members)
+        return corrupted(QStringLiteral("bundle is not a JSON object"));
+    const auto member = [&](const char *key) -> QJsonValue {
+        const auto it = members->constFind(QLatin1String(key));
+        if (it == members->cend())
+            return QJsonValue(QJsonValue::Undefined);
+        return spans.parse(*it).value_or(QJsonValue(QJsonValue::Undefined));
+    };
+    if (member("schemaVersion").toInt() != 1 || member("type").toString() != u"bundle"
+        || member("channel").toString() != channel || member("sequence").toInteger() != result.index.sequence)
+        return corrupted(QStringLiteral("bundle header does not match the index"));
 
-    for (const QJsonValue &value : bundle.value(QLatin1String("notices")).toArray()) {
+    for (const QJsonValue &value : member("notices").toArray()) {
         const QJsonObject notice = value.toObject();
         result.notices.append({notice.value(QLatin1String("license")).toString(),
                                notice.value(QLatin1String("attribution")).toString(),
                                notice.value(QLatin1String("url")).toString()});
     }
     if (result.notices.isEmpty())
-        return Error{ErrorCode::Corrupted, QStringLiteral("bundle has no license notice"), bundlePath};
+        return corrupted(QStringLiteral("bundle has no license notice"));
 
-    const QJsonArray profiles = bundle.value(QLatin1String("profiles")).toArray();
-    result.profiles.reserve(profiles.size());
+    const auto profilesSpan = members->constFind(QStringLiteral("profiles"));
+    const auto profileSpans = profilesSpan == members->cend() ? std::nullopt : spans.arrayElements(*profilesSpan);
+    if (!profileSpans)
+        return corrupted(QStringLiteral("bundle has no profile list"));
+    result.profiles.reserve(profileSpans->size());
     QSet<QString> ids;
-    for (const QJsonValue &value : profiles) {
-        const QJsonObject json = value.toObject();
+    for (const JsonSpan &span : *profileSpans) {
+        const auto parsed = spans.parse(span);
+        if (!parsed || !parsed->isObject())
+            return corrupted(QStringLiteral("bundle has a profile that is not valid JSON"));
+        const QJsonObject json = parsed->toObject();
         const QString id = json.value(QLatin1String("id")).toString();
         auto profile = profiles::parseProfile(json);
         if (!profile.ok()) {

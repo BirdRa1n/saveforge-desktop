@@ -104,6 +104,10 @@ savevault_add_test(tst_ed25519
     SOURCES unit/tst_ed25519.cpp
     LIBS savevault::registry)
 
+savevault_add_test(tst_json_spans
+    SOURCES unit/tst_json_spans.cpp
+    LIBS savevault::registry)
+
 savevault_add_test(tst_registry_channel
     SOURCES unit/tst_registry_channel.cpp
     LIBS savevault::registry)

@@ -2,11 +2,13 @@ qt_add_library(savevault_registry STATIC
     include/savevault/registry/Channel.h
     include/savevault/registry/Ed25519.h
     include/savevault/registry/Fetcher.h
+    include/savevault/registry/JsonSpans.h
     include/savevault/registry/Metadata.h
     include/savevault/registry/ProfileCatalog.h
     include/savevault/registry/RegistryCache.h
     include/savevault/registry/RegistryUpdater.h
     Channel.cpp
+    JsonSpans.cpp
     Ed25519.cpp
     Fetcher.cpp
     Metadata.cpp
