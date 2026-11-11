@@ -60,7 +60,7 @@ qt_add_qml_module(savevault_ui
 target_link_libraries(savevault_ui PRIVATE Qt6::Quick Qt6::QuickControls2 Qt6::QuickDialogs2 savevault_backend)
 
 # --- Executável GUI ---
-qt_add_executable(savevault_app WIN32 MACOSX_BUNDLE main.cpp TrayIcon.h TrayIcon.cpp)
+qt_add_executable(savevault_app WIN32 MACOSX_BUNDLE main.cpp TrayIcon.h TrayIcon.cpp UiHost.h UiHost.cpp)
 
 # App icon (source: icons/savevault.svg; regenerate with tools/icons/generate.py).
 # The PNG is the window icon at run time; the .rc and .icns give the

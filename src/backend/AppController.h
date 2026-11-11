@@ -17,6 +17,9 @@
 #include <QVariantMap>
 #include <QtQml/qqmlregistration.h>
 
+class QQmlEngine;
+class QJSEngine;
+
 #include <functional>
 #include <optional>
 
@@ -62,8 +65,19 @@ class AppController : public QObject {
     Q_PROPERTY(bool trayAvailable READ trayAvailable WRITE setTrayAvailable NOTIFY trayAvailableChanged)
 
 public:
-    explicit AppController(QObject *parent = nullptr);
+    // No default argument on purpose: Qt prefers a default constructor over
+    // create() when it builds a QML singleton, which would bypass the shared
+    // instance.
+    explicit AppController(QObject *parent);
     ~AppController() override;
+
+    // QML singleton factory. When the executable has set a shared instance,
+    // every engine gets that one (kept in C++ ownership), so the controller,
+    // its library and the automatic backups outlive the interface when the
+    // window is unloaded in the tray. Without one (tests), each engine owns a
+    // new controller.
+    static AppController *create(QQmlEngine *qmlEngine, QJSEngine *jsEngine);
+    static void setSharedInstance(AppController *controller);
 
     [[nodiscard]] LibraryModel *library() { return &m_library; }
     [[nodiscard]] bool busy() const { return !m_busyText.isEmpty(); }

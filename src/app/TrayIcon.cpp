@@ -1,6 +1,7 @@
 #include "TrayIcon.h"
 
 #include "AppController.h"
+#include "UiHost.h"
 
 #include <QApplication>
 #include <QIcon>
@@ -9,9 +10,9 @@
 
 namespace savevault::app {
 
-TrayIcon::TrayIcon(backend::AppController *controller, QQuickWindow *window, QObject *parent)
+TrayIcon::TrayIcon(backend::AppController *controller, UiHost *ui, QObject *parent)
     : QObject(parent)
-    , m_window(window)
+    , m_ui(ui)
     , m_menu(std::make_unique<QMenu>())
 {
     m_icon.setIcon(QIcon(QStringLiteral(":/savevault/icons/savevault.png")));
@@ -30,13 +31,13 @@ TrayIcon::TrayIcon(backend::AppController *controller, QQuickWindow *window, QOb
     connect(&m_icon, &QSystemTrayIcon::messageClicked, this, &TrayIcon::showWindow);
 
     connect(controller, &backend::AppController::automaticBackupDone, this, [this](const QString &text) {
-        if (m_window && !m_window->isVisible())
+        if (m_ui && (!m_ui->window() || !m_ui->window()->isVisible()))
             m_icon.showMessage(QStringLiteral("SaveVault"), text, QSystemTrayIcon::Information, 5000);
     });
     // Tell the user once per session where the app went.
-    if (m_window) {
-        connect(m_window, &QWindow::visibleChanged, this, [this](bool visible) {
-            if (!visible && !m_hiddenNoticeShown && qApp && !QCoreApplication::closingDown()) {
+    if (m_ui) {
+        connect(m_ui, &UiHost::windowVisibleChanged, this, [this](bool visible) {
+            if (!visible && !m_hiddenNoticeShown) {
                 m_hiddenNoticeShown = true;
                 m_icon.showMessage(QStringLiteral("SaveVault"),
                                    tr("O SaveVault continua aberto na bandeja e faz os backups automáticos. "
@@ -59,13 +60,8 @@ bool TrayIcon::isSupported()
 
 void TrayIcon::showWindow()
 {
-    if (!m_window)
-        return;
-    m_window->show();
-    if (m_window->windowStates().testFlag(Qt::WindowMinimized))
-        m_window->setWindowStates(m_window->windowStates() & ~Qt::WindowMinimized);
-    m_window->raise();
-    m_window->requestActivate();
+    if (m_ui)
+        m_ui->show();
 }
 
 } // namespace savevault::app

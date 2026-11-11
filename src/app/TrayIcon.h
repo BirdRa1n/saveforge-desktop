@@ -7,13 +7,14 @@
 #include <memory>
 
 class QMenu;
-class QQuickWindow;
 
 namespace savevault::backend {
 class AppController;
 }
 
 namespace savevault::app {
+
+class UiHost;
 
 // System tray icon that keeps SaveVault reachable while its window is hidden,
 // so automatic backups keep running. Offers opening the window, backing up
@@ -22,12 +23,12 @@ namespace savevault::app {
 //
 // Closing the window hides it instead of quitting when the user allows the app
 // to run in the background (Main.qml asks AppController.trayAvailable and
-// runInBackground).
+// runInBackground); UiHost then unloads the interface until it is opened again.
 class TrayIcon : public QObject {
     Q_OBJECT
 
 public:
-    TrayIcon(backend::AppController *controller, QQuickWindow *window, QObject *parent = nullptr);
+    TrayIcon(backend::AppController *controller, UiHost *ui, QObject *parent = nullptr);
     ~TrayIcon() override;
 
     // False when the desktop has no system tray.
@@ -36,7 +37,7 @@ public:
 private:
     void showWindow();
 
-    QPointer<QQuickWindow> m_window;
+    QPointer<UiHost> m_ui;
     QSystemTrayIcon m_icon;
     std::unique_ptr<QMenu> m_menu;
     bool m_hiddenNoticeShown = false;

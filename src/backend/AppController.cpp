@@ -22,6 +22,8 @@
 #include <QLocale>
 #include <QJsonDocument>
 #include <QTime>
+#include <QJSEngine>
+#include <QPointer>
 #include <QTimer>
 #include <QtConcurrent/QtConcurrentRun>
 
@@ -122,6 +124,24 @@ QString actionName(services::FileAction action)
 }
 
 } // namespace
+
+namespace {
+QPointer<AppController> sharedInstance;
+} // namespace
+
+AppController *AppController::create(QQmlEngine *, QJSEngine *)
+{
+    if (sharedInstance) {
+        QJSEngine::setObjectOwnership(sharedInstance, QJSEngine::CppOwnership);
+        return sharedInstance;
+    }
+    return new AppController(nullptr);
+}
+
+void AppController::setSharedInstance(AppController *controller)
+{
+    sharedInstance = controller;
+}
 
 AppController::AppController(QObject *parent)
     : QObject(parent)
