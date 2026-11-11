@@ -56,8 +56,13 @@ CatalogLoad loadCatalogFromCache(const QString &registryCacheDir, const QString 
 LibraryScan scanLibrary(const registry::ProfileCatalog &catalog, const QList<detection::InstallCandidate> &installs,
                         const detection::DetectionEnvironment &env, const vault::Vault *vault)
 {
+    return scanLibrary(catalog.entries(), installs, env, vault);
+}
+
+LibraryScan scanLibrary(const QList<registry::CatalogEntry> &entries, const QList<detection::InstallCandidate> &installs,
+                        const detection::DetectionEnvironment &env, const vault::Vault *vault)
+{
     LibraryScan scan;
-    const QList<registry::CatalogEntry> entries = catalog.entries();
     QHash<QString, const registry::CatalogEntry *> byId;
     QList<profiles::Profile> profiles;
     profiles.reserve(entries.size());

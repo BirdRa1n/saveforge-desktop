@@ -31,8 +31,14 @@ namespace {
 
 constexpr qsizetype kMaxActivity = 200;
 
+// What a scan hands back to the interface thread. The catalog itself (every
+// registry profile) stays on the worker and is freed there: only the games
+// found carry their profile.
 struct RefreshResult {
-    services::CatalogLoad catalog;
+    int profileCount = 0;
+    bool usingTestKeys = false;
+    QStringList warnings;
+    QList<registry::Notice> notices;
     services::LibraryScan scan;
     QHash<QString, services::GameArt> art;
 };
@@ -205,18 +211,26 @@ void AppController::refresh()
         tr("Procurando jogos…"),
         [cacheDir, localDir, coverDir = m_settings.coverCacheDirectory(), version, vaultPtr] {
             RefreshResult result;
-            result.catalog = services::loadCatalogFromCache(cacheDir, version, localDir);
+            {
+                services::CatalogLoad load = services::loadCatalogFromCache(cacheDir, version, localDir);
+                const QList<registry::CatalogEntry> entries = load.catalog.entries();
+                result.profileCount = static_cast<int>(entries.size());
+                result.usingTestKeys = load.usingTestKeys;
+                result.warnings = load.warnings;
+                result.notices = load.notices;
+                const detection::DetectionEnvironment env = detection::DetectionEnvironment::host();
+                result.scan = services::scanLibrary(entries, detection::detectInstalledGames(env), env, vaultPtr);
+            }
             const detection::DetectionEnvironment env = detection::DetectionEnvironment::host();
-            result.scan = services::scanLibrary(result.catalog.catalog, detection::detectInstalledGames(env), env, vaultPtr);
             result.art = findArt(result.scan.games, env, coverDir);
             return result;
         },
         [this](RefreshResult result) {
-            m_profileCount = static_cast<int>(result.catalog.catalog.size());
-            m_usingTestKeys = result.catalog.usingTestKeys;
-            m_warnings = result.catalog.warnings;
+            m_profileCount = result.profileCount;
+            m_usingTestKeys = result.usingTestKeys;
+            m_warnings = result.warnings;
             m_notices.clear();
-            for (const registry::Notice &notice : result.catalog.notices)
+            for (const registry::Notice &notice : std::as_const(result.notices))
                 m_notices.append(notice.attribution);
             m_notices.removeDuplicates();
             emit catalogChanged();

@@ -57,5 +57,10 @@ struct LibraryScan {
 [[nodiscard]] LibraryScan scanLibrary(const registry::ProfileCatalog &catalog,
                                       const QList<detection::InstallCandidate> &installs,
                                       const detection::DetectionEnvironment &env, const vault::Vault *vault);
+// Same, for entries already resolved with ProfileCatalog::entries() (which is
+// costly with every registry channel loaded, so callers compute it once).
+[[nodiscard]] LibraryScan scanLibrary(const QList<registry::CatalogEntry> &entries,
+                                      const QList<detection::InstallCandidate> &installs,
+                                      const detection::DetectionEnvironment &env, const vault::Vault *vault);
 
 } // namespace savevault::services
