@@ -54,7 +54,9 @@ Item {
         objectName: "commandBar"
         anchors.centerIn: parent
         width: Math.min(520, parent.width - 2 * Math.max(root.leftInset, root.rightInset) - 360)
-        implicitHeight: 26
+        // A light control in a 32 px bar: 4 px of air above and below.
+        implicitHeight: 24
+        compact: true
         placeholderText: qsTr("Buscar jogo…")
         Accessible.name: qsTr("Buscar jogo")
         shortcutHint: "Ctrl K"

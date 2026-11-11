@@ -1,21 +1,21 @@
 import QtQuick
 import QtQuick.Layouts
 
-// App mark (accent tile) and name.
+// App mark (accent tile) and name, sized for the 32 px title bar.
 RowLayout {
-    spacing: Theme.space2
+    spacing: 7
 
     Rectangle {
-        Layout.preferredWidth: 22
-        Layout.preferredHeight: 22
-        radius: 6
+        Layout.preferredWidth: 18
+        Layout.preferredHeight: 18
+        radius: 5
         color: Theme.accent
 
         Icon {
             anchors.centerIn: parent
-            width: 14
-            height: 14
-            strokeWidth: 2.2
+            width: 12
+            height: 12
+            strokeWidth: 2.4
             path: Icons.vault
             color: Theme.textOnAccent
         }
@@ -25,7 +25,7 @@ RowLayout {
         text: "SaveVault"
         color: Theme.text
         font.family: Theme.fontDisplay
-        font.pixelSize: 16
-        font.weight: Font.Bold
+        font.pixelSize: 14
+        font.weight: Font.DemiBold
     }
 }

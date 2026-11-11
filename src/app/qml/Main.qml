@@ -175,6 +175,9 @@ ApplicationWindow {
             RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                // Separates the title bar from the content panel, so the two
+                // read as different layers.
+                Layout.topMargin: 6
                 spacing: 0
 
                 Sidebar {
